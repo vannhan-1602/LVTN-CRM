@@ -1,4 +1,4 @@
-\# CRM Online — Backend
+# CRM Online — Backend
 
 
 
@@ -6,11 +6,11 @@
 
 
 
-\---
+---
 
 
 
-\## Yêu cầu
+## Yêu cầu
 
 
 
@@ -26,15 +26,15 @@
 
 
 
-\---
+---
 
 
 
-\## Cài đặt \& Chạy
+## Cài đặt \& Chạy
 
 
 
-\### 1. Clone project
+### 1. Clone project
 
 ```bash
 
@@ -46,7 +46,7 @@ cd LVTN
 
 
 
-\### 2. Khởi động MySQL
+### 2. Khởi động MySQL
 
 ```bash
 
@@ -64,7 +64,7 @@ docker run -d --name mysql-local \\
 
 
 
-\### 3. Khởi động RabbitMQ
+### 3. Khởi động RabbitMQ
 
 ```bash
 
@@ -80,7 +80,7 @@ docker run -d --name rabbitmq \\
 
 
 
-\### 4. Import database
+### 4. Import database
 
 ```bash
 
@@ -90,7 +90,7 @@ Get-Content "CRMOnline.sql" -Raw | docker exec -i mysql-local mysql -uroot -p123
 
 
 
-\### 5. Chạy project
+### 5. Chạy project
 
 Mở `CRM.slnx` bằng Visual Studio → \*\*F5\*\*
 
@@ -100,11 +100,11 @@ Swagger: `https://localhost:7071/swagger`
 
 
 
-\---
+---
 
 
 
-\## Tài khoản mặc định
+## Tài khoản mặc định
 
 
 
@@ -122,31 +122,31 @@ Swagger: `https://localhost:7071/swagger`
 
 
 
-\---
+---
 
 
 
-\## API đã hoàn thành
+## API đã hoàn thành
 
 
 
-\- `POST /api/auth/login` — Đăng nhập, nhận JWT token
+- `POST /api/auth/login` — Đăng nhập, nhận JWT token
 
-\- `GET /api/auth/users` — Danh sách user (Admin)
+- `GET /api/auth/users` — Danh sách user (Admin)
 
-\- `GET/POST/PUT/DELETE /api/customer` — Quản lý khách hàng
+- `GET/POST/PUT/DELETE /api/customer` — Quản lý khách hàng
 
-\- `GET/POST/PUT/DELETE /api/lead` — Quản lý lead
+- `GET/POST/PUT/DELETE /api/lead` — Quản lý lead
 
-\- `POST /api/lead/{id}/convert` — Chuyển lead thành khách hàng
-
-
-
-\---
+- `POST /api/lead/{id}/convert` — Chuyển lead thành khách hàng
 
 
 
-\## Kiến trúc
+---
+
+
+
+## Kiến trúc
 
 
 
