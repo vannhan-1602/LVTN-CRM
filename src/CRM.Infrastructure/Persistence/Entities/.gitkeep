@@ -1,0 +1,9 @@
+namespace CRM.Infrastructure.Persistence.Entities;
+
+/// <summary>
+/// Thư mục chứa EF Core entities sinh ra từ Scaffold-DbContext.
+/// Chạy lệnh scaffold trong README hoặc hướng dẫn Bước 2 để sinh các class tại đây.
+/// </summary>
+internal static class EntitiesPlaceholder
+{
+}

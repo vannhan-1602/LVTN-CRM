@@ -1,0 +1,21 @@
+## Ignore Visual Studio / build artifacts
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+## IDE
+.idea/
+*.swp
+
+## Secrets
+appsettings.Local.json
+**/secrets.json
+
+## EF Core
+*.db
+
+## OS
+Thumbs.db
+.DS_Store
