@@ -53,6 +53,13 @@ public enum TicketSource
     Zalo,
     TrucTiep
 }
+public enum TicketPhanHoiLoai
+{
+    NoiBoXuLy,
+    PhanHoiKhachHang,
+    YeuCauBoSung,
+    DongTicket
+}
 
 public enum CoHoiGiaiDoan
 {

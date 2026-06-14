@@ -3,6 +3,7 @@ using CRM.Application.Interfaces.Auth;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Leads;
+using CRM.Application.Interfaces.Tickets;
 using CRM.Domain.Interfaces.Messaging;
 using CRM.Domain.Interfaces.Repositories;
 using CRM.Domain.Interfaces.Services;
@@ -49,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<ILeadRepository, LeadRepository>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IAuditLogPublisher, AuditLogPublisher>();

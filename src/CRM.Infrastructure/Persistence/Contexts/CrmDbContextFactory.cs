@@ -5,9 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace CRM.Infrastructure.Persistence.Contexts;
 
-/// <summary>
-/// Factory hỗ trợ chạy Scaffold-DbContext và migrations từ CLI.
-/// </summary>
+
 public class CrmDbContextFactory : IDesignTimeDbContextFactory<CrmDbContext>
 {
     public CrmDbContext CreateDbContext(string[] args)

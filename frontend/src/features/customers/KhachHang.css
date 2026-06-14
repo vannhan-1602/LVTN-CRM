@@ -1,0 +1,345 @@
+
+.kh-page {
+  min-height: 100vh;
+  padding: 20px 24px;
+  color: #162033;
+  background-color: #f8fafc;
+  font-size: 13px; 
+}
+
+
+.kh-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px; 
+}
+
+.kh-header h1 {
+  margin: 4px 0 6px;
+  font-size: 24px; 
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px; 
+  font-weight: 700;
+  color: #5b6b85;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+
+.search,
+.form-panel input,
+.form-panel select {
+  padding: 8px 12px; 
+  border-radius: 8px;
+  border: 1px solid #d6deea;
+  background: #fff;
+  font-size: 13px; 
+  color: #162033;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search:focus,
+.form-panel input:focus,
+.form-panel select:focus {
+  border-color: #315efb;
+  box-shadow: 0 0 0 3px rgba(49, 94, 251, 0.1);
+}
+
+.search {
+  width: min(420px, 100%);
+  min-width: 260px;
+}
+
+.kh-page .kh-select-sm {
+  min-width: 140px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* ── THỐNG KÊ (STATS) ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; 
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #fff;
+  padding: 16px 20px; 
+  border: 1px solid #e5ebf3;
+  box-shadow: 0 2px 8px rgba(22, 32, 51, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-card span {
+  font-size: 13px;
+  color: #5f6c80;
+  font-weight: 500;
+}
+
+.stat-card strong {
+  font-size: 26px; 
+  line-height: 1;
+  color: #162033;
+}
+
+/* ── GRID CHÍNH ── */
+.content-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5ebf3;
+  box-shadow: 0 4px 12px rgba(22, 32, 51, 0.03);
+  overflow: hidden;
+}
+
+.panel-head {
+  padding: 16px 20px; 
+  border-bottom: 1px solid #e5ebf3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafbfc;
+}
+
+.panel-head h2 {
+  margin: 0 0 2px;
+  font-size: 15px; 
+  font-weight: 700;
+}
+
+.panel-head p {
+  margin: 0;
+  font-size: 12px;
+  color: #5f6c80;
+}
+
+/* ── FORM ── */
+.form-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; 
+  padding-bottom: 20px;
+}
+
+.form-panel > label,
+.form-panel .two-col {
+  padding: 0 20px;
+}
+
+.form-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px; 
+  font-weight: 600;
+  color: #3d4e66;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.actions {
+  padding: 16px 20px 0;
+  border-top: 1px solid #e5ebf3;
+  display: flex;
+  gap: 10px;
+}
+
+.message {
+  margin: 0 20px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.message.error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.message.success {
+  background: #f0fdf4;
+  color: #15803d;
+}
+.kh-req {
+  color: #d84d5b;
+}
+
+/* ── BẢNG DỮ LIỆU (TABLE) ── */
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e5ebf3;
+  vertical-align: middle;
+  font-size: 13px; 
+}
+
+th {
+  color: #51627a;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #fafbfc;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+tbody tr:hover {
+  background: #f8fbff;
+}
+
+.empty-row {
+  text-align: center;
+  padding: 24px 10px;
+  color: #5c6c84;
+}
+
+.stacked-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── BUTTONS ── */
+.primary-btn,
+.secondary-btn,
+.ghost-btn,
+.danger-btn {
+  padding: 8px 14px; 
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.primary-btn {
+  background: #315efb;
+  color: #fff;
+}
+.primary-btn:hover {
+  background: #254bce;
+}
+
+.secondary-btn {
+  background: #f0f4f8;
+  color: #3d4e66;
+}
+.secondary-btn:hover {
+  background: #e2e8f0;
+}
+
+.ghost-btn {
+  background: transparent;
+  color: #315efb;
+  padding: 6px 10px;
+}
+.ghost-btn:hover {
+  background: #eef3ff;
+}
+
+.danger-btn {
+  background: transparent;
+  color: #d84d5b;
+  padding: 6px 10px;
+}
+.danger-btn:hover {
+  background: #fff0f2;
+}
+
+/* ── CÁC CLASS ĐẶC THÙ ── */
+.kh-ma {
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #315efb;
+  background: #eef3ff;
+  padding: 3px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.kh-nv {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d3557;
+}
+
+/* Badge System */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px; 
+  font-weight: 700;
+}
+.badge-canhan {
+  background: #eef3fb;
+  color: #1b3557;
+}
+.badge-doanhnghiep {
+  background: #e4f3ff;
+  color: #0d5f99;
+}
+.badge-vip {
+  background: #fef3c7;
+  color: #92400e;
+}
+.badge-hoatdong {
+  background: #e8f7ef;
+  color: #18724a;
+}
+.badge-tiemnang {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+.badge-khonghoatdong {
+  background: #f3f4f6;
+  color: #6b7280;
+}
