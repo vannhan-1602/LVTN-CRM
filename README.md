@@ -1,7 +1,7 @@
-# CRM Online — Backend
+# CRM Online 
 
-> .NET 8 | Clean Architecture | CQRS | MediatR | EF Core | MySQL | RabbitMQ | JWT
-
+> Backend: .NET 8 | Clean Architecture | CQRS | MediatR | EF Core | MySQL | RabbitMQ | JWT
+> Frontend: React 18 | Vite | Tailwind CSS | Zustand | React Hook Form
 ---
 
 ## Yêu cầu
@@ -11,7 +11,7 @@
 | .NET SDK           | 8.0+      |
 | Docker Desktop     | Mới nhất  |
 | Visual Studio 2022 | 17.8+     |
-
+| VS Code            | Mới nhất  |
 ---
 
 ## Cài đặt & Chạy
