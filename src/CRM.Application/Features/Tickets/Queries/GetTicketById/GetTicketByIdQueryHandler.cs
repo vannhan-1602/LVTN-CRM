@@ -1,5 +1,7 @@
-﻿using CRM.Application.Common.Exceptions;
+using CRM.Application.Common.Constants;
+using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Tickets.Mappings;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Tickets;
 using CRM.Domain.Entities.Tickets;
 using MediatR;
@@ -9,13 +11,22 @@ namespace CRM.Application.Features.Tickets.Queries.GetTicketById
     public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, TicketDetailDto>
     {
         private readonly ITicketRepository _ticketRepository;
-        public GetTicketByIdQueryHandler(ITicketRepository ticketRepository)
-            => _ticketRepository = ticketRepository;
+        private readonly ICurrentUserService _currentUser;
+
+        public GetTicketByIdQueryHandler(ITicketRepository ticketRepository, ICurrentUserService currentUser)
+        {
+            _ticketRepository = ticketRepository;
+            _currentUser = currentUser;
+        }
 
         public async Task<TicketDetailDto> Handle(GetTicketByIdQuery request, CancellationToken cancellationToken)
         {
             var ticket = await _ticketRepository.GetByIdAsync(request.Id, cancellationToken)
                 ?? throw new NotFoundException(nameof(Ticket), request.Id);
+
+            //  Chặn Sale xem Ticket không phải mình xử lý
+            if (_currentUser.Role == Roles.Sale && ticket.NhanVienXuLyId != _currentUser.NhanSuId)
+                throw new ForbiddenException("Bạn không có quyền xem dữ liệu của nhân viên khác.");
 
             var phanHois = await _ticketRepository.GetPhanHoisAsync(request.Id, cancellationToken);
 

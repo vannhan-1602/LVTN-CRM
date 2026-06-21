@@ -1,31 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import customerApi from "../../api/customerApi";
-import Pagination from "../../components/common/Pagination"; // Import Pagination
-import "./KhachHang.css";
-
-const LOAI_KHACH_HANG_OPTIONS = [
-  { value: 1, label: "Cá nhân" },
-  { value: 2, label: "Doanh nghiệp" },
-  { value: 3, label: "VIP" },
-];
-
-const TINH_TRANG_OPTIONS = [
-  { value: 1, label: "Đang hoạt động" },
-  { value: 2, label: "Tiềm năng" },
-  { value: 3, label: "Không hoạt động" },
-];
-
-const LOAI_BADGE_MAP = {
-  1: "badge-canhan",
-  2: "badge-doanhnghiep",
-  3: "badge-vip",
-};
-
-const TINH_TRANG_BADGE_MAP = {
-  1: "badge-hoatdong",
-  2: "badge-tiemnang",
-  3: "badge-khonghoatdong",
-};
+import authApi from "../../api/authApi";
+import useAuthStore from "../auth/authStore";
+import Pagination from "../../components/common/Pagination";
+import {
+  ROLES,
+  LOAI_KHACH_HANG_OPTIONS,
+  TINH_TRANG_KHACH_HANG_OPTIONS,
+  LOAI_BADGE_COLOR,
+  TINH_TRANG_BADGE_COLOR,
+} from "../../utils/constants";
+import { formatDateTime } from "../../utils/formatters";
 
 const emptyForm = {
   tenKhachHang: "",
@@ -37,26 +22,21 @@ const emptyForm = {
   nhanVienPhuTrachId: "",
 };
 
-function formatDiaChi(diaChiList) {
-  if (!Array.isArray(diaChiList) || diaChiList.length === 0) return null;
-  const dc = diaChiList.find((d) => d.isDefault) ?? diaChiList[0];
-  return [dc.diaChiChiTiet, dc.phuongXa, dc.quanHuyen, dc.tinhThanh]
-    .filter(Boolean)
-    .join(", ");
+function Badge({ label, colorClass }) {
+  return (
+    <span
+      className={`px-2 py-0.5 rounded-full text-xs font-semibold ${colorClass}`}
+    >
+      {label}
+    </span>
+  );
 }
 
-function formatDateTime(value) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("vi-VN", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
-}
-
-// ─── component ──────────────────────────────────────────────────────────────
 export default function CustomerListPage() {
+  const { user } = useAuthStore();
+  // ✅ Khớp với backend: Delete chỉ Policies.ManagerOnly (Admin không có quyền nghiệp vụ)
+  const canDelete = user?.role === ROLES.Manager;
+
   const [items, setItems] = useState([]);
   const [nhanVienList, setNhanVienList] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -66,30 +46,24 @@ export default function CustomerListPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // States lọc & Phân trang (Sử dụng cho Pagination component)
   const [search, setSearch] = useState("");
   const [filterLoai, setFilterLoai] = useState("");
   const [filterTinhTrang, setFilterTinhTrang] = useState("");
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
 
-  // map id → họ tên nhanh
+  // nhanVienMap để dùng trong form select
   const nhanVienMap = useMemo(
     () =>
       new Map(
-        nhanVienList.map((nv) => [
-          String(nv.id),
-          nv.hoTen ?? nv.tenNhanVien ?? `NV #${nv.id}`,
-        ]),
+        nhanVienList.map((nv) => [String(nv.id), nv.hoTen ?? `NV #${nv.id}`]),
       ),
     [nhanVienList],
   );
 
-  const tenNhanVien = (id) =>
-    id != null ? (nhanVienMap.get(String(id)) ?? `NV #${id}`) : "—";
-
-  // ── fetch ──
+  // ── fetch danh sách khách hàng ──────────────────────────────────────────
   const loadKhachHang = async () => {
     setLoading(true);
     setError("");
@@ -97,95 +71,73 @@ export default function CustomerListPage() {
       const res = await customerApi.getAll({
         pageNumber,
         pageSize,
-        search: search || null,
-        loaiKhachHangId: filterLoai || null,
-        tinhTrangId: filterTinhTrang || null,
+        search: search.trim() || undefined,
+        loaiKhachHangId: filterLoai || undefined,
+        tinhTrangId: filterTinhTrang || undefined,
       });
-      // Lấy dữ liệu phân trang từ Backend
-      const data = res.data.data.items || [];
-      const fetchedTotalPages = res.data.data.totalPages || 1;
-
-      setItems(Array.isArray(data) ? data : []);
-      setTotalPages(fetchedTotalPages);
+      // axiosClient trả về ApiResponse<PagedResult<CustomerDto>>
+      const paged = res.data;
+      setItems(paged?.items ?? []);
+      setTotalPages(paged?.totalPages ?? 1);
+      setTotalCount(paged?.totalCount ?? 0);
     } catch (err) {
-      setError(err.response?.data?.message || "Tải danh sách thất bại");
+      setError(err?.message || "Tải danh sách thất bại");
     } finally {
       setLoading(false);
     }
   };
 
+  // ── fetch danh sách nhân viên (Admin API, dùng cho form select) ────────
   const loadNhanVien = async () => {
     try {
-      const API_BASE_URL =
-        import.meta.env.VITE_API_BASE_URL ?? "https://localhost:7071";
-      const res = await fetch(`${API_BASE_URL}/api/Auth/users`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setNhanVienList(Array.isArray(data.data) ? data.data : []);
+      const res = await authApi.getStaffList();
+      setNhanVienList(res.data ?? []);
     } catch {
-      /* silent */
+      /* Admin-only, sale không có quyền — bỏ qua */
     }
   };
 
-  // Gọi API mỗi khi pageNumber hoặc bộ lọc thay đổi
   useEffect(() => {
     loadKhachHang();
-    loadNhanVien();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageNumber, filterLoai, filterTinhTrang]);
 
-  // Handle Search Trigger (Nhấn Enter hoặc nút Tải lại)
-  const handleSearchSubmit = () => {
-    setPageNumber(1);
-    loadKhachHang();
-  };
+  useEffect(() => {
+    loadNhanVien();
+  }, []);
 
-  // ── stats ──
+  // ── stats từ data trang hiện tại ────────────────────────────────────────
   const stats = useMemo(
     () => ({
-      total: items.length,
-      doanhnghiep: items.filter((i) => i.loaiKhachHangId === 2).length,
-      canhan: items.filter((i) => i.loaiKhachHangId === 1).length,
-      vip: items.filter((i) => i.loaiKhachHangId === 3).length,
+      total: totalCount,
+      vip: items.filter((i) => i.loaiKhachHangId === 1).length,
+      b2b: items.filter((i) => i.loaiKhachHangId === 2).length,
+      b2c: items.filter((i) => i.loaiKhachHangId === 3).length,
     }),
-    [items],
+    [items, totalCount],
   );
 
-  // ── form handlers ──
+  // ── form handlers ────────────────────────────────────────────────────────
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
     setError("");
     setSuccess("");
   };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const validateForm = () => {
-    if (!form.tenKhachHang.trim()) return "Tên khách hàng không được rỗng";
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      return "Email không đúng định dạng";
-    if (form.soDienThoai && !/^\d{10,11}$/.test(form.soDienThoai))
-      return "Số điện thoại phải có 10–11 chữ số";
-    return "";
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const msg = validateForm();
-    if (msg) {
-      setError(msg);
-      setSuccess("");
+    if (!form.tenKhachHang.trim()) {
+      setError("Tên khách hàng không được để trống");
       return;
     }
-
     setSubmitting(true);
     setError("");
     setSuccess("");
-
     const toInt = (v) => (v === "" || v == null ? null : Number(v));
     const payload = {
       tenKhachHang: form.tenKhachHang.trim(),
@@ -196,7 +148,6 @@ export default function CustomerListPage() {
       maSoThue: form.maSoThue.trim() || null,
       nhanVienPhuTrachId: toInt(form.nhanVienPhuTrachId),
     };
-
     try {
       if (editingId) {
         await customerApi.update(editingId, payload);
@@ -208,7 +159,7 @@ export default function CustomerListPage() {
       await loadKhachHang();
       resetForm();
     } catch (err) {
-      setError(err.response?.data?.message || "Không thể lưu khách hàng");
+      setError(err?.message || "Không thể lưu khách hàng");
     } finally {
       setSubmitting(false);
     }
@@ -232,43 +183,51 @@ export default function CustomerListPage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa khách hàng này không?")) return;
-    setError("");
-    setSuccess("");
     try {
       await customerApi.delete(id);
+      setSuccess("Xóa khách hàng thành công");
       await loadKhachHang();
       if (editingId === id) resetForm();
-      setSuccess("Xóa khách hàng thành công");
     } catch (err) {
-      setError(err.response?.data?.message || "Không thể xóa khách hàng");
+      setError(err?.message || "Không thể xóa khách hàng");
     }
   };
 
-  // ─── render ─────────────────────────────────────────────────────────────
+  // ── render ───────────────────────────────────────────────────────────────
   return (
-    <main className="kh-page">
-      {/* HEADER */}
-      <section className="kh-header">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="eyebrow">CRM / Khách hàng</p>
-          <h1>Quản lý khách hàng</h1>
+          <p className="text-xs text-gray-500 uppercase tracking-wide">
+            CRM / Khách hàng
+          </p>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Quản lý khách hàng
+          </h1>
         </div>
-        <div className="toolbar">
+        {/* Toolbar */}
+        <div className="flex flex-wrap gap-2">
           <input
-            className="search"
             type="search"
             placeholder="Tìm theo mã, tên, email, SĐT..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setPageNumber(1);
+                loadKhachHang();
+              }
+            }}
+            className="border rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <select
-            className="search kh-select-sm"
             value={filterLoai}
             onChange={(e) => {
               setFilterLoai(e.target.value);
               setPageNumber(1);
             }}
+            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <option value="">Tất cả loại</option>
             {LOAI_KHACH_HANG_OPTIONS.map((o) => (
@@ -278,155 +237,185 @@ export default function CustomerListPage() {
             ))}
           </select>
           <select
-            className="search kh-select-sm"
             value={filterTinhTrang}
             onChange={(e) => {
               setFilterTinhTrang(e.target.value);
               setPageNumber(1);
             }}
+            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
-            <option value="">Tất cả trạng thái</option>
-            {TINH_TRANG_OPTIONS.map((o) => (
+            <option value="">Tất cả tình trạng</option>
+            {TINH_TRANG_KHACH_HANG_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
             ))}
           </select>
           <button
-            className="secondary-btn"
-            type="button"
-            onClick={handleSearchSubmit}
+            onClick={() => {
+              setPageNumber(1);
+              loadKhachHang();
+            }}
+            className="border rounded-lg px-4 py-2 text-sm hover:bg-gray-50"
           >
             Tải lại
           </button>
         </div>
-      </section>
+      </div>
 
-      {/* STATS */}
-      <section className="stats-row">
-        <article className="stat-card">
-          <span>Khách hàng (Trang hiện tại)</span>
-          <strong>{stats.total}</strong>
-        </article>
-        <article className="stat-card">
-          <span>Cá nhân</span>
-          <strong>{stats.canhan}</strong>
-        </article>
-        <article className="stat-card">
-          <span>Doanh nghiệp</span>
-          <strong>{stats.doanhnghiep}</strong>
-        </article>
-        <article className="stat-card">
-          <span>VIP</span>
-          <strong>{stats.vip}</strong>
-        </article>
-      </section>
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: "Tổng khách hàng", value: stats.total },
+          { label: "VIP", value: stats.vip },
+          { label: "B2B", value: stats.b2b },
+          { label: "B2C", value: stats.b2c },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="bg-white rounded-xl border p-4 shadow-sm"
+          >
+            <p className="text-xs text-gray-500">{s.label}</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">{s.value}</p>
+          </div>
+        ))}
+      </div>
 
-      {/* CONTENT */}
-      <section className="content-grid">
-        {/* FORM */}
-        <form className="panel form-panel" onSubmit={handleSubmit}>
-          <div className="panel-head">
+      {/* Content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Form */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-xl border shadow-sm p-6 space-y-4 lg:col-span-1"
+        >
+          <div className="flex items-center justify-between">
             <div>
-              <h2>
+              <h2 className="font-semibold text-gray-800">
                 {editingId ? "Cập nhật khách hàng" : "Thêm khách hàng mới"}
               </h2>
-              <p>Điền thông tin và nhấn lưu.</p>
+              <p className="text-xs text-gray-400">
+                Điền thông tin và nhấn lưu.
+              </p>
             </div>
-            {editingId ? (
-              <button className="ghost-btn" type="button" onClick={resetForm}>
+            {editingId && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
                 Hủy sửa
               </button>
-            ) : null}
+            )}
           </div>
 
-          <label>
-            Tên khách hàng <span className="kh-req">*</span>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tên khách hàng <span className="text-red-500">*</span>
+            </label>
             <input
               name="tenKhachHang"
               value={form.tenKhachHang}
               onChange={handleChange}
               placeholder="Nguyễn Văn A"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-          </label>
+          </div>
 
-          <div className="two-col">
-            <label>
-              Email
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
               <input
                 name="email"
                 type="email"
                 value={form.email}
                 onChange={handleChange}
                 placeholder="example@mail.com"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
-            </label>
-            <label>
-              Số điện thoại
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                SĐT
+              </label>
               <input
                 name="soDienThoai"
                 value={form.soDienThoai}
                 onChange={handleChange}
                 placeholder="0901234567"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
-            </label>
+            </div>
           </div>
 
-          <div className="two-col">
-            <label>
-              Loại khách hàng
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Loại KH
+              </label>
               <select
                 name="loaiKhachHangId"
                 value={form.loaiKhachHangId}
                 onChange={handleChange}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
-                <option value="">-- Chọn loại --</option>
+                <option value="">-- Chọn --</option>
                 {LOAI_KHACH_HANG_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
                 ))}
               </select>
-            </label>
-            <label>
-              Tình trạng
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tình trạng
+              </label>
               <select
                 name="tinhTrangId"
                 value={form.tinhTrangId}
                 onChange={handleChange}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
-                <option value="">-- Chọn tình trạng --</option>
-                {TINH_TRANG_OPTIONS.map((o) => (
+                <option value="">-- Chọn --</option>
+                {TINH_TRANG_KHACH_HANG_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
           </div>
 
-          <label>
-            Mã số thuế
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mã số thuế
+            </label>
             <input
               name="maSoThue"
               value={form.maSoThue}
               onChange={handleChange}
               placeholder="0123456789"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-          </label>
+          </div>
 
-          <label>
-            Nhân viên phụ trách
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nhân viên phụ trách
+            </label>
             {nhanVienList.length > 0 ? (
               <select
                 name="nhanVienPhuTrachId"
                 value={form.nhanVienPhuTrachId}
                 onChange={handleChange}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 <option value="">-- Chọn nhân viên --</option>
                 {nhanVienList.map((nv) => (
                   <option key={nv.id} value={nv.id}>
-                    {nv.hoTen ?? nv.tenNhanVien ?? `NV #${nv.id}`}
+                    {nv.hoTen ?? `NV #${nv.id}`}
                   </option>
                 ))}
               </select>
@@ -438,56 +427,76 @@ export default function CustomerListPage() {
                 value={form.nhanVienPhuTrachId}
                 onChange={handleChange}
                 placeholder="ID nhân viên"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             )}
-          </label>
+          </div>
 
-          {error ? <div className="message error">{error}</div> : null}
-          {success ? <div className="message success">{success}</div> : null}
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 rounded-lg p-2">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="text-sm text-green-700 bg-green-50 rounded-lg p-2">
+              {success}
+            </div>
+          )}
 
-          <div className="actions">
-            <button className="primary-btn" type="submit" disabled={submitting}>
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
               {submitting ? "Đang lưu..." : editingId ? "Cập nhật" : "Thêm mới"}
             </button>
-            <button className="secondary-btn" type="button" onClick={resetForm}>
-              Làm mới form
+            <button
+              type="button"
+              onClick={resetForm}
+              className="px-4 border rounded-lg py-2 text-sm hover:bg-gray-50"
+            >
+              Làm mới
             </button>
           </div>
         </form>
 
-        {/* TABLE */}
-        <section className="panel table-panel">
-          <div className="panel-head">
+        {/* Table */}
+        <div className="bg-white rounded-xl border shadow-sm lg:col-span-2 overflow-hidden">
+          <div className="px-6 py-4 border-b flex items-center justify-between">
             <div>
-              <h2>Danh sách khách hàng</h2>
-              <p>
-                Trang {pageNumber} / {totalPages}
+              <h2 className="font-semibold text-gray-800">
+                Danh sách khách hàng
+              </h2>
+              <p className="text-xs text-gray-400">
+                Trang {pageNumber} / {totalPages} — {totalCount} khách hàng
               </p>
             </div>
-            {loading ? (
-              <span className="text-gray-500 text-sm">Đang tải...</span>
-            ) : null}
+            {loading && (
+              <span className="text-xs text-gray-400 animate-pulse">
+                Đang tải...
+              </span>
+            )}
           </div>
 
-          <div className="table-wrap">
-            <table>
-              <thead>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
                 <tr>
-                  <th>Mã KH</th>
-                  <th>Tên khách hàng</th>
-                  <th>Liên hệ</th>
-                  <th>Địa chỉ</th>
-                  <th>Loại</th>
-                  <th>Tình trạng</th>
-                  <th>NV phụ trách</th>
-                  <th>Cập nhật</th>
-                  <th>Hành động</th>
+                  <th className="px-4 py-3 text-left">Mã KH</th>
+                  <th className="px-4 py-3 text-left">Tên khách hàng</th>
+                  <th className="px-4 py-3 text-left">Liên hệ</th>
+                  <th className="px-4 py-3 text-left">Loại</th>
+                  <th className="px-4 py-3 text-left">Tình trạng</th>
+                  <th className="px-4 py-3 text-left">NV phụ trách</th>
+                  <th className="px-4 py-3 text-left">Cập nhật</th>
+                  <th className="px-4 py-3 text-left">Hành động</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100">
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="empty-row">
+                    <td colSpan="8" className="text-center py-10 text-gray-400">
                       {loading
                         ? "Đang tải dữ liệu..."
                         : "Không có dữ liệu phù hợp"}
@@ -495,99 +504,93 @@ export default function CustomerListPage() {
                   </tr>
                 ) : (
                   items.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <span className="kh-ma">
-                          {item.maKhachHang || `#${item.id}`}
+                    <tr
+                      key={item.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <span className="font-mono text-blue-600 text-xs font-semibold">
+                          {item.maKhachHang}
                         </span>
                       </td>
-                      <td>
-                        <div className="stacked-cell">
-                          <strong>{item.tenKhachHang}</strong>
-                          {item.maSoThue && (
-                            <span style={{ color: "#6d7c91", fontSize: 12 }}>
-                              MST: {item.maSoThue}
-                            </span>
-                          )}
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-gray-900">
+                          {item.tenKhachHang}
                         </div>
+                        {item.maSoThue && (
+                          <div className="text-xs text-gray-400">
+                            MST: {item.maSoThue}
+                          </div>
+                        )}
                       </td>
-                      <td>
-                        <div className="stacked-cell">
-                          {item.email && <span>{item.email}</span>}
-                          {item.soDienThoai && (
-                            <span style={{ color: "#6d7c91", fontSize: 12 }}>
-                              {item.soDienThoai}
-                            </span>
-                          )}
-                          {!item.email && !item.soDienThoai && (
-                            <span style={{ color: "#aaa" }}>—</span>
-                          )}
-                        </div>
+                      <td className="px-4 py-3">
+                        <div>{item.email || "—"}</div>
+                        {item.soDienThoai && (
+                          <div className="text-xs text-gray-400">
+                            {item.soDienThoai}
+                          </div>
+                        )}
                       </td>
-                      <td>
-                        <div className="stacked-cell">
-                          {formatDiaChi(item.diaChiList) ? (
-                            <span>{formatDiaChi(item.diaChiList)}</span>
-                          ) : (
-                            <span style={{ color: "#aaa" }}>—</span>
-                          )}
-                          {item.diaChiList?.length > 1 && (
-                            <span style={{ color: "#6d7c91", fontSize: 12 }}>
-                              +{item.diaChiList.length - 1} địa chỉ khác
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td>
+                      <td className="px-4 py-3">
                         {item.loaiKhachHangId ? (
-                          <span
-                            className={`badge ${LOAI_BADGE_MAP[item.loaiKhachHangId] ?? "badge"}`}
-                          >
-                            {LOAI_KHACH_HANG_OPTIONS.find(
-                              (o) => o.value === item.loaiKhachHangId,
-                            )?.label ?? `Loại ${item.loaiKhachHangId}`}
-                          </span>
+                          <Badge
+                            label={
+                              item.tenLoaiKhachHang ??
+                              `Loại ${item.loaiKhachHangId}`
+                            }
+                            colorClass={
+                              LOAI_BADGE_COLOR[item.loaiKhachHangId] ??
+                              "bg-gray-100 text-gray-600"
+                            }
+                          />
                         ) : (
                           "—"
                         )}
                       </td>
-                      <td>
+                      <td className="px-4 py-3">
                         {item.tinhTrangId ? (
-                          <span
-                            className={`badge ${TINH_TRANG_BADGE_MAP[item.tinhTrangId] ?? "badge"}`}
-                          >
-                            {TINH_TRANG_OPTIONS.find(
-                              (o) => o.value === item.tinhTrangId,
-                            )?.label ?? `Trạng thái ${item.tinhTrangId}`}
-                          </span>
+                          <Badge
+                            label={
+                              item.tenTinhTrang ??
+                              `Tình trạng ${item.tinhTrangId}`
+                            }
+                            colorClass={
+                              TINH_TRANG_BADGE_COLOR[item.tinhTrangId] ??
+                              "bg-gray-100 text-gray-600"
+                            }
+                          />
                         ) : (
                           "—"
                         )}
                       </td>
-                      <td>
-                        <span className="kh-nv">
-                          {item.tenNhanVienPhuTrach
-                            ? item.tenNhanVienPhuTrach
-                            : tenNhanVien(item.nhanVienPhuTrachId)}
-                        </span>
+                      <td className="px-4 py-3 text-gray-700">
+                        {item.tenNhanVienPhuTrach
+                          ? item.tenNhanVienPhuTrach
+                          : item.nhanVienPhuTrachId
+                            ? (nhanVienMap.get(
+                                String(item.nhanVienPhuTrachId),
+                              ) ?? `NV #${item.nhanVienPhuTrachId}`)
+                            : "—"}
                       </td>
-                      <td>{formatDateTime(item.updatedAt)}</td>
-                      <td>
-                        <div className="row-actions">
+                      <td className="px-4 py-3 text-xs text-gray-400">
+                        {formatDateTime(item.updatedAt)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
                           <button
-                            type="button"
-                            className="ghost-btn"
                             onClick={() => handleEdit(item)}
+                            className="text-blue-600 hover:underline text-xs font-medium"
                           >
                             Sửa
                           </button>
-                          <button
-                            type="button"
-                            className="danger-btn"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            Xóa
-                          </button>
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="text-red-500 hover:underline text-xs font-medium"
+                            >
+                              Xóa
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -597,16 +600,15 @@ export default function CustomerListPage() {
             </table>
           </div>
 
-          {/* SỬ DỤNG PAGINATION ĐÃ IMPORT Ở ĐÂY */}
-          <div style={{ padding: "16px 24px", borderTop: "1px solid #e5ebf3" }}>
+          <div className="px-6 py-4 border-t">
             <Pagination
               pageNumber={pageNumber}
               totalPages={totalPages}
               onPageChange={setPageNumber}
             />
           </div>
-        </section>
-      </section>
-    </main>
+        </div>
+      </div>
+    </div>
   );
 }

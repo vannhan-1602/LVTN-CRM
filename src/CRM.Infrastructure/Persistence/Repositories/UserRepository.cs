@@ -49,6 +49,7 @@ public class UserRepository : IUserRepository
             TrangThai = user.TrangThai,
             RoleId = user.RoleId,
             RoleName = user.Role?.TenRole ?? string.Empty,
+            NhanSuId = user.NhanSuId,         
             HoTen = user.NhanSu?.HoTen,
             Email = user.NhanSu?.Email,
             CreatedAt = user.CreatedAt

@@ -5,6 +5,9 @@ using MediatR;
 namespace CRM.Application.Features.Customers.Queries.GetAllCustomers;
 
 public record GetAllCustomersQuery(
-    int PageNumber = 1,
-    int PageSize = 10,
-    string? Search = null) : IRequest<PagedResult<CustomerDto>>;
+    int PageNumber,
+    int PageSize,
+    string? Search,
+    ushort? LoaiKhachHangId,    
+    ushort? TinhTrangId          
+) : IRequest<PagedResult<CustomerDto>>;

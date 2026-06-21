@@ -2,9 +2,10 @@ using CRM.Application.Interfaces.Auth;
 
 namespace CRM.Infrastructure.Identity;
 
-/// <summary>
-/// Xác thực mật khẩu. Hỗ trợ plain-text (DB hiện tại) và BCrypt hash (prefix $2).
-/// </summary>
+
+/// Xác thực mật khẩu. Hỗ trợ plain-text (dữ liệu DB cũ) và BCrypt hash (prefix $2).
+/// Mật khẩu mới luôn được băm bằng BCrypt khi tạo/đặt lại.
+
 public class PasswordHasher : IPasswordHasher
 {
     public bool Verify(string password, string storedPassword)
@@ -21,4 +22,6 @@ public class PasswordHasher : IPasswordHasher
 
         return string.Equals(password, storedPassword, StringComparison.Ordinal);
     }
+
+    public string Hash(string password) => BCrypt.Net.BCrypt.HashPassword(password);
 }

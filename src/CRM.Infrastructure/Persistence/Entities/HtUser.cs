@@ -22,6 +22,9 @@ public class HtThongTinNhanSu
     public DateTime? UpdatedAt { get; set; }
 
     public HtUser? User { get; set; }
+
+    public HtPhongBan? PhongBan { get; set; }
+    public HtChucVu? ChucVu { get; set; }
 }
 
 public class HtUser

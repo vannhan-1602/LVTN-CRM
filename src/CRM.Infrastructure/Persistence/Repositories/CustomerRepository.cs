@@ -1,4 +1,6 @@
 using CRM.Application.Common.Models;
+using CRM.Application.Features.Customers.DTOs;
+using CRM.Application.Features.Customers.Mappings;
 using CRM.Application.Interfaces.Customers;
 using CRM.Domain.Entities.Customers;
 using CRM.Infrastructure.Persistence.Contexts;
@@ -20,41 +22,100 @@ public class CustomerRepository : ICustomerRepository
     {
         var entity = await _context.KhKhachHangs
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted, cancellationToken);
 
         return entity is null ? null : MapToDomain(entity);
     }
 
-    public async Task<PagedResult<KhachHang>> GetPagedAsync(
+    public async Task<CustomerDto?> GetByIdEnrichedAsync(ulong id, CancellationToken cancellationToken = default)
+    {
+        var result = await (
+            from kh in _context.KhKhachHangs
+            where kh.Id == id && !kh.IsDeleted
+            join loai in _context.KhLoaiKhachHangs on kh.LoaiKhachHangId equals loai.Id into loaiJoin
+            from loai in loaiJoin.DefaultIfEmpty()
+            join tinh in _context.KhTinhTrangKhachHangs on kh.TinhTrangId equals tinh.Id into tinhJoin
+            from tinh in tinhJoin.DefaultIfEmpty()
+            join ns in _context.HtThongTinNhanSu on (uint?)kh.NhanVienPhuTrachId equals (uint?)ns.Id into nsJoin
+            from ns in nsJoin.DefaultIfEmpty()
+            select new
+            {
+                KhachHang = kh,
+                TenLoai = loai != null ? loai.TenLoai : null,
+                TenTinhTrang = tinh != null ? tinh.TenTinhTrang : null,
+                TenNhanVien = ns != null ? ns.HoTen : null
+            }
+        ).FirstOrDefaultAsync(cancellationToken);
+
+        if (result is null) return null;
+
+        return CustomerMapper.ToDto(MapToDomain(result.KhachHang),
+            result.TenLoai, result.TenTinhTrang, result.TenNhanVien);
+    }
+
+    public async Task<PagedResult<CustomerDto>> GetPagedAsync(
         int pageNumber,
         int pageSize,
         string? search,
+        ushort? loaiKhachHangId,
+        ushort? tinhTrangId,
+        uint? ownerNhanSuId,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.KhKhachHangs.AsNoTracking();
+        var query =
+            from kh in _context.KhKhachHangs.AsNoTracking()
+            where !kh.IsDeleted
+            join loai in _context.KhLoaiKhachHangs on kh.LoaiKhachHangId equals loai.Id into loaiJoin
+            from loai in loaiJoin.DefaultIfEmpty()
+            join tinh in _context.KhTinhTrangKhachHangs on kh.TinhTrangId equals tinh.Id into tinhJoin
+            from tinh in tinhJoin.DefaultIfEmpty()
+            join ns in _context.HtThongTinNhanSu on (uint?)kh.NhanVienPhuTrachId equals (uint?)ns.Id into nsJoin
+            from ns in nsJoin.DefaultIfEmpty()
+            select new
+            {
+                KhachHang = kh,
+                TenLoai = loai != null ? loai.TenLoai : null,
+                TenTinhTrang = tinh != null ? tinh.TenTinhTrang : null,
+                TenNhanVien = ns != null ? ns.HoTen : null
+            };
 
         if (!string.IsNullOrWhiteSpace(search))
         {
             var keyword = search.Trim();
-            query = query.Where(c =>
-                c.TenKhachHang.Contains(keyword) ||
-                c.MaKhachHang.Contains(keyword) ||
-                (c.Email != null && c.Email.Contains(keyword)) ||
-                (c.SoDienThoai != null && c.SoDienThoai.Contains(keyword)));
+            query = query.Where(x =>
+                x.KhachHang.TenKhachHang.Contains(keyword) ||
+                x.KhachHang.MaKhachHang.Contains(keyword) ||
+                (x.KhachHang.Email != null && x.KhachHang.Email.Contains(keyword)) ||
+                (x.KhachHang.SoDienThoai != null && x.KhachHang.SoDienThoai.Contains(keyword)));
         }
+
+        if (loaiKhachHangId.HasValue)
+            query = query.Where(x => x.KhachHang.LoaiKhachHangId == loaiKhachHangId.Value);
+
+        if (tinhTrangId.HasValue)
+            query = query.Where(x => x.KhachHang.TinhTrangId == tinhTrangId.Value);
+
+        //  Sale chỉ thấy Customer mình phụ trách
+        if (ownerNhanSuId.HasValue)
+            query = query.Where(x => x.KhachHang.NhanVienPhuTrachId == ownerNhanSuId.Value);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await query
-            .OrderByDescending(c => c.CreatedAt)
-            .ThenByDescending(c => c.Id)
+            .OrderByDescending(x => x.KhachHang.CreatedAt)
+            .ThenByDescending(x => x.KhachHang.Id)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<KhachHang>
+        var dtos = items.Select(x =>
+            CustomerMapper.ToDto(MapToDomain(x.KhachHang),
+                x.TenLoai, x.TenTinhTrang, x.TenNhanVien))
+            .ToList();
+
+        return new PagedResult<CustomerDto>
         {
-            Items = items.Select(MapToDomain).ToList(),
+            Items = dtos,
             PageNumber = pageNumber,
             PageSize = pageSize,
             TotalCount = totalCount
@@ -79,12 +140,9 @@ public class CustomerRepository : ICustomerRepository
     public async Task<bool> SoftDeleteAsync(ulong id, CancellationToken cancellationToken = default)
     {
         var entity = await _context.KhKhachHangs
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted, cancellationToken);
 
-        if (entity is null)
-        {
-            return false;
-        }
+        if (entity is null) return false;
 
         entity.IsDeleted = true;
         entity.UpdatedAt = DateTime.UtcNow;
@@ -92,9 +150,7 @@ public class CustomerRepository : ICustomerRepository
         return true;
     }
 
-    public Task<bool> ExistsMaKhachHangAsync(
-        string maKhachHang,
-        ulong? excludeId = null,
+    public Task<bool> ExistsMaKhachHangAsync(string maKhachHang, ulong? excludeId = null,
         CancellationToken cancellationToken = default) =>
         _context.KhKhachHangs.AnyAsync(
             c => c.MaKhachHang == maKhachHang && (!excludeId.HasValue || c.Id != excludeId.Value),
@@ -121,42 +177,39 @@ public class CustomerRepository : ICustomerRepository
     {
         var entity = await _context.KhKhachHangs
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.MaKhachHang == maKhachHang, cancellationToken);
-
+            .FirstOrDefaultAsync(c => c.MaKhachHang == maKhachHang && !c.IsDeleted, cancellationToken);
         return entity is null ? null : MapToDomain(entity);
     }
 
-    private static KhachHang MapToDomain(KhKhachHang entity) =>
-        new()
-        {
-            Id = entity.Id,
-            MaKhachHang = entity.MaKhachHang,
-            TenKhachHang = entity.TenKhachHang,
-            LoaiKhachHangId = entity.LoaiKhachHangId,
-            TinhTrangId = entity.TinhTrangId,
-            Email = entity.Email,
-            SoDienThoai = entity.SoDienThoai,
-            MaSoThue = entity.MaSoThue,
-            NhanVienPhuTrachId = entity.NhanVienPhuTrachId,
-            IsDeleted = entity.IsDeleted,
-            CreatedAt = entity.CreatedAt,
-            UpdatedAt = entity.UpdatedAt
-        };
+    private static KhachHang MapToDomain(KhKhachHang e) => new()
+    {
+        Id = e.Id,
+        MaKhachHang = e.MaKhachHang,
+        TenKhachHang = e.TenKhachHang,
+        LoaiKhachHangId = e.LoaiKhachHangId,
+        TinhTrangId = e.TinhTrangId,
+        Email = e.Email,
+        SoDienThoai = e.SoDienThoai,
+        MaSoThue = e.MaSoThue,
+        NhanVienPhuTrachId = e.NhanVienPhuTrachId,
+        IsDeleted = e.IsDeleted,
+        CreatedAt = e.CreatedAt,
+        UpdatedAt = e.UpdatedAt
+    };
 
-    private static KhKhachHang MapToEntity(KhachHang customer) =>
-        new()
-        {
-            Id = customer.Id,
-            MaKhachHang = customer.MaKhachHang,
-            TenKhachHang = customer.TenKhachHang,
-            LoaiKhachHangId = customer.LoaiKhachHangId,
-            TinhTrangId = customer.TinhTrangId,
-            Email = customer.Email,
-            SoDienThoai = customer.SoDienThoai,
-            MaSoThue = customer.MaSoThue,
-            NhanVienPhuTrachId = customer.NhanVienPhuTrachId,
-            IsDeleted = customer.IsDeleted,
-            CreatedAt = customer.CreatedAt,
-            UpdatedAt = customer.UpdatedAt
-        };
+    private static KhKhachHang MapToEntity(KhachHang d) => new()
+    {
+        Id = d.Id,
+        MaKhachHang = d.MaKhachHang,
+        TenKhachHang = d.TenKhachHang,
+        LoaiKhachHangId = d.LoaiKhachHangId,
+        TinhTrangId = d.TinhTrangId,
+        Email = d.Email,
+        SoDienThoai = d.SoDienThoai,
+        MaSoThue = d.MaSoThue,
+        NhanVienPhuTrachId = d.NhanVienPhuTrachId,
+        IsDeleted = d.IsDeleted,
+        CreatedAt = d.CreatedAt,
+        UpdatedAt = d.UpdatedAt
+    };
 }

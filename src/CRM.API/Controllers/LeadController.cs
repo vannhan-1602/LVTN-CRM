@@ -1,4 +1,4 @@
-﻿using CRM.Application.Common.Constants;
+using CRM.Application.Common.Constants;
 using CRM.Application.Common.Models;
 using CRM.Application.Features.Customers.DTOs;
 using CRM.Application.Features.Leads.Commands.ConvertLead;
@@ -16,7 +16,7 @@ namespace CRM.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = Policies.SalesTeam)]
+    [Authorize(Policy = Policies.SalesTeam)]   // Sale + Manager
     public class LeadController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -59,16 +59,18 @@ namespace CRM.API.Controllers
             return Ok(ApiResponse<LeadDto>.Ok(result, "Cập nhật lead thành công."));
         }
 
+        // ManagerOnly 
         [HttpDelete("{id:long}")]
-        [Authorize(Policy = Policies.AdminOrManager)]
+        [Authorize(Policy = Policies.ManagerOnly)]
         public async Task<IActionResult> Delete(ulong id, CancellationToken ct)
         {
             await _mediator.Send(new DeleteLeadCommand(id), ct);
             return Ok(ApiResponse.Ok("Xóa lead thành công."));
         }
 
+        // Convert của Sale "chuyển đổi lead thành khách hàng"
+        // nằm trong quyền hạn chính của Sale
         [HttpPost("{id:long}/convert")]
-        [Authorize(Policy = Policies.AdminOrManager)]
         public async Task<IActionResult> Convert(ulong id, [FromBody] ConvertLeadCommand request, CancellationToken ct)
         {
             var result = await _mediator.Send(request with { LeadId = id }, ct);

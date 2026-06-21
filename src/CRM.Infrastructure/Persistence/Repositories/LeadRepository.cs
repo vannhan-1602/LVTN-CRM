@@ -1,15 +1,10 @@
-﻿using CRM.Application.Common.Models;
+using CRM.Application.Common.Models;
 using CRM.Application.Interfaces.Leads;
 using CRM.Domain.Entities.Customers;
 using CRM.Infrastructure.Persistence.Contexts;
 using CRM.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using CRM.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CRM.Infrastructure.Persistence.Repositories
 {
@@ -25,7 +20,7 @@ namespace CRM.Infrastructure.Persistence.Repositories
         }
 
         public async Task<PagedResult<Lead>> GetPagedAsync(
-            int pageNumber, int pageSize, string? search, CancellationToken ct = default)
+            int pageNumber, int pageSize, string? search, uint? ownerNhanSuId, CancellationToken ct = default)
         {
             var query = _context.Set<KhLeadEntity>().AsNoTracking();
 
@@ -33,6 +28,10 @@ namespace CRM.Infrastructure.Persistence.Repositories
                 query = query.Where(x =>
                     x.TenLead.Contains(search) ||
                     (x.TenCongTy != null && x.TenCongTy.Contains(search)));
+
+            // Sale chỉ thấy Lead mình phụ trách
+            if (ownerNhanSuId.HasValue)
+                query = query.Where(x => x.NhanVienPhuTrach_Id == ownerNhanSuId.Value);
 
             var total = await query.CountAsync(ct);
             var items = await query

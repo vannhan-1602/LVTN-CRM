@@ -20,4 +20,28 @@ public static class CustomerMapper
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };
+
+    
+    public static CustomerDto ToDto(
+        KhachHang customer,
+        string? tenLoai,
+        string? tenTinhTrang,
+        string? tenNhanVien) =>
+        new()
+        {
+            Id = customer.Id,
+            MaKhachHang = customer.MaKhachHang,
+            TenKhachHang = customer.TenKhachHang,
+            LoaiKhachHangId = customer.LoaiKhachHangId,
+            TenLoaiKhachHang = tenLoai,
+            TinhTrangId = customer.TinhTrangId,
+            TenTinhTrang = tenTinhTrang,
+            Email = customer.Email,
+            SoDienThoai = customer.SoDienThoai,
+            MaSoThue = customer.MaSoThue,
+            NhanVienPhuTrachId = customer.NhanVienPhuTrachId,
+            TenNhanVienPhuTrach = tenNhanVien,
+            CreatedAt = customer.CreatedAt,
+            UpdatedAt = customer.UpdatedAt
+        };
 }

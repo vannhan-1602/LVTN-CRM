@@ -5,7 +5,9 @@ using CRM.Application.Common.Models;
 using AppValidationException = CRM.Application.Common.Exceptions.ValidationException;
 
 namespace CRM.API.Middleware;
-
+//tác dụng : Middleware này được sử dụng để xử lý các ngoại lệ (exceptions) toàn cục trong ứng dụng ASP.NET Core.
+//Nó giúp bắt các lỗi không được xử lý trong pipeline của ứng dụng và trả về phản hồi JSON có cấu trúc chuẩn cho client,
+//đồng thời ghi log các lỗi này.
 public class GlobalExceptionHandlerMiddleware
 {
     private readonly RequestDelegate _next;

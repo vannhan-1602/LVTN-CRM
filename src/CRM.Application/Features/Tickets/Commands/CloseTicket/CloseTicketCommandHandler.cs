@@ -1,7 +1,9 @@
-﻿using CRM.Application.Common.Exceptions;
+using CRM.Application.Common.Constants;
+using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Tickets.DTOs;
 using CRM.Application.Features.Tickets.Mappings;
 using CRM.Application.Interfaces.Audit;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Tickets;
 using CRM.Domain.Entities.Tickets;
 using CRM.Domain.Enums;
@@ -11,9 +13,9 @@ using Microsoft.Extensions.Logging;
 
 namespace CRM.Application.Features.Tickets.Commands.CloseTicket
 {
-  
-    /// Đóng ticket: chuyển trạng thái sang "Dong", ghi nhận ngày đóng, lý do đóng
-    /// và thêm một bản phản hồi loại DongTicket.
+
+    // Đóng ticket: chuyển trạng thái sang "Dong", ghi nhận ngày đóng, lý do đóng
+    // và thêm một bản phản hồi loại DongTicket.
 
     public class CloseTicketCommandHandler : IRequestHandler<CloseTicketCommand, TicketDto>
     {
@@ -21,17 +23,20 @@ namespace CRM.Application.Features.Tickets.Commands.CloseTicket
         private readonly ITicketRepository _ticketRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogPublisher _auditLogPublisher;
+        private readonly ICurrentUserService _currentUser;
         private readonly ILogger<CloseTicketCommandHandler> _logger;
 
         public CloseTicketCommandHandler(
             ITicketRepository ticketRepository,
             IUnitOfWork unitOfWork,
             IAuditLogPublisher auditLogPublisher,
+            ICurrentUserService currentUser,
             ILogger<CloseTicketCommandHandler> logger)
         {
             _ticketRepository = ticketRepository;
             _unitOfWork = unitOfWork;
             _auditLogPublisher = auditLogPublisher;
+            _currentUser = currentUser;
             _logger = logger;
         }
 
@@ -39,6 +44,10 @@ namespace CRM.Application.Features.Tickets.Commands.CloseTicket
         {
             var ticket = await _ticketRepository.GetByIdAsync(request.Id, cancellationToken)
                 ?? throw new NotFoundException(nameof(Ticket), request.Id);
+
+            //  Chặn Sale đóng Ticket không phải mình xử lý
+            if (_currentUser.Role == Roles.Sale && ticket.NhanVienXuLyId != _currentUser.NhanSuId)
+                throw new ForbiddenException("Bạn không có quyền thao tác trên ticket của nhân viên khác.");
 
             if (ticket.TrangThai == TicketStatus.Dong)
                 throw new BusinessRuleException("Ticket đã đóng trước đó.");

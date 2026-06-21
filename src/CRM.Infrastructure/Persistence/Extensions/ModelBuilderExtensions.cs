@@ -7,10 +7,9 @@ namespace CRM.Infrastructure.Persistence.Extensions;
 
 public static class ModelBuilderExtensions
 {
-    /// <summary>
-    /// Các bảng có cột IsDeleted trong CRMOnline:
-    /// BH_CoHoiBanHang, KH_KhachHang, TK_Ticket
-    /// </summary>
+
+    /// Các bảng có cột IsDeleted trong db BH_CoHoiBanHang, KH_KhachHang, TK_Ticket
+  
     private static readonly HashSet<string> SoftDeleteTableNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "BH_CoHoiBanHang",

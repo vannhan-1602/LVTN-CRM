@@ -41,6 +41,12 @@ public class JwtTokenService : IJwtTokenService
             claims.Add(new Claim("hoTen", authUser.HoTen));
         }
 
+        // Dùng để filter dữ liệu theo phạm vi phụ trách (Sale chỉ thấy dữ liệu của mình).
+        if (authUser.NhanSuId.HasValue)
+        {
+            claims.Add(new Claim("nhanSuId", authUser.NhanSuId.Value.ToString()));
+        }
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

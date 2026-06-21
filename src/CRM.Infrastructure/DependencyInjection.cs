@@ -1,9 +1,13 @@
 using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Auth;
 using CRM.Application.Interfaces.Common;
+using CRM.Application.Interfaces.Contracts;
 using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Leads;
+using CRM.Application.Interfaces.Products;
+using CRM.Application.Interfaces.Quotes;
 using CRM.Application.Interfaces.Tickets;
+using CRM.Application.Interfaces.Users;
 using CRM.Domain.Interfaces.Messaging;
 using CRM.Domain.Interfaces.Repositories;
 using CRM.Domain.Interfaces.Services;
@@ -53,6 +57,10 @@ public static class DependencyInjection
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<ILeadRepository, LeadRepository>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IUserManagementRepository, UserManagementRepository>();
+        services.AddScoped<IQuoteRepository, QuoteRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IContractRepository, ContractRepository>();
         services.AddScoped<IAuditLogPublisher, AuditLogPublisher>();
         services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();

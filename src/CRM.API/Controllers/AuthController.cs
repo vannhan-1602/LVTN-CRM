@@ -1,6 +1,7 @@
 using CRM.Application.Common.Models;
 using CRM.Application.Features.Auth.Commands.Login;
 using CRM.Application.Features.Auth.DTOs;
+using CRM.Application.Features.Auth.Queries.GetStaffList;
 using CRM.Application.Features.Auth.Queries.GetUsers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -34,6 +35,7 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<LoginResponseDto>.Ok(result, "Đăng nhập thành công."));
     }
 
+    // Danh sách tài khoản đầy đủ — chỉ Admin 
     [HttpGet("users")]
     [Authorize(Policy = Policies.AdminOnly)]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<UserSummaryDto>>), StatusCodes.Status200OK)]
@@ -43,5 +45,18 @@ public class AuthController : ControllerBase
     {
         var users = await _mediator.Send(new GetUsersQuery(), cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<UserSummaryDto>>.Ok(users));
+    }
+
+    
+    // Danh sách nhân viên tối giản (Id/HoTen/Role) cho dropdown
+    // "Nhân viên phụ trách / xử lý" ở Customer/Lead/Ticket. Mở cho mọi role
+    // đã đăng nhập (không giới hạn AdminOnly như /users).
+    [HttpGet("staff-list")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<StaffLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStaffList(CancellationToken cancellationToken)
+    {
+        var staff = await _mediator.Send(new GetStaffListQuery(), cancellationToken);
+        return Ok(ApiResponse<IReadOnlyList<StaffLookupDto>>.Ok(staff));
     }
 }

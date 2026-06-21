@@ -24,11 +24,13 @@ public static class AuthorizationExtensions
             options.AddPolicy(Policies.AdminOrManager, policy =>
                 policy.RequireRole(Roles.Admin, Roles.Manager));
 
+           
             options.AddPolicy(Policies.SalesTeam, policy =>
-                policy.RequireRole(Roles.Admin, Roles.Manager, Roles.Sale));
+                policy.RequireRole(Roles.Manager, Roles.Sale));
 
+           
             options.AddPolicy(Policies.FinanceTeam, policy =>
-                policy.RequireRole(Roles.Admin, Roles.Accountant));
+                policy.RequireRole(Roles.Manager, Roles.Accountant));
         });
 
         return services;

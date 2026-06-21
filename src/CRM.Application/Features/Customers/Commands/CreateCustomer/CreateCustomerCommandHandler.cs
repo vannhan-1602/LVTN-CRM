@@ -1,6 +1,8 @@
+using CRM.Application.Common.Constants;
 using CRM.Application.Features.Customers.DTOs;
 using CRM.Application.Features.Customers.Mappings;
 using CRM.Application.Interfaces.Audit;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Customers;
 using CRM.Domain.Entities.Customers;
 using CRM.Domain.Interfaces.Repositories;
@@ -17,23 +19,31 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
     private readonly ICustomerRepository _customerRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLogPublisher;
+    private readonly ICurrentUserService _currentUser;
     private readonly ILogger<CreateCustomerCommandHandler> _logger;
 
     public CreateCustomerCommandHandler(
         ICustomerRepository customerRepository,
         IUnitOfWork unitOfWork,
         IAuditLogPublisher auditLogPublisher,
+        ICurrentUserService currentUser,
         ILogger<CreateCustomerCommandHandler> logger)
     {
         _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
         _auditLogPublisher = auditLogPublisher;
+        _currentUser = currentUser;
         _logger = logger;
     }
 
     public async Task<CustomerDto> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
     {
         var maKhachHang = await _customerRepository.GenerateMaKhachHangAsync(cancellationToken);
+
+        // Sale tạo Customer luôn tự gán cho chính mình; Manager chỉ định tùy ý.
+        var nhanVienPhuTrachId = _currentUser.Role == Roles.Sale
+            ? _currentUser.NhanSuId
+            : request.NhanVienPhuTrachId;
 
         var customer = new KhachHang
         {
@@ -44,7 +54,7 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
             Email = request.Email?.Trim(),
             SoDienThoai = request.SoDienThoai?.Trim(),
             MaSoThue = request.MaSoThue?.Trim(),
-            NhanVienPhuTrachId = request.NhanVienPhuTrachId,
+            NhanVienPhuTrachId = nhanVienPhuTrachId,
             IsDeleted = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

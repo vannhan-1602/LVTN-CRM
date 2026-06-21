@@ -1,7 +1,9 @@
-﻿using CRM.Application.Common.Exceptions;
+using CRM.Application.Common.Constants;
+using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Customers.DTOs;
 using CRM.Application.Features.Customers.Mappings;
 using CRM.Application.Interfaces.Audit;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Leads;
 using CRM.Domain.Entities.Customers;
@@ -9,11 +11,6 @@ using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CRM.Application.Features.Leads.Commands.ConvertLead
 {
@@ -23,6 +20,7 @@ namespace CRM.Application.Features.Leads.Commands.ConvertLead
         private readonly ICustomerRepository _customerRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogPublisher _auditLogPublisher;
+        private readonly ICurrentUserService _currentUser;
         private readonly ILogger<ConvertLeadCommandHandler> _logger;
 
         public ConvertLeadCommandHandler(
@@ -30,12 +28,14 @@ namespace CRM.Application.Features.Leads.Commands.ConvertLead
             ICustomerRepository customerRepository,
             IUnitOfWork unitOfWork,
             IAuditLogPublisher auditLogPublisher,
+            ICurrentUserService currentUser,
             ILogger<ConvertLeadCommandHandler> logger)
         {
             _leadRepository = leadRepository;
             _customerRepository = customerRepository;
             _unitOfWork = unitOfWork;
             _auditLogPublisher = auditLogPublisher;
+            _currentUser = currentUser;
             _logger = logger;
         }
 
@@ -44,10 +44,13 @@ namespace CRM.Application.Features.Leads.Commands.ConvertLead
             var lead = await _leadRepository.GetByIdAsync(request.LeadId, cancellationToken)
                 ?? throw new NotFoundException(nameof(Lead), request.LeadId);
 
+            // Chặn Sale chuyển đổi Lead không phải mình phụ trách
+            if (_currentUser.Role == Roles.Sale && lead.NhanVienPhuTrachId != _currentUser.NhanSuId)
+                throw new ForbiddenException("Bạn không có quyền thao tác trên dữ liệu của nhân viên khác.");
+
             if (lead.TinhTrang == LeadTinhTrang.DaChuyenDoi)
                 throw new BusinessRuleException("Lead này đã được chuyển đổi thành khách hàng.");
 
-            // Tạo khách hàng mới từ thông tin lead
             var maKhachHang = await _customerRepository.GenerateMaKhachHangAsync(cancellationToken);
             var customer = new KhachHang
             {
@@ -63,14 +66,12 @@ namespace CRM.Application.Features.Leads.Commands.ConvertLead
                 UpdatedAt = DateTime.UtcNow
             };
 
-            // Cập nhật trạng thái lead — cả 2 thao tác trong cùng 1 transaction
             lead.TinhTrang = LeadTinhTrang.DaChuyenDoi;
             lead.UpdatedAt = DateTime.UtcNow;
 
             var createdCustomer = await _customerRepository.AddAsync(customer, cancellationToken);
             await _leadRepository.UpdateAsync(lead, cancellationToken);
 
-            // SaveChangesAsync commit cả 2 trong 1 lần — TransactionBehavior bọc ngoài
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             createdCustomer = await _customerRepository.GetByMaKhachHangAsync(maKhachHang, cancellationToken)

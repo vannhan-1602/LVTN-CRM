@@ -15,6 +15,8 @@ public class LoginResponseDto
     public string Role { get; set; } = string.Empty;
     public string? HoTen { get; set; }
     public string? Email { get; set; }
+
+    public uint? NhanSuId { get; set; }
 }
 
 public class UserSummaryDto

@@ -1,7 +1,10 @@
-﻿using CRM.Application.Common.Exceptions;
+using CRM.Application.Common.Constants;
+using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Tickets.DTOs;
 using CRM.Application.Features.Tickets.Mappings;
 using CRM.Application.Interfaces.Audit;
+using CRM.Application.Interfaces.Common;
+using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Tickets;
 using CRM.Domain.Entities.Tickets;
 using CRM.Domain.Enums;
@@ -15,32 +18,51 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
     {
         private const string AuditTable = "TK_Ticket";
         private readonly ITicketRepository _ticketRepository;
+        private readonly ICustomerRepository _customerRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogPublisher _auditLogPublisher;
+        private readonly ICurrentUserService _currentUser;
         private readonly ILogger<CreateTicketCommandHandler> _logger;
 
         public CreateTicketCommandHandler(
             ITicketRepository ticketRepository,
+            ICustomerRepository customerRepository,
             IUnitOfWork unitOfWork,
             IAuditLogPublisher auditLogPublisher,
+            ICurrentUserService currentUser,
             ILogger<CreateTicketCommandHandler> logger)
         {
             _ticketRepository = ticketRepository;
+            _customerRepository = customerRepository;
             _unitOfWork = unitOfWork;
             _auditLogPublisher = auditLogPublisher;
+            _currentUser = currentUser;
             _logger = logger;
         }
 
         public async Task<TicketDto> Handle(CreateTicketCommand request, CancellationToken cancellationToken)
         {
-            if (!await _ticketRepository.KhachHangExistsAsync(request.KhachHangId, cancellationToken))
-                throw new NotFoundException(nameof(CRM.Domain.Entities.Customers.KhachHang), request.KhachHangId);
+            var khachHang = await _customerRepository.GetByIdAsync(request.KhachHangId, cancellationToken)
+                ?? throw new NotFoundException(nameof(CRM.Domain.Entities.Customers.KhachHang), request.KhachHangId);
+
+            // Sale chỉ được tạo Ticket cho Customer mình phụ trách 
+            if (_currentUser.Role == Roles.Sale && khachHang.NhanVienPhuTrachId != _currentUser.NhanSuId)
+                throw new ForbiddenException("Bạn chỉ có thể tạo ticket cho khách hàng mình phụ trách.");
 
             if (request.LoaiTicketId.HasValue &&
                 !await _ticketRepository.LoaiTicketExistsAsync(request.LoaiTicketId.Value, cancellationToken))
                 throw new BusinessRuleException("Loại ticket không hợp lệ hoặc đã bị khóa.");
 
             var maTicket = await _ticketRepository.GenerateMaTicketAsync(cancellationToken);
+
+            // Sale tạo ticket -> LUÔN là người tiếp nhận và người xử lý mặc định
+            // Manager được toàn quyền chỉ định theo request.
+            var nhanVienTiepNhanId = _currentUser.Role == Roles.Sale
+                ? _currentUser.NhanSuId
+                : request.NhanVienTiepNhanId;
+            var nhanVienXuLyId = _currentUser.Role == Roles.Sale
+                ? _currentUser.NhanSuId
+                : request.NhanVienXuLyId;
 
             var ticket = new Ticket
             {
@@ -59,8 +81,8 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
                     ? TicketSource.Phone
                     : Enum.Parse<TicketSource>(request.NguonTiepNhan),
                 TrangThai = TicketStatus.Moi,
-                NhanVienTiepNhanId = request.NhanVienTiepNhanId,
-                NhanVienXuLyId = request.NhanVienXuLyId,
+                NhanVienTiepNhanId = nhanVienTiepNhanId,
+                NhanVienXuLyId = nhanVienXuLyId,
                 NgayHenXuLy = request.NgayHenXuLy,
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow,

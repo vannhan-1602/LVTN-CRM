@@ -1,4 +1,4 @@
-﻿using CRM.Application.Common.Constants;
+using CRM.Application.Common.Constants;
 using CRM.Application.Common.Models;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Features.Tickets.Commands.AddPhanHoi;
@@ -18,7 +18,9 @@ namespace CRM.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //đổi thành SalesTeam (Sale + Manager)
+    
+    [Authorize(Policy = Policies.SalesTeam)]
     public class TicketController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -76,8 +78,9 @@ namespace CRM.API.Controllers
             return Ok(ApiResponse<TicketDto>.Ok(result, "Cập nhật ticket thành công."));
         }
 
+        // ManagerOnly
         [HttpDelete("{id:long}")]
-        [Authorize(Policy = Policies.AdminOrManager)]
+        [Authorize(Policy = Policies.ManagerOnly)]
         public async Task<IActionResult> Delete(ulong id, CancellationToken ct)
         {
             await _mediator.Send(new DeleteTicketCommand(id), ct);

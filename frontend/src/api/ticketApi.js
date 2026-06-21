@@ -8,7 +8,8 @@ const ticketApi = {
   delete: (id) => axiosClient.delete(`/Ticket/${id}`),
   assign: (id, data) => axiosClient.post(`/Ticket/${id}/assign`, data),
   close: (id, data) => axiosClient.post(`/Ticket/${id}/close`, data),
-  addPhanHoi: (id, data) => axiosClient.post(`/Ticket/${id}/phan-hoi`, data),
+  getPhanHois: (id) => axiosClient.get(`/Ticket/${id}/phanhoi`),
+  addPhanHoi: (id, data) => axiosClient.post(`/Ticket/${id}/phanhoi`, data),
 };
 
 export default ticketApi;

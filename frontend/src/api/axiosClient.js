@@ -2,31 +2,32 @@ import axios from "axios";
 
 const axiosClient = axios.create({
   baseURL: "https://localhost:7071/api",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-// Attach JWT token to every request
 axiosClient.interceptors.request.use((config) => {
-  const raw = localStorage.getItem("auth-storage");
-  if (raw) {
-    try {
-      const parsed = JSON.parse(raw);
-      const token = parsed?.state?.token;
+  try {
+    const raw = localStorage.getItem("auth-storage");
+    if (raw) {
+      const token = JSON.parse(raw)?.state?.token;
       if (token) config.headers.Authorization = `Bearer ${token}`;
-    } catch {}
-  }
+    }
+  } catch {}
   return config;
 });
 
-// Handle 401 globally
 axiosClient.interceptors.response.use(
-  (res) => res,
+  (res) => res.data,
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem("auth-storage");
-      window.location.href = "/login";
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
-    return Promise.reject(err);
+    return Promise.reject(err.response?.data ?? { message: err.message });
   },
 );
 

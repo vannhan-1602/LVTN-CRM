@@ -14,7 +14,7 @@ namespace CRM.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = Policies.SalesTeam)]
+[Authorize(Policy = Policies.SalesTeam)]   // Sale + Manager 
 public class CustomerController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -30,10 +30,12 @@ public class CustomerController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? search = null,
+        [FromQuery] ushort? loaiKhachHangId = null,
+        [FromQuery] ushort? tinhTrangId = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _mediator.Send(
-            new GetAllCustomersQuery(pageNumber, pageSize, search),
+            new GetAllCustomersQuery(pageNumber, pageSize, search, loaiKhachHangId, tinhTrangId),
             cancellationToken);
 
         return Ok(ApiResponse<PagedResult<CustomerDto>>.Ok(result));
@@ -95,8 +97,9 @@ public class CustomerController : ControllerBase
         return Ok(ApiResponse<CustomerDto>.Ok(result, "Cập nhật khách hàng thành công."));
     }
 
+    // ManagerOnly
     [HttpDelete("{id:long}")]
-    [Authorize(Policy = Policies.AdminOrManager)]
+    [Authorize(Policy = Policies.ManagerOnly)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(ulong id, CancellationToken cancellationToken)

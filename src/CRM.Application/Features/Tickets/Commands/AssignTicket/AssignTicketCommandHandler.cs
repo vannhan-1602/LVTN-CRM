@@ -1,7 +1,9 @@
-﻿using CRM.Application.Common.Exceptions;
+using CRM.Application.Common.Constants;
+using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Tickets.DTOs;
 using CRM.Application.Features.Tickets.Mappings;
 using CRM.Application.Interfaces.Audit;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Tickets;
 using CRM.Domain.Entities.Tickets;
 using CRM.Domain.Enums;
@@ -11,27 +13,34 @@ using Microsoft.Extensions.Logging;
 
 namespace CRM.Application.Features.Tickets.Commands.AssignTicket
 {
-
-    // Gán (hoặc chuyển) nhân viên xử lý cho ticket. Nếu ticket đang ở trạng thái "Mới" sẽ
-    // tự động chuyển sang "Đang xử lý" và ghi nhận một bản phản hồi nội bộ.
-
+    /// <summary>
+    /// Gán (hoặc chuyển) nhân viên xử lý cho ticket. Nếu ticket đang ở trạng thái "Mới" sẽ
+    /// tự động chuyển sang "Đang xử lý" và ghi nhận một bản phản hồi nội bộ.
+    ///
+    /// Quy tắc quyền hạn: Sale chỉ được thao tác trên ticket mình đang phụ trách
+    /// (tự nhận hoặc cập nhật ticket của chính mình) — việc điều phối/chuyển ticket
+    /// cho nhân viên khác do Manager thực hiện (Manager không bị giới hạn ở đây).
+    /// </summary>
     public class AssignTicketCommandHandler : IRequestHandler<AssignTicketCommand, TicketDto>
     {
         private const string AuditTable = "TK_Ticket";
         private readonly ITicketRepository _ticketRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogPublisher _auditLogPublisher;
+        private readonly ICurrentUserService _currentUser;
         private readonly ILogger<AssignTicketCommandHandler> _logger;
 
         public AssignTicketCommandHandler(
             ITicketRepository ticketRepository,
             IUnitOfWork unitOfWork,
             IAuditLogPublisher auditLogPublisher,
+            ICurrentUserService currentUser,
             ILogger<AssignTicketCommandHandler> logger)
         {
             _ticketRepository = ticketRepository;
             _unitOfWork = unitOfWork;
             _auditLogPublisher = auditLogPublisher;
+            _currentUser = currentUser;
             _logger = logger;
         }
 
@@ -39,6 +48,19 @@ namespace CRM.Application.Features.Tickets.Commands.AssignTicket
         {
             var ticket = await _ticketRepository.GetByIdAsync(request.Id, cancellationToken)
                 ?? throw new NotFoundException(nameof(Ticket), request.Id);
+
+            if (_currentUser.Role == Roles.Sale)
+            {
+                // Sale chỉ được thao tác trên ticket hiện đang là của mình (hoặc chưa
+                // ai nhận — NhanVienXuLyId null) và chỉ được tự gán cho chính mình,
+                // không được chuyển ticket cho đồng nghiệp khác.
+                var isOwnedByMeOrUnassigned = ticket.NhanVienXuLyId == null || ticket.NhanVienXuLyId == _currentUser.NhanSuId;
+                if (!isOwnedByMeOrUnassigned)
+                    throw new ForbiddenException("Bạn không có quyền thao tác trên ticket của nhân viên khác.");
+
+                if (request.NhanVienXuLyId != _currentUser.NhanSuId)
+                    throw new ForbiddenException("Bạn chỉ có thể tự nhận xử lý ticket, không thể gán cho người khác.");
+            }
 
             if (ticket.TrangThai == TicketStatus.Dong)
                 throw new BusinessRuleException("Ticket đã đóng, không thể gán xử lý.");
