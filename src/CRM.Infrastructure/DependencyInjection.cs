@@ -1,9 +1,12 @@
+using CRM.Application.Interfaces.Activities;
+using CRM.Application.Interfaces.Addresses;
 using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Auth;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Contracts;
 using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Leads;
+using CRM.Application.Interfaces.Opportunities;
 using CRM.Application.Interfaces.Products;
 using CRM.Application.Interfaces.Quotes;
 using CRM.Application.Interfaces.Tickets;
@@ -61,6 +64,9 @@ public static class DependencyInjection
         services.AddScoped<IQuoteRepository, QuoteRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IContractRepository, ContractRepository>();
+        services.AddScoped<IOpportunityRepository, OpportunityRepository>();
+        services.AddScoped<IActivityRepository, ActivityRepository>();
+        services.AddScoped<IAddressRepository, AddressRepository>();
         services.AddScoped<IAuditLogPublisher, AuditLogPublisher>();
         services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();

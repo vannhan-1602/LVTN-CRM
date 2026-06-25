@@ -40,7 +40,7 @@ public class UserRepository : IUserRepository
         return users.Select(MapToUserAccount).ToList();
     }
 
-    private static UserAccount MapToUserAccount(Persistence.Entities.HtUser user) =>
+    private static UserAccount MapToUserAccount(Persistence.Entities.HtUserEntity user) =>
         new()
         {
             Id = user.Id,
@@ -49,7 +49,7 @@ public class UserRepository : IUserRepository
             TrangThai = user.TrangThai,
             RoleId = user.RoleId,
             RoleName = user.Role?.TenRole ?? string.Empty,
-            NhanSuId = user.NhanSuId,         
+            NhanSuId = user.NhanSuId,
             HoTen = user.NhanSu?.HoTen,
             Email = user.NhanSu?.Email,
             CreatedAt = user.CreatedAt

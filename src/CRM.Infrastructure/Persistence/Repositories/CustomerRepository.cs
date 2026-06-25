@@ -59,7 +59,7 @@ public class CustomerRepository : ICustomerRepository
         string? search,
         ushort? loaiKhachHangId,
         ushort? tinhTrangId,
-        uint? ownerNhanSuId,
+        uint? ownerUserId,
         CancellationToken cancellationToken = default)
     {
         var query =
@@ -95,9 +95,9 @@ public class CustomerRepository : ICustomerRepository
         if (tinhTrangId.HasValue)
             query = query.Where(x => x.KhachHang.TinhTrangId == tinhTrangId.Value);
 
-        //  Sale chỉ thấy Customer mình phụ trách
-        if (ownerNhanSuId.HasValue)
-            query = query.Where(x => x.KhachHang.NhanVienPhuTrachId == ownerNhanSuId.Value);
+        //  Sale chỉ thấy Customer mình phụ trách 
+        if (ownerUserId.HasValue)
+            query = query.Where(x => x.KhachHang.NhanVienPhuTrachId == ownerUserId.Value);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -181,7 +181,7 @@ public class CustomerRepository : ICustomerRepository
         return entity is null ? null : MapToDomain(entity);
     }
 
-    private static KhachHang MapToDomain(KhKhachHang e) => new()
+    private static KhachHang MapToDomain(KhKhachHangEntity e) => new()
     {
         Id = e.Id,
         MaKhachHang = e.MaKhachHang,
@@ -197,7 +197,7 @@ public class CustomerRepository : ICustomerRepository
         UpdatedAt = e.UpdatedAt
     };
 
-    private static KhKhachHang MapToEntity(KhachHang d) => new()
+    private static KhKhachHangEntity MapToEntity(KhachHang d) => new()
     {
         Id = d.Id,
         MaKhachHang = d.MaKhachHang,

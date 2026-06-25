@@ -82,7 +82,7 @@ public class UserManagementRepository : IUserManagementRepository
         CancellationToken ct = default)
     {
         //  tạo nhân sự trước, user sau
-        var nhanSu = new HtThongTinNhanSu
+        var nhanSu = new HtThongTinNhanSuEntity
         {
             HoTen = hoTen,
             Email = email,
@@ -96,7 +96,7 @@ public class UserManagementRepository : IUserManagementRepository
         await _context.HtThongTinNhanSu.AddAsync(nhanSu, ct);
         await _context.SaveChangesAsync(ct); // cần Id của nhân sự trước khi tạo user
 
-        var user = new HtUser
+        var user = new HtUserEntity
         {
             NhanSuId = nhanSu.Id,
             Username = username,

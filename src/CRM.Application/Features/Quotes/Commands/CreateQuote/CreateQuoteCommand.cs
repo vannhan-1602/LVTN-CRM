@@ -72,8 +72,8 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
         var khachHang = await _customerRepository.GetByIdAsync(request.KhachHangId, ct)
             ?? throw new NotFoundException(nameof(CRM.Domain.Entities.Customers.KhachHang), request.KhachHangId);
 
-        //  Sale chỉ lập báo giá cho khách hàng mình phụ trách.
-        if (_currentUser.Role == Roles.Sale && khachHang.NhanVienPhuTrachId != _currentUser.NhanSuId)
+        // Sale chỉ lập báo giá cho khách hàng mình phụ trách.
+        if (_currentUser.Role == Roles.Sale && khachHang.NhanVienPhuTrachId != _currentUser.UserId)
             throw new ForbiddenException("Bạn chỉ có thể lập báo giá cho khách hàng mình phụ trách.");
 
         var chiTietInputs = new List<BaoGiaChiTietInput>();
@@ -87,7 +87,7 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
             if (!product.DangKinhDoanh)
                 throw new BusinessRuleException($"Sản phẩm '{product.TenSP}' đã ngừng kinh doanh, không thể đưa vào báo giá.");
 
-            var donGia = item.DonGia ?? product.GiaBan;
+            var donGia = item.DonGia ?? product.GiaBan ?? 0m;
             chiTietInputs.Add(new BaoGiaChiTietInput(item.SanPhamId, item.SoLuong, donGia));
             tongTien += item.SoLuong * donGia;
         }

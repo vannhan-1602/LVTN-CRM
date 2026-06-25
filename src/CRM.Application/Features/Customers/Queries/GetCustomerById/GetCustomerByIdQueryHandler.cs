@@ -25,8 +25,8 @@ public class GetCustomerByIdQueryHandler : IRequestHandler<GetCustomerByIdQuery,
         var customer = await _customerRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(KhachHang), request.Id);
 
-        //  Chặn Sale xem Customer không phải của mình
-        if (_currentUser.Role == Roles.Sale && customer.NhanVienPhuTrachId != _currentUser.NhanSuId)
+        // Chặn Sale xem Customer không phải của mình.
+        if (_currentUser.Role == Roles.Sale && customer.NhanVienPhuTrachId != _currentUser.UserId)
             throw new ForbiddenException("Bạn không có quyền xem dữ liệu của nhân viên khác.");
 
         return CustomerMapper.ToDto(customer);

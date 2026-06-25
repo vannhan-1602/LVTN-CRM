@@ -16,7 +16,7 @@ public interface ICustomerRepository
         ushort? loaiKhachHangId,
         ushort? tinhTrangId,
         //  null = không giới hạn (Manager); có giá trị = chỉ Customer của Sale đó
-        uint? ownerNhanSuId,
+        uint? ownerUserId,
         CancellationToken cancellationToken = default);
 
     Task<KhachHang> AddAsync(KhachHang customer, CancellationToken cancellationToken = default);

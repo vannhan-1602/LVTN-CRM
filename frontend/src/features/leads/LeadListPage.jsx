@@ -6,6 +6,7 @@ import Pagination from "../../components/common/Pagination";
 import {
   ROLES,
   LEAD_TINH_TRANG_OPTIONS,
+  LEAD_TINH_TRANG_LABEL,
   LEAD_TINH_TRANG_COLOR,
 } from "../../utils/constants";
 import { formatDateTime } from "../../utils/formatters";
@@ -541,7 +542,10 @@ export default function LeadListPage() {
                       <td className="px-4 py-3">
                         {item.tinhTrang ? (
                           <Badge
-                            label={item.tinhTrang}
+                            label={
+                              LEAD_TINH_TRANG_LABEL[item.tinhTrang] ??
+                              item.tinhTrang
+                            }
                             colorClass={
                               LEAD_TINH_TRANG_COLOR[item.tinhTrang] ??
                               "bg-gray-100 text-gray-600"
@@ -568,7 +572,7 @@ export default function LeadListPage() {
                           >
                             Sửa
                           </button>
-                          {canConvert && item.tinhTrang !== "Đã chuyển đổi" && (
+                          {canConvert && item.tinhTrang !== "DaChuyenDoi" && (
                             <button
                               onClick={() => setConvertLead(item)}
                               className="text-green-600 hover:underline text-xs font-medium"

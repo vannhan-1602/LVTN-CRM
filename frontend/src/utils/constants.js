@@ -1,4 +1,4 @@
-// ── Roles (khớp với backend Roles.cs) ────────────────────────────────────────
+// ── Roles 
 export const ROLES = {
   Admin: "Admin",
   Manager: "Manager",
@@ -6,7 +6,7 @@ export const ROLES = {
   Accountant: "Accountant",
 };
 
-// ── Khách hàng — dữ liệu thực từ DB ─────────────────────────────────────────
+
 // KH_LoaiKhachHang: 1=VIP, 2=B2B, 3=B2C
 export const LOAI_KHACH_HANG_OPTIONS = [
   { value: 1, label: "VIP" },
@@ -32,21 +32,23 @@ export const TINH_TRANG_BADGE_COLOR = {
   3: "bg-gray-100 text-gray-600",
 };
 
-// ── Lead ─────────────────────────────────────────────────────────────────────
+
 export const LEAD_TINH_TRANG_OPTIONS = [
-  { value: "Mới", label: "Mới" },
-  { value: "Đang chăm sóc", label: "Đang chăm sóc" },
-  { value: "Đã chuyển đổi", label: "Đã chuyển đổi" },
-  { value: "Thất bại", label: "Thất bại" },
+  { value: "Moi", label: "Mới" },
+  { value: "DangChamSoc", label: "Đang chăm sóc" },
+  { value: "DaChuyenDoi", label: "Đã chuyển đổi" },
+  { value: "ThatBai", label: "Thất bại" },
 ];
+export const LEAD_TINH_TRANG_LABEL = Object.fromEntries(
+  LEAD_TINH_TRANG_OPTIONS.map((o) => [o.value, o.label]),
+);
 export const LEAD_TINH_TRANG_COLOR = {
-  Mới: "bg-blue-100 text-blue-700",
-  "Đang chăm sóc": "bg-yellow-100 text-yellow-700",
-  "Đã chuyển đổi": "bg-green-100 text-green-700",
-  "Thất bại": "bg-red-100 text-red-600",
+  Moi: "bg-blue-100 text-blue-700",
+  DangChamSoc: "bg-yellow-100 text-yellow-700",
+  DaChuyenDoi: "bg-green-100 text-green-700",
+  ThatBai: "bg-red-100 text-red-600",
 };
 
-// ── Ticket — enum strings từ backend DomainEnums.cs ──────────────────────────
 export const TICKET_STATUS = {
   Moi: "Mới",
   DangXuLy: "Đang xử lý",
@@ -87,9 +89,10 @@ export const TICKET_SOURCE_OPTIONS = [
   { value: "TrucTiep", label: "Trực tiếp" },
 ];
 
+
 export const TICKET_PHAN_HOI_LOAI_OPTIONS = [
   { value: "NoiBoXuLy", label: "Nội bộ xử lý" },
-  { value: "PhanHoiKhachHang", label: "Phản hồi khách hàng" },
+  { value: "PhanHoiKhachHang", label: "Đã trả lời khách hàng" },
   { value: "YeuCauBoSung", label: "Yêu cầu bổ sung" },
   { value: "DongTicket", label: "Đóng ticket" },
 ];
@@ -106,7 +109,7 @@ export const QUOTE_STATUS = {
 };
 
 export const QUOTE_STATUS_OPTIONS = Object.entries(QUOTE_STATUS).map(
-  ([value, label]) => ({ value, label })
+  ([value, label]) => ({ value, label }),
 );
 
 export const QUOTE_STATUS_COLOR = {
@@ -123,7 +126,7 @@ export const CONTRACT_STATUS = {
 };
 
 export const CONTRACT_STATUS_OPTIONS = Object.entries(CONTRACT_STATUS).map(
-  ([value, label]) => ({ value, label })
+  ([value, label]) => ({ value, label }),
 );
 
 export const CONTRACT_STATUS_COLOR = {
@@ -142,5 +145,5 @@ export const STOCK_TRANSACTION_TYPE_OPTIONS = [
 ];
 
 export const STOCK_TRANSACTION_TYPE_LABEL = Object.fromEntries(
-  STOCK_TRANSACTION_TYPE_OPTIONS.map((o) => [o.value, o.label])
+  STOCK_TRANSACTION_TYPE_OPTIONS.map((o) => [o.value, o.label]),
 );

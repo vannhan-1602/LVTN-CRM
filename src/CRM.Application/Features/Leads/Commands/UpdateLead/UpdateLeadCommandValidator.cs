@@ -10,9 +10,6 @@ namespace CRM.Application.Features.Leads.Commands.UpdateLead
 {
     public class UpdateLeadCommandValidator : AbstractValidator<UpdateLeadCommand>
     {
-        private static readonly string[] ValidTinhTrang =
-            [LeadTinhTrang.Moi, LeadTinhTrang.DangChamSoc, LeadTinhTrang.DaChuyenDoi, LeadTinhTrang.ThatBai];
-
         public UpdateLeadCommandValidator()
         {
             RuleFor(x => x.Id).GreaterThan(0UL).WithMessage("Id không hợp lệ.");
@@ -22,7 +19,7 @@ namespace CRM.Application.Features.Leads.Commands.UpdateLead
             RuleFor(x => x.Email)
                 .EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Email));
             RuleFor(x => x.TinhTrang)
-                .Must(t => ValidTinhTrang.Contains(t))
+                .Must(t => LeadTinhTrang.All.Contains(t))
                 .WithMessage("Tình trạng không hợp lệ.")
                 .When(x => !string.IsNullOrWhiteSpace(x.TinhTrang));
         }

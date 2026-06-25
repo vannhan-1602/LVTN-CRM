@@ -14,7 +14,9 @@ namespace CRM.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = Policies.SalesTeam)]   // Sale + Manager 
+// chỉ yêu cầu đã đăng nhập. Hai nhóm quyền khác nhau (đọc vs ghi)
+// "Accountant: xem Customer và Contract (chỉ đọc)") trong khi Sale/Manager được ghi.
+[Authorize]
 public class CustomerController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -25,6 +27,7 @@ public class CustomerController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<CustomerDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -42,6 +45,7 @@ public class CustomerController : ControllerBase
     }
 
     [HttpGet("{id:long}")]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
     [ProducesResponseType(typeof(ApiResponse<CustomerDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(ulong id, CancellationToken cancellationToken)
@@ -51,6 +55,7 @@ public class CustomerController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = Policies.SalesTeam)]
     [ProducesResponseType(typeof(ApiResponse<CustomerDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create(
@@ -75,6 +80,7 @@ public class CustomerController : ControllerBase
     }
 
     [HttpPut("{id:long}")]
+    [Authorize(Policy = Policies.SalesTeam)]
     [ProducesResponseType(typeof(ApiResponse<CustomerDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(

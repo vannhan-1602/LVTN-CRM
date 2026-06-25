@@ -31,6 +31,11 @@ public static class AuthorizationExtensions
            
             options.AddPolicy(Policies.FinanceTeam, policy =>
                 policy.RequireRole(Roles.Manager, Roles.Accountant));
+
+            // Sale + Manager + Accountant: dùng cho API GET (chỉ đọc)
+            // ở Customer/Contract. Accountant có quyền xem nhưng không thuộc SalesTeam.
+            options.AddPolicy(Policies.CustomerReadAccess, policy =>
+                policy.RequireRole(Roles.Manager, Roles.Sale, Roles.Accountant));
         });
 
         return services;

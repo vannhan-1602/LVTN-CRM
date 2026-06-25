@@ -42,7 +42,7 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
 
         // Sale tạo Customer luôn tự gán cho chính mình; Manager chỉ định tùy ý.
         var nhanVienPhuTrachId = _currentUser.Role == Roles.Sale
-            ? _currentUser.NhanSuId
+            ? _currentUser.UserId
             : request.NhanVienPhuTrachId;
 
         var customer = new KhachHang

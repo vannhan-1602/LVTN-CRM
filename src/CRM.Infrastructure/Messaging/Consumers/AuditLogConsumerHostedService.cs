@@ -113,7 +113,7 @@ public class AuditLogConsumerHostedService : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
 
-        var auditLog = new SysAuditLog
+        var auditLog = new SysAuditLogEntity
         {
             TableName = message.TableName,
             RecordId = message.RecordId,

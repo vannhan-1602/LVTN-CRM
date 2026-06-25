@@ -8,7 +8,7 @@ public class ProductDto
     public string MaSP { get; set; } = string.Empty;
     public string TenSP { get; set; } = string.Empty;
     public string? DonVi { get; set; }
-    public decimal GiaBan { get; set; }
+    public decimal? GiaBan { get; set; }
     public int SoLuongTon { get; set; }
     public bool DangKinhDoanh { get; set; }
     public string? AnhDaiDien { get; set; }

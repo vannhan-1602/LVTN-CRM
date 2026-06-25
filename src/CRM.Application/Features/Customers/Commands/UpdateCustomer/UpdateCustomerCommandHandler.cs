@@ -42,8 +42,9 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
         var customer = await _customerRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(KhachHang), request.Id);
 
-        // ✅ Chặn Sale sửa Customer không phải của mình
-        if (_currentUser.Role == Roles.Sale && customer.NhanVienPhuTrachId != _currentUser.NhanSuId)
+        // Chặn Sale sửa Customer không phải của mình.
+       
+        if (_currentUser.Role == Roles.Sale && customer.NhanVienPhuTrachId != _currentUser.UserId)
             throw new ForbiddenException("Bạn không có quyền sửa dữ liệu của nhân viên khác.");
 
         var oldDto = CustomerMapper.ToDto(customer);
@@ -55,7 +56,7 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
         customer.SoDienThoai = request.SoDienThoai?.Trim();
         customer.MaSoThue = request.MaSoThue?.Trim();
 
-        // ✅ Sale không được đổi người phụ trách (tránh chuyển Customer ra khỏi/vào
+        // Sale không được đổi người phụ trách (tránh chuyển Customer ra khỏi/vào
         // phạm vi kiểm soát của mình một cách tùy tiện) — chỉ Manager mới đổi được.
         if (_currentUser.Role != Roles.Sale)
             customer.NhanVienPhuTrachId = request.NhanVienPhuTrachId;

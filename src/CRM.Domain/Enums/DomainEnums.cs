@@ -7,28 +7,6 @@ public enum UserStatus
     Inactive
 }
 
-public enum AuditAction
-{
-    Insert,
-    Update,
-    Delete
-}
-
-public enum BaoGiaStatus
-{
-    Nhap,
-    DaGui,
-    TuChoi,
-    ChapNhan
-}
-
-public enum HopDongStatus
-{
-    DangThucHien,
-    TamDung,
-    ThanhLy
-}
-
 public enum TicketPriority
 {
     Thap,
@@ -69,10 +47,13 @@ public enum CoHoiGiaiDoan
     ThanhCong,
     ThatBai
 }
+
 public static class LeadTinhTrang
 {
-    public const string Moi = "Mới";
-    public const string DangChamSoc = "Đang chăm sóc";
-    public const string DaChuyenDoi = "Đã chuyển đổi";
-    public const string ThatBai = "Thất bại";
+    public const string Moi = "Moi";
+    public const string DangChamSoc = "DangChamSoc";
+    public const string DaChuyenDoi = "DaChuyenDoi";
+    public const string ThatBai = "ThatBai";
+
+    public static readonly IReadOnlyList<string> All = [Moi, DangChamSoc, DaChuyenDoi, ThatBai];
 }

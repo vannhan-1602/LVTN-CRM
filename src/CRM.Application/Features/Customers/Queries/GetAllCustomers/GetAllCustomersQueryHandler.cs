@@ -24,7 +24,8 @@ public class GetAllCustomersQueryHandler
         CancellationToken cancellationToken)
     {
         // Sale chỉ xem Customer mình phụ trách. Manager xem toàn đội.
-        uint? ownerNhanSuId = _currentUser.Role == Roles.Sale ? _currentUser.NhanSuId : null;
+       
+        uint? ownerUserId = _currentUser.Role == Roles.Sale ? _currentUser.UserId : null;
 
         var result = await _customerRepository.GetPagedAsync(
             request.PageNumber,
@@ -32,7 +33,7 @@ public class GetAllCustomersQueryHandler
             request.Search,
             request.LoaiKhachHangId,
             request.TinhTrangId,
-            ownerNhanSuId,
+            ownerUserId,
             cancellationToken);
 
         return new PagedResult<CustomerDto>

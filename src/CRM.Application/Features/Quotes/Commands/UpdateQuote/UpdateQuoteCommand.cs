@@ -78,7 +78,7 @@ public class UpdateQuoteCommandHandler : IRequestHandler<UpdateQuoteCommand, Quo
             if (!product.DangKinhDoanh)
                 throw new BusinessRuleException($"Sản phẩm '{product.TenSP}' đã ngừng kinh doanh.");
 
-            var donGia = item.DonGia ?? product.GiaBan;
+            var donGia = item.DonGia ?? product.GiaBan ?? 0m;
             chiTietInputs.Add(new Interfaces.Quotes.BaoGiaChiTietInput(item.SanPhamId, item.SoLuong, donGia));
             tongTien += item.SoLuong * donGia;
         }
