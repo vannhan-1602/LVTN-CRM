@@ -20,7 +20,7 @@ public class KhDiaChiEntityConfiguration : IEntityTypeConfiguration<KhDiaChiEnti
 
         b.HasOne<KhKhachHangEntity>()
          .WithMany()
-         .HasForeignKey(x => x.KhachHang_Id)
+         .HasForeignKey("KhachHang_Id")
          .OnDelete(DeleteBehavior.Cascade);
     }
 }

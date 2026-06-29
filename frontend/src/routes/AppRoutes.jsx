@@ -5,12 +5,21 @@ import ProtectedRoute from "./ProtectedRoute";
 import { ROLES } from "../utils/constants";
 
 import CustomerListPage from "../features/customers/CustomerListPage";
+import CustomerDetailPage from "../features/customers/CustomerDetailPage";
 import LeadListPage from "../features/leads/LeadListPage";
+import LeadDetailPage from "../features/leads/LeadDetailPage";
 import TicketListPage from "../features/tickets/TicketListPage";
+import TicketDetailPage from "../features/tickets/TicketDetailPage";
 import UserManagementPage from "../features/users/UserManagementPage";
-import ProductListPage from "../features/products/ProductListPage"; // ✅ MỚI
-import QuoteListPage from "../features/quotes/QuoteListPage"; // ✅ MỚI
-import ContractListPage from "../features/contracts/ContractListPage"; // ✅ MỚI
+import UserDetailPage from "../features/users/UserDetailPage";
+import ProductListPage from "../features/products/ProductListPage";
+import ProductDetailPage from "../features/products/ProductDetailPage";
+import QuoteListPage from "../features/quotes/QuoteListPage";
+import QuoteDetailPage from "../features/quotes/QuoteDetailPage";
+import ContractListPage from "../features/contracts/ContractListPage"; 
+import ContractDetailPage from "../features/contracts/ContractDetailPage";
+import OpportunityListPage from "../features/opportunities/OpportunityListPage"; 
+import OpportunityDetailPage from "../features/opportunities/OpportunityDetailPage";
 
 function Dashboard() {
   return (
@@ -65,10 +74,16 @@ export default function AppRoutes() {
           }
         >
           <Route path="/leads" element={<LeadListPage />} />
+          <Route path="/leads/:id" element={<LeadDetailPage />} />
           <Route path="/tickets" element={<TicketListPage />} />
-          <Route path="/quotes" element={<QuoteListPage />} /> {/* ✅ MỚI */}
+          <Route path="/tickets/:id" element={<TicketDetailPage />} />
+          <Route path="/opportunities" element={<OpportunityListPage />} />{" "}
+          <Route path="/opportunities/:id" element={<OpportunityDetailPage />} />
+          <Route path="/quotes" element={<QuoteListPage />} />
+          <Route path="/quotes/:id" element={<QuoteDetailPage />} /> 
           <Route path="/products" element={<ProductListPage />} />{" "}
-          {/* ✅ MỚI — Sale xem để lập báo giá, chỉ Manager mới sửa được (component tự ẩn form) */}
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          {/* Sale xem để lập báo giá, chỉ Manager mới sửa được (component tự ẩn form) */}
         </Route>
 
         {/* Customer: Sale + Manager (đọc/ghi) + Accountant (chỉ đọc) */}
@@ -80,9 +95,10 @@ export default function AppRoutes() {
           }
         >
           <Route path="/customers" element={<CustomerListPage />} />
+          <Route path="/customers/:id" element={<CustomerDetailPage />} />
         </Route>
 
-        {/* Hợp đồng: Sale + Manager (đọc/ghi) + Accountant (chỉ đọc — theo docx) */}
+        {/* Hợp đồng: Sale + Manager (đọc/ghi) + Accountant (chỉ đọc) */}
         <Route
           element={
             <ProtectedRoute
@@ -91,7 +107,8 @@ export default function AppRoutes() {
           }
         >
           <Route path="/contracts" element={<ContractListPage />} />{" "}
-          {/* ✅ MỚI */}
+          <Route path="/contracts/:id" element={<ContractDetailPage />} />
+          
         </Route>
 
         {/* Accountant + Manager (xem) */}
@@ -106,6 +123,7 @@ export default function AppRoutes() {
         {/* Admin ONLY — User Management, theo đúng phạm vi quyền hạn trong docx */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.Admin]} />}>
           <Route path="/users" element={<UserManagementPage />} />
+          <Route path="/users/:id" element={<UserDetailPage />} />
         </Route>
       </Route>
 

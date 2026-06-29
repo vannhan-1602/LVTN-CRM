@@ -67,5 +67,19 @@ public class TkTicketEntityConfiguration : IEntityTypeConfiguration<TkTicketEnti
         builder.HasIndex(x => x.KhachHang_Id);
 
         builder.HasIndex(x => x.NhanVienXuLy_Id);
+
+        builder.Property(x => x.HopDongId).HasColumnName("HopDong_Id").IsRequired(false);
+
+        // FK relationships
+        builder.HasOne<KhKhachHangEntity>()
+               .WithMany()
+               .HasForeignKey("KhachHang_Id")
+               .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<HdHopDongEntity>()
+               .WithMany()
+               .HasForeignKey(x => x.HopDongId)
+               .IsRequired(false)
+               .OnDelete(DeleteBehavior.SetNull);
     }
 }

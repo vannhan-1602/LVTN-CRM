@@ -45,10 +45,14 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
         services.AddDbContext<CrmDbContext>(options =>
-            options.UseMySql(
-                connectionString,
-                ServerVersion.AutoDetect(connectionString),
-                mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
+            options
+                .UseMySql(
+                    connectionString,
+                    ServerVersion.AutoDetect(connectionString),
+                    mySqlOptions => mySqlOptions.EnableRetryOnFailure())
+                .LogTo(
+                    sql => { if (sql.Contains("HD_HopDong", StringComparison.OrdinalIgnoreCase)) System.Console.WriteLine("=EF_SQL= " + sql); },
+                    Microsoft.Extensions.Logging.LogLevel.Information));
 
         services.AddAutoMapper(typeof(PersistenceMappingProfile).Assembly);
 

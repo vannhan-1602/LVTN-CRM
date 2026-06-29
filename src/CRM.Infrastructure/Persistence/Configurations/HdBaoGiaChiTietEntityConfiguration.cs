@@ -18,12 +18,12 @@ public class HdBaoGiaChiTietEntityConfiguration : IEntityTypeConfiguration<HdBao
 
         b.HasOne<HdBaoGiaEntity>()
          .WithMany()
-         .HasForeignKey(x => x.BaoGia_Id)
+         .HasForeignKey("BaoGia_Id")
          .OnDelete(DeleteBehavior.Cascade);
 
         b.HasOne<BhSanPhamEntity>()
          .WithMany()
-         .HasForeignKey(x => x.SanPham_Id)
+         .HasForeignKey("SanPham_Id")
          .OnDelete(DeleteBehavior.Restrict);
     }
 }

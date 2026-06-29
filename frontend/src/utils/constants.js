@@ -15,9 +15,9 @@ export const LOAI_KHACH_HANG_OPTIONS = [
 ];
 export const LOAI_KHACH_HANG_MAP = { 1: "VIP", 2: "B2B", 3: "B2C" };
 export const LOAI_BADGE_COLOR = {
-  1: "bg-yellow-100 text-yellow-800",
-  2: "bg-blue-100 text-blue-800",
-  3: "bg-green-100 text-green-800",
+  1: "bg-warning-50 text-warning-700",
+  2: "bg-info-50 text-info-700",
+  3: "bg-success-50 text-success-700",
 };
 
 // KH_TinhTrangKhachHang: 1=Đang giao dịch, 2=Tiềm năng, 3=Ngừng giao dịch
@@ -27,9 +27,9 @@ export const TINH_TRANG_KHACH_HANG_OPTIONS = [
   { value: 3, label: "Ngừng giao dịch" },
 ];
 export const TINH_TRANG_BADGE_COLOR = {
-  1: "bg-emerald-100 text-emerald-800",
-  2: "bg-purple-100 text-purple-800",
-  3: "bg-gray-100 text-gray-600",
+  1: "bg-success-50 text-success-700",
+  2: "bg-accent-50 text-accent-700",
+  3: "bg-ink-100 text-ink-500",
 };
 
 
@@ -43,10 +43,10 @@ export const LEAD_TINH_TRANG_LABEL = Object.fromEntries(
   LEAD_TINH_TRANG_OPTIONS.map((o) => [o.value, o.label]),
 );
 export const LEAD_TINH_TRANG_COLOR = {
-  Moi: "bg-blue-100 text-blue-700",
-  DangChamSoc: "bg-yellow-100 text-yellow-700",
-  DaChuyenDoi: "bg-green-100 text-green-700",
-  ThatBai: "bg-red-100 text-red-600",
+  Moi: "bg-info-50 text-info-700",
+  DangChamSoc: "bg-warning-50 text-warning-700",
+  DaChuyenDoi: "bg-success-50 text-success-700",
+  ThatBai: "bg-danger-50 text-danger-600",
 };
 
 export const TICKET_STATUS = {
@@ -59,10 +59,10 @@ export const TICKET_STATUS_OPTIONS = Object.entries(TICKET_STATUS).map(
   ([value, label]) => ({ value, label }),
 );
 export const TICKET_STATUS_COLOR = {
-  Moi: "bg-blue-100 text-blue-700",
-  DangXuLy: "bg-yellow-100 text-yellow-700",
-  ChoPhanHoi: "bg-orange-100 text-orange-700",
-  Dong: "bg-gray-100 text-gray-600",
+  Moi: "bg-info-50 text-info-700",
+  DangXuLy: "bg-warning-50 text-warning-700",
+  ChoPhanHoi: "bg-accent-50 text-accent-700",
+  Dong: "bg-ink-100 text-ink-500",
 };
 
 export const TICKET_PRIORITY = {
@@ -75,10 +75,10 @@ export const TICKET_PRIORITY_OPTIONS = Object.entries(TICKET_PRIORITY).map(
   ([value, label]) => ({ value, label }),
 );
 export const TICKET_PRIORITY_COLOR = {
-  Thap: "bg-green-100 text-green-700",
-  TrungBinh: "bg-blue-100 text-blue-700",
-  Cao: "bg-orange-100 text-orange-700",
-  KhanCap: "bg-red-100 text-red-700",
+  Thap: "bg-success-50 text-success-700",
+  TrungBinh: "bg-info-50 text-info-700",
+  Cao: "bg-warning-50 text-warning-700",
+  KhanCap: "bg-danger-50 text-danger-600",
 };
 
 export const TICKET_SOURCE_OPTIONS = [
@@ -113,10 +113,10 @@ export const QUOTE_STATUS_OPTIONS = Object.entries(QUOTE_STATUS).map(
 );
 
 export const QUOTE_STATUS_COLOR = {
-  Nhap: "bg-gray-100 text-gray-600",
-  DaGui: "bg-blue-100 text-blue-700",
-  TuChoi: "bg-red-100 text-red-600",
-  ChapNhan: "bg-green-100 text-green-700",
+  Nhap: "bg-ink-100 text-ink-500",
+  DaGui: "bg-info-50 text-info-700",
+  TuChoi: "bg-danger-50 text-danger-600",
+  ChapNhan: "bg-success-50 text-success-700",
 };
 
 export const CONTRACT_STATUS = {
@@ -130,9 +130,9 @@ export const CONTRACT_STATUS_OPTIONS = Object.entries(CONTRACT_STATUS).map(
 );
 
 export const CONTRACT_STATUS_COLOR = {
-  DangThucHien: "bg-green-100 text-green-700",
-  TamDung: "bg-yellow-100 text-yellow-700",
-  ThanhLy: "bg-gray-100 text-gray-600",
+  DangThucHien: "bg-success-50 text-success-700",
+  TamDung: "bg-warning-50 text-warning-700",
+  ThanhLy: "bg-ink-100 text-ink-500",
 };
 
 export const STOCK_TRANSACTION_TYPE_OPTIONS = [
@@ -147,3 +147,57 @@ export const STOCK_TRANSACTION_TYPE_OPTIONS = [
 export const STOCK_TRANSACTION_TYPE_LABEL = Object.fromEntries(
   STOCK_TRANSACTION_TYPE_OPTIONS.map((o) => [o.value, o.label]),
 );
+
+// CH_CoHoiBanHang.GiaiDoan
+export const GIAI_DOAN_LIST = ["KhaoSat", "DeXuat", "ThuongLuong", "ThanhCong", "ThatBai"];
+
+export const GIAI_DOAN_LABEL = {
+  KhaoSat: "Khảo sát",
+  DeXuat: "Đề xuất",
+  ThuongLuong: "Thương lượng",
+  ThanhCong: "Thành công",
+  ThatBai: "Thất bại",
+};
+
+export const GIAI_DOAN_COLOR = {
+  KhaoSat: "bg-info-50 text-info-700",
+  DeXuat: "bg-accent-50 text-accent-700",
+  ThuongLuong: "bg-warning-50 text-warning-700",
+  ThanhCong: "bg-success-50 text-success-700",
+  ThatBai: "bg-danger-50 text-danger-600",
+};
+
+// Màu header cột kanban — đặc (solid), không dùng token -50 nhạt
+export const GIAI_DOAN_HEADER_COLOR = {
+  KhaoSat: "bg-info-600",
+  DeXuat: "bg-accent-600",
+  ThuongLuong: "bg-warning-600",
+  ThanhCong: "bg-success-600",
+  ThatBai: "bg-danger-600",
+};
+
+export const NEXT_STAGE = {
+  KhaoSat: "DeXuat",
+  DeXuat: "ThuongLuong",
+  ThuongLuong: "ThanhCong",
+};
+
+// HT_User — màu badge vai trò và trạng thái tài khoản
+export const USER_ROLE_COLOR = {
+  Admin: "bg-danger-50 text-danger-600",
+  Manager: "bg-accent-50 text-accent-700",
+  Sale: "bg-info-50 text-info-700",
+  Accountant: "bg-success-50 text-success-700",
+};
+
+export const USER_STATUS_LABEL = {
+  Active: "Đang hoạt động",
+  Locked: "Đã khóa",
+  Inactive: "Ngừng hoạt động",
+};
+
+export const USER_STATUS_COLOR = {
+  Active: "bg-success-50 text-success-700",
+  Locked: "bg-danger-50 text-danger-600",
+  Inactive: "bg-ink-100 text-ink-500",
+};

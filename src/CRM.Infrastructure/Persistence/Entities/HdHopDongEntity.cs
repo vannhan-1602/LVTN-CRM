@@ -7,9 +7,10 @@ public class HdHopDongEntity
 {
     public ulong Id { get; set; }
     public string MaHopDong { get; set; } = string.Empty;
-    public ulong KhachHang_Id { get; set; }
 
-    public ulong? BaoGia_Id { get; set; }
+ 
+    public ulong KhachHangId { get; set; }
+    public ulong? BaoGiaId { get; set; }
 
     public DateOnly? NgayKy { get; set; }
     public int? ThoiHan { get; set; }

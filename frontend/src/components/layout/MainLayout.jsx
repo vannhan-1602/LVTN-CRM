@@ -1,21 +1,46 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Users,
+  Target,
+  Package,
+  Receipt,
+  FileText,
+  Headset,
+  Wallet,
+  UserCog,
+  LogOut,
+} from "lucide-react";
 import useAuthStore from "../../features/auth/authStore";
 import { ROLES } from "../../utils/constants";
 
-function SidebarLink({ to, children }) {
+function SidebarLink({ to, icon: Icon, children }) {
   return (
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+        `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors mb-0.5 ${
           isActive
-            ? "bg-blue-600 text-white"
-            : "text-gray-300 hover:bg-gray-800 hover:text-white"
+            ? "bg-accent-500/15 text-white font-medium"
+            : "text-brand-100/70 hover:bg-white/5 hover:text-white"
         }`
       }
     >
-      {children}
+      {({ isActive }) => (
+        <>
+          <Icon size={17} className={isActive ? "text-accent-400" : ""} />
+          {children}
+        </>
+      )}
     </NavLink>
+  );
+}
+
+function SidebarSection({ children }) {
+  return (
+    <div className="pt-4 pb-1.5 px-3 text-[11px] font-semibold text-brand-100/40 uppercase tracking-wider">
+      {children}
+    </div>
   );
 }
 
@@ -29,7 +54,6 @@ export default function MainLayout() {
     navigate("/login");
   };
 
-  // ✅ Theo đúng bảng phân quyền trong docx:
   // - Sale: Lead, Customer, Opportunity, Quote, Contract, Ticket (phạm vi phụ trách)
   // - Manager: toàn bộ quyền Sale (toàn đội) + Dashboard/Report/AI Analysis
   // - Accountant: Invoice, Payment, Debt Tracking + xem (read-only) Customer/Contract
@@ -39,43 +63,79 @@ export default function MainLayout() {
   const isFinanceTeam = [ROLES.Accountant, ROLES.Manager].includes(user?.role);
   const isAdmin = user?.role === ROLES.Admin;
 
+  const initials = (user?.hoTen || user?.username || "??")
+    .split(" ")
+    .map((p) => p[0])
+    .slice(-2)
+    .join("")
+    .toUpperCase();
+
+  const scopeLabel =
+    (isAdmin && "Phạm vi: Quản trị hệ thống") ||
+    (user?.role === ROLES.Manager && "Phạm vi: Toàn đội kinh doanh") ||
+    (user?.role === ROLES.Sale && "Phạm vi: Dữ liệu phụ trách") ||
+    (user?.role === ROLES.Accountant && "Phạm vi: Nghiệp vụ kế toán");
+
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
-      <aside className="w-56 bg-gray-900 flex flex-col flex-shrink-0">
-        <div className="px-5 py-5 border-b border-gray-800">
-          <span className="text-white font-bold text-lg tracking-wide">
-            CRM SYSTEM
-          </span>
+    <div className="flex h-screen bg-canvas overflow-hidden">
+      <aside className="w-60 bg-brand-700 flex flex-col flex-shrink-0">
+        <div className="px-5 py-5 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-accent-500 flex items-center justify-center text-white text-sm font-semibold">
+              C
+            </div>
+            <span className="text-white font-semibold text-[15px] tracking-wide">
+              CRM System
+            </span>
+          </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <SidebarLink to="/">Dashboard</SidebarLink>
+        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+          <SidebarLink to="/" icon={LayoutDashboard}>
+            Dashboard
+          </SidebarLink>
 
           {isSalesTeam && (
             <>
-              <div className="pt-3 pb-1 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Kinh doanh
-              </div>
-              <SidebarLink to="/leads">Quản lý Lead</SidebarLink>
-              <SidebarLink to="/customers">Khách hàng</SidebarLink>
-              <SidebarLink to="/products">Sản phẩm / Dịch vụ</SidebarLink>
-              <SidebarLink to="/quotes">Báo giá</SidebarLink>
-              <SidebarLink to="/contracts">Hợp đồng</SidebarLink>
-              <SidebarLink to="/tickets">Hỗ trợ (Ticket)</SidebarLink>
+              <SidebarSection>Kinh doanh</SidebarSection>
+              <SidebarLink to="/leads" icon={Target}>
+                Quản lý Lead
+              </SidebarLink>
+              <SidebarLink to="/customers" icon={Users}>
+                Khách hàng
+              </SidebarLink>
+              <SidebarLink to="/opportunities" icon={Target}>
+                Cơ hội bán hàng
+              </SidebarLink>
+              <SidebarLink to="/products" icon={Package}>
+                Sản phẩm / Dịch vụ
+              </SidebarLink>
+              <SidebarLink to="/quotes" icon={Receipt}>
+                Báo giá
+              </SidebarLink>
+              <SidebarLink to="/contracts" icon={FileText}>
+                Hợp đồng
+              </SidebarLink>
+              <SidebarLink to="/tickets" icon={Headset}>
+                Hỗ trợ (Ticket)
+              </SidebarLink>
             </>
           )}
 
           {isFinanceTeam && (
             <>
-              <div className="pt-3 pb-1 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Kế toán
-              </div>
-              <SidebarLink to="/invoices">Hóa đơn & Công nợ</SidebarLink>
-              {/* Accountant xem Customer/Contract (chỉ đọc); Manager đã có 2 link này ở mục Kinh doanh nên chỉ thêm cho Accountant */}
+              <SidebarSection>Kế toán</SidebarSection>
+              <SidebarLink to="/invoices" icon={Wallet}>
+                Hóa đơn & Công nợ
+              </SidebarLink>
               {user?.role === ROLES.Accountant && (
                 <>
-                  <SidebarLink to="/customers">Khách hàng (xem)</SidebarLink>
-                  <SidebarLink to="/contracts">Hợp đồng (xem)</SidebarLink>
+                  <SidebarLink to="/customers" icon={Users}>
+                    Khách hàng (xem)
+                  </SidebarLink>
+                  <SidebarLink to="/contracts" icon={FileText}>
+                    Hợp đồng (xem)
+                  </SidebarLink>
                 </>
               )}
             </>
@@ -83,41 +143,44 @@ export default function MainLayout() {
 
           {isAdmin && (
             <>
-              <div className="pt-3 pb-1 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Quản trị hệ thống
-              </div>
-              <SidebarLink to="/users">Người dùng & Nhân sự</SidebarLink>
+              <SidebarSection>Quản trị hệ thống</SidebarSection>
+              <SidebarLink to="/users" icon={UserCog}>
+                Người dùng & Nhân sự
+              </SidebarLink>
             </>
           )}
         </nav>
 
-        <div className="px-4 py-3 border-t border-gray-800 text-xs text-gray-500">
-          {isAdmin && "Phạm vi: Quản trị hệ thống"}
-          {user?.role === ROLES.Manager && "Phạm vi: Toàn đội kinh doanh"}
-          {user?.role === ROLES.Sale && "Phạm vi: Dữ liệu phụ trách"}
-          {user?.role === ROLES.Accountant && "Phạm vi: Nghiệp vụ kế toán"}
+        <div className="px-4 py-3.5 border-t border-white/10 text-[11px] text-brand-100/40">
+          {scopeLabel}
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b px-6 py-3 flex items-center justify-between flex-shrink-0">
+        <header className="bg-surface border-b border-ink-100 px-6 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-gray-800">
-              {user?.hoTen || user?.username}
-            </span>
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">
+            <div className="w-8 h-8 rounded-full bg-info-50 flex items-center justify-center text-xs font-semibold text-info-700">
+              {initials}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-ink-900 leading-tight">
+                {user?.hoTen || user?.username}
+              </p>
+            </div>
+            <span className="text-xs bg-success-50 text-success-700 px-2.5 py-1 rounded-full font-medium">
               {user?.role}
             </span>
           </div>
           <button
             onClick={handleLogout}
-            className="text-sm text-red-600 border border-red-200 hover:bg-red-50 px-4 py-1.5 rounded-lg transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-danger-600 hover:bg-danger-50 px-3 py-1.5 rounded-lg transition-colors"
           >
+            <LogOut size={15} />
             Đăng xuất
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
+        <main className="flex-1 overflow-y-auto bg-canvas p-6">
           <Outlet />
         </main>
       </div>

@@ -12,7 +12,7 @@ public class TkTicketEntity
     public string? FileDinhKem { get; set; }
     public ushort? LoaiTicket_Id { get; set; }
     public ulong KhachHang_Id { get; set; }
-    public ulong? HopDong_Id { get; set; }
+    public ulong? HopDongId { get; set; }
     public uint? SanPham_Id { get; set; }
     public string MucDoUuTien { get; set; } = "TrungBinh";
     public string NguonTiepNhan { get; set; } = "Phone";

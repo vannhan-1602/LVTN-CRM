@@ -18,12 +18,12 @@ public class KhHoatDongEntityConfiguration : IEntityTypeConfiguration<KhHoatDong
 
         b.HasOne<KhKhachHangEntity>()
          .WithMany()
-         .HasForeignKey(x => x.KhachHang_Id)
+         .HasForeignKey("KhachHang_Id")
          .OnDelete(DeleteBehavior.Cascade);
 
         b.HasOne<KhLeadEntity>()
          .WithMany()
-         .HasForeignKey(x => x.Lead_Id)
+         .HasForeignKey("Lead_Id")
          .OnDelete(DeleteBehavior.Cascade);
     }
 }

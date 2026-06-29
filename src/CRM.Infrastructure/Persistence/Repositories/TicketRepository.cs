@@ -80,7 +80,7 @@ namespace CRM.Infrastructure.Persistence.Repositories
             entity.MoTa = ticket.MoTa;
             entity.FileDinhKem = ticket.FileDinhKem;
             entity.LoaiTicket_Id = ticket.LoaiTicketId;
-            entity.HopDong_Id = ticket.HopDongId;
+            entity.HopDongId = ticket.HopDongId;
             entity.SanPham_Id = ticket.SanPhamId;
             entity.MucDoUuTien = ticket.MucDoUuTien.ToString();
             entity.NguonTiepNhan = ticket.NguonTiepNhan.ToString();
@@ -159,7 +159,7 @@ namespace CRM.Infrastructure.Persistence.Repositories
             FileDinhKem = e.FileDinhKem,
             LoaiTicketId = e.LoaiTicket_Id,
             KhachHangId = e.KhachHang_Id,
-            HopDongId = e.HopDong_Id,
+            HopDongId = e.HopDongId,
             SanPhamId = e.SanPham_Id,
             MucDoUuTien = Enum.Parse<TicketPriority>(e.MucDoUuTien),
             NguonTiepNhan = Enum.Parse<TicketSource>(e.NguonTiepNhan),
@@ -182,7 +182,7 @@ namespace CRM.Infrastructure.Persistence.Repositories
             FileDinhKem = t.FileDinhKem,
             LoaiTicket_Id = t.LoaiTicketId,
             KhachHang_Id = t.KhachHangId,
-            HopDong_Id = t.HopDongId,
+            HopDongId = t.HopDongId,
             SanPham_Id = t.SanPhamId,
             MucDoUuTien = t.MucDoUuTien.ToString(),
             NguonTiepNhan = t.NguonTiepNhan.ToString(),

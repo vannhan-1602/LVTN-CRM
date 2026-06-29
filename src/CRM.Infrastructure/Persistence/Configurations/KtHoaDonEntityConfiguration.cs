@@ -18,14 +18,16 @@ public class KtHoaDonEntityConfiguration : IEntityTypeConfiguration<KtHoaDonEnti
         b.Property(x => x.TrangThaiThanhToan).HasMaxLength(30).HasDefaultValue("ChuaThanhToan");
         b.Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+        b.Property(x => x.HopDongId).HasColumnName("HopDong_Id").IsRequired(false);
+
         b.HasOne<HdHopDongEntity>()
          .WithMany()
-         .HasForeignKey(x => x.HopDong_Id)
+         .HasForeignKey(x => x.HopDongId)
          .OnDelete(DeleteBehavior.SetNull);
 
         b.HasOne<KhKhachHangEntity>()
          .WithMany()
-         .HasForeignKey(x => x.KhachHang_Id)
+         .HasForeignKey("KhachHang_Id")
          .OnDelete(DeleteBehavior.Restrict);
     }
 }

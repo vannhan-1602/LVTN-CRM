@@ -1,171 +1,45 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  FileText,
+  Plus,
+  Search,
+  Eye,
+  Pencil,
+  Trash2,
+  CheckCircle2,
+  Wallet,
+} from "lucide-react";
 import contractApi from "../../api/contractApi";
-import quoteApi from "../../api/quoteApi";
 import useAuthStore from "../auth/authStore";
 import Pagination from "../../components/common/Pagination";
-import { ROLES, CONTRACT_STATUS, CONTRACT_STATUS_OPTIONS, CONTRACT_STATUS_COLOR } from "../../utils/constants";
-import { formatDate, formatDateTime } from "../../utils/formatters";
+import PageHeader from "../../components/common/PageHeader";
+import StatCard from "../../components/common/StatCard";
+import EmptyState from "../../components/common/EmptyState";
+import RowMenu from "../../components/common/RowMenu";
+import Badge from "../../components/common/Badge";
+import Button from "../../components/common/Button";
+import CreateContractModal from "./CreateContractModal";
+import {
+  ROLES,
+  CONTRACT_STATUS,
+  CONTRACT_STATUS_OPTIONS,
+} from "../../utils/constants";
+import { formatDate } from "../../utils/formatters";
 
-function Badge({ label, colorClass }) {
-  return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${colorClass}`}>{label}</span>;
-}
+const STATUS_TONE = {
+  DangThucHien: "success",
+  TamDung: "warning",
+  ThanhLy: "neutral",
+};
 
 function formatMoney(n) {
   return n == null ? "—" : Number(n).toLocaleString("vi-VN") + " đ";
 }
 
-// ── Modal: tạo hợp đồng từ báo giá đã chấp nhận ─────────────────────────────
-function CreateContractModal({ onClose, onSaved }) {
-  const [acceptedQuotes, setAcceptedQuotes] = useState([]);
-  const [baoGiaId, setBaoGiaId] = useState("");
-  const [ngayKy, setNgayKy] = useState(new Date().toISOString().slice(0, 10));
-  const [thoiHan, setThoiHan] = useState("12");
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await quoteApi.getAll({ pageSize: 100, trangThai: "ChapNhan" });
-        setAcceptedQuotes(res.data?.items ?? []);
-      } catch { setError("Không thể tải danh sách báo giá đã chấp nhận"); }
-      finally { setLoading(false); }
-    })();
-  }, []);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!baoGiaId) { setError("Vui lòng chọn báo giá"); return; }
-    setSubmitting(true); setError("");
-    try {
-      await contractApi.createFromQuote({
-        baoGiaId: Number(baoGiaId),
-        ngayKy: ngayKy || null,
-        thoiHan: thoiHan ? Number(thoiHan) : null,
-      });
-      onSaved();
-    } catch (err) {
-      setError(err?.message || "Không thể tạo hợp đồng");
-    } finally { setSubmitting(false); }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-        <h3 className="font-bold text-lg text-gray-800">Tạo hợp đồng từ báo giá</h3>
-
-        {loading ? (
-          <p className="text-sm text-gray-400">Đang tải danh sách báo giá...</p>
-        ) : acceptedQuotes.length === 0 ? (
-          <p className="text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
-            Chưa có báo giá nào ở trạng thái "Đã chấp nhận". Hãy chuyển trạng thái báo giá
-            sang Đã chấp nhận ở trang Báo giá trước khi tạo hợp đồng.
-          </p>
-        ) : (
-          <>
-            <div>
-              <label className="block text-sm font-medium mb-1">Báo giá đã chấp nhận <span className="text-red-500">*</span></label>
-              <select value={baoGiaId} onChange={(e) => setBaoGiaId(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm">
-                <option value="">-- Chọn báo giá --</option>
-                {acceptedQuotes.map(q => (
-                  <option key={q.id} value={q.id}>{q.maBaoGia} — {q.tenKhachHang} — {formatMoney(q.tongTien)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Ngày ký</label>
-                <input type="date" value={ngayKy} onChange={(e) => setNgayKy(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2 text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Thời hạn (tháng)</label>
-                <input type="number" min="1" value={thoiHan} onChange={(e) => setThoiHan(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2 text-sm" />
-              </div>
-            </div>
-          </>
-        )}
-
-        {error && <div className="text-sm text-red-600 bg-red-50 rounded p-2">{error}</div>}
-
-        <div className="flex gap-2">
-          <button type="submit" disabled={submitting || acceptedQuotes.length === 0}
-            className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-            {submitting ? "Đang tạo..." : "Tạo hợp đồng"}
-          </button>
-          <button type="button" onClick={onClose} className="px-4 border rounded-lg py-2 text-sm hover:bg-gray-50">Hủy</button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-// ── Modal: chi tiết hợp đồng + đổi trạng thái ───────────────────────────────
-function ContractDetailModal({ contract, onClose, canManage, onChanged }) {
-  const [trangThai, setTrangThai] = useState(contract.trangThai);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  const isFinal = contract.trangThai === "ThanhLy";
-
-  const handleUpdateStatus = async () => {
-    setSubmitting(true); setError("");
-    try {
-      await contractApi.updateStatus(contract.id, trangThai);
-      onChanged();
-      onClose();
-    } catch (err) {
-      setError(err?.message || "Không thể cập nhật trạng thái");
-    } finally { setSubmitting(false); }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-lg text-gray-800">{contract.maHopDong}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl font-bold">×</button>
-        </div>
-
-        <div className="space-y-2 text-sm">
-          <div><span className="text-gray-500">Khách hàng:</span> <span className="font-medium">{contract.tenKhachHang}</span></div>
-          {contract.maBaoGia && (
-            <div><span className="text-gray-500">Từ báo giá:</span> <span className="font-mono">{contract.maBaoGia}</span></div>
-          )}
-          <div><span className="text-gray-500">Giá trị:</span> <span className="font-semibold">{formatMoney(contract.giaTri)}</span></div>
-          <div><span className="text-gray-500">Ngày ký:</span> {formatDate(contract.ngayKy)}</div>
-          <div><span className="text-gray-500">Thời hạn:</span> {contract.thoiHan ? `${contract.thoiHan} tháng` : "—"}</div>
-        </div>
-
-        {canManage && !isFinal ? (
-          <div className="border-t pt-4 space-y-3">
-            <label className="block text-sm font-medium">Cập nhật trạng thái</label>
-            <select value={trangThai} onChange={(e) => setTrangThai(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 text-sm">
-              {CONTRACT_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            {error && <div className="text-sm text-red-600 bg-red-50 rounded p-2">{error}</div>}
-            <button onClick={handleUpdateStatus} disabled={submitting || trangThai === contract.trangThai}
-              className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-              {submitting ? "Đang lưu..." : "Lưu trạng thái"}
-            </button>
-          </div>
-        ) : (
-          <div className="border-t pt-4">
-            <Badge label={CONTRACT_STATUS[contract.trangThai] ?? contract.trangThai} colorClass={CONTRACT_STATUS_COLOR[contract.trangThai]} />
-            {isFinal && <p className="text-xs text-gray-400 mt-2">Hợp đồng đã thanh lý, không thể thay đổi thêm.</p>}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function ContractListPage() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const canManage = [ROLES.Sale, ROLES.Manager].includes(user?.role);
   const canDelete = user?.role === ROLES.Manager;
   const isReadOnly = user?.role === ROLES.Accountant;
@@ -176,7 +50,6 @@ export default function ContractListPage() {
   const [success, setSuccess] = useState("");
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [detailContract, setDetailContract] = useState(null);
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -207,94 +80,115 @@ export default function ContractListPage() {
     catch (err) { setError(err?.message || "Không thể xóa"); }
   };
 
+  const dangThucHienCount = items.filter((i) => i.trangThai === "DangThucHien").length;
+  const tongGiaTri = items.reduce((sum, i) => sum + (i.giaTri || 0), 0);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {showCreateModal && (
         <CreateContractModal onClose={() => setShowCreateModal(false)}
           onSaved={() => { setShowCreateModal(false); setSuccess("Tạo hợp đồng thành công"); loadContracts(); }} />
       )}
-      {detailContract && (
-        <ContractDetailModal contract={detailContract} canManage={canManage}
-          onClose={() => setDetailContract(null)} onChanged={loadContracts} />
-      )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-wide">CRM / Kinh doanh</p>
-          <h1 className="text-2xl font-bold text-gray-800">Quản lý Hợp đồng</h1>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <input type="search" placeholder="Tìm theo mã hợp đồng..."
-            value={search} onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { setPageNumber(1); loadContracts(); } }}
-            className="border rounded-lg px-3 py-2 text-sm w-56" />
-          <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPageNumber(1); }}
-            className="border rounded-lg px-3 py-2 text-sm">
-            <option value="">Tất cả trạng thái</option>
-            {CONTRACT_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-          {canManage && (
-            <button onClick={() => setShowCreateModal(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-              + Tạo từ báo giá
-            </button>
-          )}
-        </div>
+      <PageHeader
+        breadcrumb="CRM / Kinh doanh"
+        title="Quản lý hợp đồng"
+        actions={
+          canManage && (
+            <Button icon={Plus} onClick={() => setShowCreateModal(true)}>
+              Tạo từ báo giá
+            </Button>
+          )
+        }
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard label="Tổng hợp đồng (trang này)" value={totalCount} icon={FileText} />
+        <StatCard label="Đang thực hiện" value={dangThucHienCount} tone="success" icon={CheckCircle2} />
+        <StatCard label="Giá trị (trang này)" value={formatMoney(tongGiaTri)} tone="accent" icon={Wallet} />
       </div>
 
       {isReadOnly && (
-        <div className="text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-lg p-3">
+        <div className="text-xs text-info-700 bg-info-50 border border-info-100 rounded-lg p-3">
           Tài khoản Kế toán chỉ có quyền xem danh sách hợp đồng (không thể tạo/sửa/xóa).
         </div>
       )}
+      {error && <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-3">{error}</div>}
+      {success && <div className="text-sm text-success-700 bg-success-50 rounded-lg p-3">{success}</div>}
 
-      {error && <div className="text-sm text-red-600 bg-red-50 rounded-lg p-3">{error}</div>}
-      {success && <div className="text-sm text-green-700 bg-green-50 rounded-lg p-3">{success}</div>}
-
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold text-gray-800">Danh sách hợp đồng</h2>
-            <p className="text-xs text-gray-400">Trang {pageNumber}/{totalPages} — {totalCount} hợp đồng</p>
+      <div className="bg-surface rounded-card border border-ink-100 overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-ink-100 flex items-center justify-between gap-3 flex-wrap">
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
+            <input
+              type="search" placeholder="Tìm theo mã hợp đồng..."
+              value={search} onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { setPageNumber(1); loadContracts(); } }}
+              className="border border-ink-200 rounded-lg pl-9 pr-3 py-2 text-sm w-60 focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            />
           </div>
-          {loading && <span className="text-xs text-gray-400 animate-pulse">Đang tải...</span>}
+          <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPageNumber(1); }}
+            className="border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400">
+            <option value="">Tất cả trạng thái</option>
+            {CONTRACT_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
         </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
-              <tr>
-                <th className="px-4 py-3 text-left">Mã hợp đồng</th>
-                <th className="px-4 py-3 text-left">Khách hàng</th>
-                <th className="px-4 py-3 text-left">Giá trị</th>
-                <th className="px-4 py-3 text-left">Ngày ký</th>
-                <th className="px-4 py-3 text-left">Trạng thái</th>
-                {!isReadOnly && <th className="px-4 py-3 text-left">Hành động</th>}
+            <thead>
+              <tr className="bg-surface-alt">
+                <th className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">Mã hợp đồng</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">Khách hàng</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">Giá trị</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">Ngày ký</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">Trạng thái</th>
+                <th className="w-12"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-ink-100">
               {items.length === 0 ? (
-                <tr><td colSpan={isReadOnly ? 5 : 6} className="text-center py-10 text-gray-400">{loading ? "Đang tải..." : "Không có dữ liệu"}</td></tr>
+                <tr>
+                  <td colSpan={6}>
+                    <EmptyState
+                      icon={FileText}
+                      title={loading ? "Đang tải..." : "Chưa có hợp đồng nào"}
+                      description={!loading ? "Tạo hợp đồng từ một báo giá đã được khách hàng chấp nhận." : undefined}
+                    />
+                  </td>
+                </tr>
               ) : items.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setDetailContract(item)}>
-                  <td className="px-4 py-3 font-mono text-blue-600 text-xs font-semibold">{item.maHopDong}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{item.tenKhachHang}</td>
-                  <td className="px-4 py-3 text-gray-700">{formatMoney(item.giaTri)}</td>
-                  <td className="px-4 py-3 text-xs text-gray-400">{formatDate(item.ngayKy)}</td>
-                  <td className="px-4 py-3"><Badge label={CONTRACT_STATUS[item.trangThai] ?? item.trangThai} colorClass={CONTRACT_STATUS_COLOR[item.trangThai]} /></td>
-                  {!isReadOnly && (
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex gap-2">
-                        <button onClick={() => setDetailContract(item)} className="text-blue-600 hover:underline text-xs font-medium">Xem</button>
-                        {canDelete && <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:underline text-xs font-medium">Xóa</button>}
-                      </div>
-                    </td>
-                  )}
+                <tr
+                  key={item.id}
+                  className="hover:bg-surface-alt cursor-pointer transition-colors"
+                  onClick={() => navigate(`/contracts/${item.id}`)}
+                >
+                  <td className="px-5 py-3.5 font-mono text-info-600 text-xs font-semibold">{item.maHopDong}</td>
+                  <td className="px-5 py-3.5 font-medium text-ink-900">{item.tenKhachHang}</td>
+                  <td className="px-5 py-3.5 text-ink-700">{formatMoney(item.giaTri)}</td>
+                  <td className="px-5 py-3.5 text-xs text-ink-400">{formatDate(item.ngayKy)}</td>
+                  <td className="px-5 py-3.5">
+                    <Badge label={CONTRACT_STATUS[item.trangThai] ?? item.trangThai} tone={STATUS_TONE[item.trangThai]} />
+                  </td>
+                  <td className="px-3 py-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                    {!isReadOnly && (
+                      <RowMenu
+                        items={[
+                          { label: "Xem chi tiết", icon: Eye, onClick: () => navigate(`/contracts/${item.id}`) },
+                          ...(canManage ? [{ label: "Sửa", icon: Pencil, onClick: () => navigate(`/contracts/${item.id}?edit=1`) }] : []),
+                          ...(canDelete ? [{ label: "Xóa", icon: Trash2, danger: true, onClick: () => handleDelete(item.id) }] : []),
+                        ]}
+                      />
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="px-6 py-4 border-t">
+
+        <div className="px-5 py-3.5 border-t border-ink-100 flex items-center justify-between">
+          <p className="text-xs text-ink-400">{totalCount} hợp đồng</p>
           <Pagination pageNumber={pageNumber} totalPages={totalPages} onPageChange={setPageNumber} />
         </div>
       </div>

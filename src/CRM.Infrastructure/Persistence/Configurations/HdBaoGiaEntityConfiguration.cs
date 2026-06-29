@@ -22,7 +22,7 @@ public class HdBaoGiaEntityConfiguration : IEntityTypeConfiguration<HdBaoGiaEnti
 
         b.HasOne<KhKhachHangEntity>()
          .WithMany()
-         .HasForeignKey(x => x.KhachHang_Id)
+         .HasForeignKey("KhachHang_Id")
          .OnDelete(DeleteBehavior.Restrict);
     }
 }

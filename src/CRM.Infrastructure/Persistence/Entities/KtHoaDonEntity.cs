@@ -7,7 +7,7 @@ public class KtHoaDonEntity
 {
     public ulong Id { get; set; }
     public string MaHoaDon { get; set; } = string.Empty;
-    public ulong? HopDong_Id { get; set; }
+    public ulong? HopDongId { get; set; }
     public ulong KhachHang_Id { get; set; }
     public decimal TongTien { get; set; }
     public decimal? SoTienDaThu { get; set; }

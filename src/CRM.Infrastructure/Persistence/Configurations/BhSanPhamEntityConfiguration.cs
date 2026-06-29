@@ -23,7 +23,7 @@ public class BhSanPhamEntityConfiguration : IEntityTypeConfiguration<BhSanPhamEn
 
         b.HasOne<BhLoaiSanPhamEntity>()
          .WithMany()
-         .HasForeignKey(x => x.LoaiSanPham_Id)
+         .HasForeignKey("LoaiSanPham_Id")
          .IsRequired(false)
          .OnDelete(DeleteBehavior.Restrict);
     }
