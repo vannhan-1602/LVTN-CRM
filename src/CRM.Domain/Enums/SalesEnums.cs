@@ -28,6 +28,25 @@ public static class ContractStatus
     public static readonly IReadOnlyList<string> All = [DangThucHien, TamDung, ThanhLy];
 }
 
+/// <summary>Trạng thái thanh toán hóa đơn. Khớp enum KT_HoaDon.TrangThaiThanhToan trong DB.</summary>
+public static class InvoiceStatus
+{
+    public const string ChuaThanhToan = "ChuaThanhToan";
+    public const string ThanhToan1Phan = "ThanhToan1Phan";
+    public const string HoanTat = "HoanTat";
+
+    public static readonly IReadOnlyList<string> All = [ChuaThanhToan, ThanhToan1Phan, HoanTat];
+}
+
+/// <summary>Loại phiếu thu/chi. Khớp enum KT_PhieuThuChi.LoaiPhieu trong DB.</summary>
+public static class PaymentVoucherType
+{
+    public const string Thu = "Thu";
+    public const string Chi = "Chi";
+
+    public static readonly IReadOnlyList<string> All = [Thu, Chi];
+}
+
 /// <summary>Loại giao dịch kho. Khớp enum Kho_TheKho.LoaiGiaoDich trong DB.</summary>
 public static class StockTransactionType
 {

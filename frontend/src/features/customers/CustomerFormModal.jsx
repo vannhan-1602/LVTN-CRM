@@ -3,7 +3,10 @@ import customerApi from "../../api/customerApi";
 import authApi from "../../api/authApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
-import { LOAI_KHACH_HANG_OPTIONS, TINH_TRANG_KHACH_HANG_OPTIONS } from "../../utils/constants";
+import {
+  LOAI_KHACH_HANG_OPTIONS,
+  TINH_TRANG_KHACH_HANG_OPTIONS,
+} from "../../utils/constants";
 
 const emptyForm = {
   tenKhachHang: "",
@@ -76,84 +79,175 @@ export default function CustomerFormModal({ customer, onClose, onSaved }) {
       onSaved();
     } catch (err) {
       setError(err?.message || "Không thể lưu khách hàng");
-    } finally { setSubmitting(false); }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <Modal isOpen onClose={onClose} title={isEdit ? "Cập nhật khách hàng" : "Thêm khách hàng mới"} size="md">
+    <Modal
+      isOpen
+      onClose={onClose}
+      title={isEdit ? "Cập nhật khách hàng" : "Thêm khách hàng mới"}
+      size="md"
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-ink-700 mb-1.5">
             Tên khách hàng <span className="text-danger-500">*</span>
           </label>
-          <input name="tenKhachHang" value={form.tenKhachHang} onChange={handleChange}
+          <input
+            name="tenKhachHang"
+            value={form.tenKhachHang}
+            onChange={handleChange}
             placeholder="Nguyễn Văn A"
-            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-ink-700 mb-1.5">Email</label>
-            <input name="email" type="email" value={form.email} onChange={handleChange}
+            <label className="block text-sm font-medium text-ink-700 mb-1.5">
+              Email
+            </label>
+            <input
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
               placeholder="example@mail.com"
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink-700 mb-1.5">Số điện thoại</label>
-            <input name="soDienThoai" value={form.soDienThoai} onChange={handleChange}
+            <label className="block text-sm font-medium text-ink-700 mb-1.5">
+              Số điện thoại
+            </label>
+            <input
+              name="soDienThoai"
+              value={form.soDienThoai}
+              onChange={handleChange}
               placeholder="0901234567"
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-ink-700 mb-1.5">Loại khách hàng</label>
-            <select name="loaiKhachHangId" value={form.loaiKhachHangId} onChange={handleChange}
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400">
+            <label className="block text-sm font-medium text-ink-700 mb-1.5">
+              Loại khách hàng
+            </label>
+            <select
+              name="loaiKhachHangId"
+              value={form.loaiKhachHangId}
+              onChange={handleChange}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            >
               <option value="">-- Chọn --</option>
-              {LOAI_KHACH_HANG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              {LOAI_KHACH_HANG_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink-700 mb-1.5">Tình trạng</label>
-            <select name="tinhTrangId" value={form.tinhTrangId} onChange={handleChange}
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400">
+            <label className="block text-sm font-medium text-ink-700 mb-1.5">
+              Tình trạng
+            </label>
+            <select
+              name="tinhTrangId"
+              value={form.tinhTrangId}
+              onChange={handleChange}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            >
               <option value="">-- Chọn --</option>
-              {TINH_TRANG_KHACH_HANG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              {TINH_TRANG_KHACH_HANG_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-ink-700 mb-1.5">Mã số thuế</label>
-          <input name="maSoThue" value={form.maSoThue} onChange={handleChange}
+          <label className="block text-sm font-medium text-ink-700 mb-1.5">
+            Mã số thuế
+          </label>
+          <input
+            name="maSoThue"
+            value={form.maSoThue}
+            onChange={handleChange}
             placeholder="0123456789"
-            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-ink-700 mb-1.5">Nhân viên phụ trách</label>
-          {nhanVienList.length > 0 ? (
-            <select name="nhanVienPhuTrachId" value={form.nhanVienPhuTrachId} onChange={handleChange}
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400">
+          <label className="block text-sm font-medium text-ink-700 mb-1.5">
+            Nhân viên phụ trách
+            {isEdit && (
+              <span className="ml-2 text-xs text-ink-400 font-normal">
+                (không thể thay đổi)
+              </span>
+            )}
+          </label>
+          {isEdit ? (
+            // Khi sửa: chỉ hiển thị, không cho thay đổi nhân viên phụ trách
+            <input
+              value={
+                nhanVienList.find(
+                  (nv) => String(nv.id) === String(form.nhanVienPhuTrachId),
+                )?.hoTen ??
+                (form.nhanVienPhuTrachId
+                  ? `NV #${form.nhanVienPhuTrachId}`
+                  : "—")
+              }
+              disabled
+              className="w-full border border-ink-100 bg-surface-alt rounded-lg px-3 py-2 text-sm text-ink-500 cursor-not-allowed"
+            />
+          ) : nhanVienList.length > 0 ? (
+            <select
+              name="nhanVienPhuTrachId"
+              value={form.nhanVienPhuTrachId}
+              onChange={handleChange}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            >
               <option value="">-- Chọn nhân viên --</option>
-              {nhanVienList.map((nv) => <option key={nv.id} value={nv.id}>{nv.hoTen ?? `NV #${nv.id}`}</option>)}
+              {nhanVienList.map((nv) => (
+                <option key={nv.id} value={nv.id}>
+                  {nv.hoTen ?? `NV #${nv.id}`}
+                </option>
+              ))}
             </select>
           ) : (
-            <input name="nhanVienPhuTrachId" type="number" min="1" value={form.nhanVienPhuTrachId} onChange={handleChange}
+            <input
+              name="nhanVienPhuTrachId"
+              type="number"
+              min="1"
+              value={form.nhanVienPhuTrachId}
+              onChange={handleChange}
               placeholder="ID nhân viên"
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            />
           )}
         </div>
 
-        {error && <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2.5">{error}</div>}
+        {error && (
+          <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2.5">
+            {error}
+          </div>
+        )}
 
         <div className="flex gap-2 pt-1">
           <Button type="submit" disabled={submitting} className="flex-1">
             {submitting ? "Đang lưu..." : isEdit ? "Cập nhật" : "Thêm mới"}
           </Button>
-          <Button type="button" variant="secondary" onClick={onClose}>Hủy</Button>
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Hủy
+          </Button>
         </div>
       </form>
     </Modal>

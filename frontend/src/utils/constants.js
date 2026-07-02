@@ -1,11 +1,10 @@
-// ── Roles 
+// ── Roles
 export const ROLES = {
   Admin: "Admin",
   Manager: "Manager",
   Sale: "Sale",
   Accountant: "Accountant",
 };
-
 
 // KH_LoaiKhachHang: 1=VIP, 2=B2B, 3=B2C
 export const LOAI_KHACH_HANG_OPTIONS = [
@@ -31,7 +30,6 @@ export const TINH_TRANG_BADGE_COLOR = {
   2: "bg-accent-50 text-accent-700",
   3: "bg-ink-100 text-ink-500",
 };
-
 
 export const LEAD_TINH_TRANG_OPTIONS = [
   { value: "Moi", label: "Mới" },
@@ -88,7 +86,6 @@ export const TICKET_SOURCE_OPTIONS = [
   { value: "Zalo", label: "Zalo" },
   { value: "TrucTiep", label: "Trực tiếp" },
 ];
-
 
 export const TICKET_PHAN_HOI_LOAI_OPTIONS = [
   { value: "NoiBoXuLy", label: "Nội bộ xử lý" },
@@ -149,7 +146,13 @@ export const STOCK_TRANSACTION_TYPE_LABEL = Object.fromEntries(
 );
 
 // CH_CoHoiBanHang.GiaiDoan
-export const GIAI_DOAN_LIST = ["KhaoSat", "DeXuat", "ThuongLuong", "ThanhCong", "ThatBai"];
+export const GIAI_DOAN_LIST = [
+  "KhaoSat",
+  "DeXuat",
+  "ThuongLuong",
+  "ThanhCong",
+  "ThatBai",
+];
 
 export const GIAI_DOAN_LABEL = {
   KhaoSat: "Khảo sát",

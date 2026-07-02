@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CRM.Infrastructure.Persistence.Entities;
 
@@ -11,7 +11,7 @@ public class KtPhieuThuChiEntity
     public ulong? KhachHang_Id { get; set; }
     public ulong? HoaDon_Id { get; set; }
     public decimal SoTien { get; set; }
-    public int? NguoiLap_Id { get; set; }
+    public uint? NguoiLap_Id { get; set; }            // int unsigned trong DB → uint? trong C#
     public DateTime? NgayTao { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
