@@ -10,6 +10,9 @@ import {
   Wallet,
   UserCog,
   LogOut,
+  Settings,
+  TrendingUp,
+  ClipboardList,
 } from "lucide-react";
 import useAuthStore from "../../features/auth/authStore";
 import { ROLES } from "../../utils/constants";
@@ -44,6 +47,10 @@ function SidebarSection({ children }) {
   );
 }
 
+function SidebarDivider() {
+  return <div className="my-1 border-t border-white/10" />;
+}
+
 export default function MainLayout() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -54,11 +61,6 @@ export default function MainLayout() {
     navigate("/login");
   };
 
-  // - Sale: Lead, Customer, Opportunity, Quote, Contract, Ticket (phạm vi phụ trách)
-  // - Manager: toàn bộ quyền Sale (toàn đội) + Dashboard/Report/AI Analysis
-  // - Accountant: Invoice, Payment, Debt Tracking + xem (read-only) Customer/Contract
-  // - Admin: CHỈ User Management, Role & Permission, Audit Log, nhân sự/phòng ban
-  //          KHÔNG truy cập nghiệp vụ kinh doanh hay kế toán
   const isSalesTeam = [ROLES.Sale, ROLES.Manager].includes(user?.role);
   const isFinanceTeam = [ROLES.Accountant, ROLES.Manager].includes(user?.role);
   const isAdmin = user?.role === ROLES.Admin;
@@ -79,6 +81,7 @@ export default function MainLayout() {
   return (
     <div className="flex h-screen bg-canvas overflow-hidden">
       <aside className="w-60 bg-brand-700 flex flex-col flex-shrink-0">
+        {/* Logo */}
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-accent-500 flex items-center justify-center text-white text-sm font-semibold">
@@ -90,11 +93,12 @@ export default function MainLayout() {
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 px-3 py-3 overflow-y-auto">
           <SidebarLink to="/" icon={LayoutDashboard}>
             Dashboard
           </SidebarLink>
 
+          {/* KINH DOANH: Sale + Manager */}
           {isSalesTeam && (
             <>
               <SidebarSection>Kinh doanh</SidebarSection>
@@ -104,7 +108,7 @@ export default function MainLayout() {
               <SidebarLink to="/customers" icon={Users}>
                 Khách hàng
               </SidebarLink>
-              <SidebarLink to="/opportunities" icon={Target}>
+              <SidebarLink to="/opportunities" icon={TrendingUp}>
                 Cơ hội bán hàng
               </SidebarLink>
               <SidebarLink to="/products" icon={Package}>
@@ -122,12 +126,14 @@ export default function MainLayout() {
             </>
           )}
 
+          {/* KẾ TOÁN: Accountant + Manager */}
           {isFinanceTeam && (
             <>
               <SidebarSection>Kế toán</SidebarSection>
               <SidebarLink to="/invoices" icon={Wallet}>
                 Hóa đơn & Công nợ
               </SidebarLink>
+              {/* Accountant chỉ xem Customer + Contract (read-only) */}
               {user?.role === ROLES.Accountant && (
                 <>
                   <SidebarLink to="/customers" icon={Users}>
@@ -141,11 +147,15 @@ export default function MainLayout() {
             </>
           )}
 
+          {/* ADMIN: chỉ quản trị hệ thống */}
           {isAdmin && (
             <>
               <SidebarSection>Quản trị hệ thống</SidebarSection>
               <SidebarLink to="/users" icon={UserCog}>
                 Người dùng & Nhân sự
+              </SidebarLink>
+              <SidebarLink to="/settings" icon={Settings}>
+                Cài đặt danh mục
               </SidebarLink>
             </>
           )}

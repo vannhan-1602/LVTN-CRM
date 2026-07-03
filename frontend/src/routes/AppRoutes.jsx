@@ -16,10 +16,13 @@ import ProductListPage from "../features/products/ProductListPage";
 import ProductDetailPage from "../features/products/ProductDetailPage";
 import QuoteListPage from "../features/quotes/QuoteListPage";
 import QuoteDetailPage from "../features/quotes/QuoteDetailPage";
-import ContractListPage from "../features/contracts/ContractListPage"; 
+import ContractListPage from "../features/contracts/ContractListPage";
 import ContractDetailPage from "../features/contracts/ContractDetailPage";
-import OpportunityListPage from "../features/opportunities/OpportunityListPage"; 
+import OpportunityListPage from "../features/opportunities/OpportunityListPage";
 import OpportunityDetailPage from "../features/opportunities/OpportunityDetailPage";
+import InvoiceListPage from "../features/invoices/InvoiceListPage";
+import InvoiceDetailPage from "../features/invoices/InvoiceDetailPage";
+import SettingsPage from "../features/settings/SettingsPage";
 
 function Dashboard() {
   return (
@@ -36,22 +39,12 @@ function UnauthorizedPage() {
   return (
     <div className="flex flex-col items-center justify-center h-64 text-center">
       <div className="text-5xl mb-4">🚫</div>
-      <h3 className="text-xl font-bold text-red-600 mb-2">
+      <h3 className="text-xl font-bold text-danger-600 mb-2">
         403 — Không có quyền truy cập
       </h3>
-      <p className="text-gray-500 text-sm">
+      <p className="text-ink-500 text-sm">
         Tài khoản của bạn không có quyền xem trang này.
       </p>
-    </div>
-  );
-}
-
-function InvoicePlaceholder() {
-  return (
-    <div className="bg-white rounded-xl border shadow-sm p-8 text-center">
-      <div className="text-4xl mb-4">🧾</div>
-      <h3 className="text-xl font-bold text-gray-700">Hóa đơn & Công nợ</h3>
-      <p className="text-gray-400 mt-2 text-sm">Module đang được phát triển.</p>
     </div>
   );
 }
@@ -67,7 +60,7 @@ export default function AppRoutes() {
           <Route path="/" element={<Dashboard />} />
         </Route>
 
-        {/* Sale + Manager: Lead, Ticket, Báo giá (Admin KHÔNG có quyền theo docx) */}
+        {/* Sale + Manager */}
         <Route
           element={
             <ProtectedRoute allowedRoles={[ROLES.Sale, ROLES.Manager]} />
@@ -77,16 +70,18 @@ export default function AppRoutes() {
           <Route path="/leads/:id" element={<LeadDetailPage />} />
           <Route path="/tickets" element={<TicketListPage />} />
           <Route path="/tickets/:id" element={<TicketDetailPage />} />
-          <Route path="/opportunities" element={<OpportunityListPage />} />{" "}
-          <Route path="/opportunities/:id" element={<OpportunityDetailPage />} />
+          <Route path="/opportunities" element={<OpportunityListPage />} />
+          <Route
+            path="/opportunities/:id"
+            element={<OpportunityDetailPage />}
+          />
           <Route path="/quotes" element={<QuoteListPage />} />
-          <Route path="/quotes/:id" element={<QuoteDetailPage />} /> 
-          <Route path="/products" element={<ProductListPage />} />{" "}
+          <Route path="/quotes/:id" element={<QuoteDetailPage />} />
+          <Route path="/products" element={<ProductListPage />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />
-          {/* Sale xem để lập báo giá, chỉ Manager mới sửa được (component tự ẩn form) */}
         </Route>
 
-        {/* Customer: Sale + Manager (đọc/ghi) + Accountant (chỉ đọc) */}
+        {/* Customer + Contract: Sale + Manager (đọc/ghi) + Accountant (chỉ đọc) */}
         <Route
           element={
             <ProtectedRoute
@@ -96,34 +91,25 @@ export default function AppRoutes() {
         >
           <Route path="/customers" element={<CustomerListPage />} />
           <Route path="/customers/:id" element={<CustomerDetailPage />} />
-        </Route>
-
-        {/* Hợp đồng: Sale + Manager (đọc/ghi) + Accountant (chỉ đọc) */}
-        <Route
-          element={
-            <ProtectedRoute
-              allowedRoles={[ROLES.Sale, ROLES.Manager, ROLES.Accountant]}
-            />
-          }
-        >
-          <Route path="/contracts" element={<ContractListPage />} />{" "}
+          <Route path="/contracts" element={<ContractListPage />} />
           <Route path="/contracts/:id" element={<ContractDetailPage />} />
-          
         </Route>
 
-        {/* Accountant + Manager (xem) */}
+        {/* Hóa đơn: Accountant + Manager */}
         <Route
           element={
             <ProtectedRoute allowedRoles={[ROLES.Accountant, ROLES.Manager]} />
           }
         >
-          <Route path="/invoices" element={<InvoicePlaceholder />} />
+          <Route path="/invoices" element={<InvoiceListPage />} />
+          <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
         </Route>
 
-        {/* Admin ONLY — User Management, theo đúng phạm vi quyền hạn trong docx */}
+        {/* Admin ONLY */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.Admin]} />}>
           <Route path="/users" element={<UserManagementPage />} />
           <Route path="/users/:id" element={<UserDetailPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>
 
