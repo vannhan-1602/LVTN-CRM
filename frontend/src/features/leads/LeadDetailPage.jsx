@@ -18,6 +18,7 @@ import Card, { Field } from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import LeadFormModal from "./LeadFormModal";
+import ActivitySection from "../activities/ActivitySection";
 import {
   ROLES,
   LEAD_TINH_TRANG_LABEL,
@@ -250,6 +251,8 @@ export default function LeadDetailPage() {
               />
             </div>
           </Card>
+
+          <ActivitySection leadId={lead.id} canEdit={canEdit} />
         </div>
 
         <div className="space-y-4">
