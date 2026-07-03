@@ -48,6 +48,10 @@ public partial class CrmDbContext : DbContext
     public virtual DbSet<TkLoaiTicketEntity> TkLoaiTickets { get; set; }
     public virtual DbSet<TkTicketPhanHoiEntity> TkTicketPhanHois { get; set; }
 
+    // Loyalty (KH_ mới)
+    public virtual DbSet<KhXepHangEntity> KhXepHangs { get; set; }
+    public virtual DbSet<KhNgayLeEntity> KhNgayLes { get; set; }
+
     // Hệ thống (SYS_)
     public virtual DbSet<SysAuditLogEntity> SysAuditLogs { get; set; }
 

@@ -18,7 +18,17 @@ public class InvoiceDto
 
 public class CreateInvoiceRequestDto
 {
+    /// <summary>
+    /// Hợp đồng gốc (nếu có). Khi truyền HopDongId, hệ thống tự lấy KhachHangId
+    /// từ hợp đồng — không cần truyền KhachHangId riêng.
+    /// Hợp đồng phải đang ở trạng thái DangThucHien.
+    /// </summary>
     public ulong? HopDongId { get; set; }
-    public ulong KhachHangId { get; set; }
+
+    /// <summary>
+    /// Bắt buộc nếu không có HopDongId (hóa đơn bán lẻ không qua hợp đồng).
+    /// </summary>
+    public ulong? KhachHangId { get; set; }
+
     public decimal TongTien { get; set; }
 }

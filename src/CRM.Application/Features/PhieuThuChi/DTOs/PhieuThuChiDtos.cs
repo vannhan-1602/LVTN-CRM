@@ -18,8 +18,19 @@ public class PhieuThuChiDto
 
 public class CreatePhieuThuChiRequestDto
 {
+    /// <summary>
+    /// Hóa đơn liên kết. Bắt buộc nếu LoaiPhieu = "Thu".
+    /// </summary>
     public ulong? HoaDonId { get; set; }
+
+    /// <summary>
+    /// Khách hàng. Nếu không truyền và có HoaDonId, hệ thống tự lấy từ hóa đơn.
+    /// Bắt buộc nếu LoaiPhieu = "Chi" và không có HoaDonId.
+    /// </summary>
     public ulong? KhachHangId { get; set; }
+
+    /// <summary>Thu hoặc Chi</summary>
     public string LoaiPhieu { get; set; } = "Thu";
+
     public decimal SoTien { get; set; }
 }

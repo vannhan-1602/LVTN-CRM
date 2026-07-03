@@ -1,10 +1,10 @@
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.PhieuThuChi.DTOs;
 using CRM.Application.Interfaces.Audit;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Invoices;
 using CRM.Application.Interfaces.PhieuThuChi;
-using CRM.Application.Interfaces.Common;
 using CRM.Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -14,16 +14,16 @@ using DomainPhieuThuChi = CRM.Domain.Entities.Sales.PhieuThuChi;
 namespace CRM.Application.Features.PhieuThuChi.Commands.CreatePhieuThuChi;
 
 /// <summary>
-/// Tạo một Phiếu Thu hoặc Phiếu Chi.
-/// 
-/// Nghiệp vụ chính:
-/// - Loại 'Thu': ghi nhận tiền thực thu từ khách hàng cho 1 hóa đơn cụ thể.
-///   Sau khi tạo phiếu thu, hệ thống tự động:
-///   1. Cộng SoTien vào SoTienDaThu của hóa đơn liên kết.
-///   2. Cập nhật TrangThaiThanhToan của hóa đơn (ChuaThanhToan → ThanhToan1Phan → HoanTat).
-///   3. Kiểm tra không cho thu vượt quá TongTien của hóa đơn.
-/// 
-/// - Loại 'Chi': ghi nhận chi phí phát sinh, không bắt buộc gắn hóa đơn.
+/// Tạo Phiếu Thu hoặc Phiếu Chi.
+///
+/// Phiếu Thu:
+///   - Bắt buộc gắn HoaDonId.
+///   - Hệ thống kiểm tra hóa đơn chưa hoàn tất và số tiền không vượt mức còn lại.
+///   - Sau khi tạo, tự cập nhật SoTienDaThu + TrangThaiThanhToan hóa đơn (atomic).
+///
+/// Phiếu Chi:
+///   - Phải có KhachHangId hoặc HoaDonId để truy vết mục đích chi.
+///   - Không ảnh hưởng trạng thái hóa đơn.
 /// </summary>
 public record CreatePhieuThuChiCommand(
     ulong? HoaDonId,
@@ -44,17 +44,13 @@ public class CreatePhieuThuChiCommandValidator : AbstractValidator<CreatePhieuTh
             .GreaterThan(0m)
             .WithMessage("Số tiền phải lớn hơn 0.");
 
-        // Phiếu Thu bắt buộc phải gắn với một hóa đơn cụ thể để kiểm soát thanh toán.
         When(x => x.LoaiPhieu == PaymentVoucherType.Thu, () =>
         {
             RuleFor(x => x.HoaDonId)
-                .NotNull()
-                .WithMessage("Phiếu Thu phải được gắn với một hóa đơn.")
-                .GreaterThan(0UL)
-                .WithMessage("Mã hóa đơn không hợp lệ.");
+                .NotNull().WithMessage("Phiếu Thu phải gắn với một hóa đơn.")
+                .GreaterThan(0UL).WithMessage("Mã hóa đơn không hợp lệ.");
         });
 
-        // Phiếu Chi phải có khách hàng hoặc hóa đơn để truy vết mục đích chi.
         When(x => x.LoaiPhieu == PaymentVoucherType.Chi, () =>
         {
             RuleFor(x => x)
@@ -68,69 +64,68 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
 {
     private const string AuditTable = "KT_PhieuThuChi";
 
-    private readonly IPhieuThuChiRepository _phieuThuChiRepository;
-    private readonly IInvoiceRepository _invoiceRepository;
-    private readonly ICustomerRepository _customerRepository;
-    private readonly ICurrentUserService _currentUserService;
-    private readonly IAuditLogPublisher _auditLogPublisher;
+    private readonly IPhieuThuChiRepository _phieuThuChiRepo;
+    private readonly IInvoiceRepository _invoiceRepo;
+    private readonly ICustomerRepository _customerRepo;
+    private readonly ICurrentUserService _currentUser;
+    private readonly IAuditLogPublisher _auditLog;
     private readonly ILogger<CreatePhieuThuChiCommandHandler> _logger;
 
     public CreatePhieuThuChiCommandHandler(
-        IPhieuThuChiRepository phieuThuChiRepository,
-        IInvoiceRepository invoiceRepository,
-        ICustomerRepository customerRepository,
-        ICurrentUserService currentUserService,
-        IAuditLogPublisher auditLogPublisher,
+        IPhieuThuChiRepository phieuThuChiRepo,
+        IInvoiceRepository invoiceRepo,
+        ICustomerRepository customerRepo,
+        ICurrentUserService currentUser,
+        IAuditLogPublisher auditLog,
         ILogger<CreatePhieuThuChiCommandHandler> logger)
     {
-        _phieuThuChiRepository = phieuThuChiRepository;
-        _invoiceRepository = invoiceRepository;
-        _customerRepository = customerRepository;
-        _currentUserService = currentUserService;
-        _auditLogPublisher = auditLogPublisher;
+        _phieuThuChiRepo = phieuThuChiRepo;
+        _invoiceRepo = invoiceRepo;
+        _customerRepo = customerRepo;
+        _currentUser = currentUser;
+        _auditLog = auditLog;
         _logger = logger;
     }
 
     public async Task<PhieuThuChiDto> Handle(CreatePhieuThuChiCommand request, CancellationToken ct)
     {
-        // ── 1. Validate hóa đơn và kiểm tra không thu vượt mức ────────────
+        // ── 1. Validate hóa đơn ───────────────────────────────────────────
+        ulong? resolvedKhachHangId = request.KhachHangId;
+
         if (request.HoaDonId.HasValue)
         {
-            var hoaDon = await _invoiceRepository.GetByIdAsync(request.HoaDonId.Value, ct)
+            var hoaDon = await _invoiceRepo.GetByIdAsync(request.HoaDonId.Value, ct)
                 ?? throw new NotFoundException("Hóa đơn", request.HoaDonId.Value);
+
+            // Tự lấy KhachHangId từ hóa đơn nếu không truyền
+            resolvedKhachHangId ??= hoaDon.KhachHangId;
 
             if (request.LoaiPhieu == PaymentVoucherType.Thu)
             {
                 if (hoaDon.TrangThaiThanhToan == InvoiceStatus.HoanTat)
                     throw new BusinessRuleException(
-                        $"Hóa đơn {hoaDon.MaHoaDon} đã hoàn tất thanh toán, không thể tạo thêm phiếu thu.");
+                        $"Hóa đơn {hoaDon.MaHoaDon} đã hoàn tất thanh toán.");
 
-                var tongDaThu = await _phieuThuChiRepository.GetTongDaThuByHoaDonAsync(request.HoaDonId.Value, ct);
+                // Tính số tiền còn lại dựa trên tổng phiếu thu thực tế trong DB
+                // (không dùng SoTienDaThu trên entity vì có thể có race condition đọc)
+                var tongDaThu = await _phieuThuChiRepo.GetTongDaThuByHoaDonAsync(request.HoaDonId.Value, ct);
                 var conLai = hoaDon.TongTien - tongDaThu;
 
                 if (request.SoTien > conLai)
                     throw new BusinessRuleException(
-                        $"Số tiền thu ({request.SoTien:N0} VNĐ) vượt quá số tiền còn lại của hóa đơn ({conLai:N0} VNĐ).");
+                        $"Số tiền thu ({request.SoTien:N0} đ) vượt quá số tiền còn lại ({conLai:N0} đ).");
             }
         }
 
-        // ── 2. Validate khách hàng nếu có ─────────────────────────────────
-        ulong? resolvedKhachHangId = request.KhachHangId;
-
-        if (request.KhachHangId.HasValue)
+        // ── 2. Validate khách hàng tồn tại ───────────────────────────────
+        if (resolvedKhachHangId.HasValue)
         {
-            _ = await _customerRepository.GetByIdAsync(request.KhachHangId.Value, ct)
-                ?? throw new NotFoundException("Khách hàng", request.KhachHangId.Value);
-        }
-        else if (request.HoaDonId.HasValue)
-        {
-            // Nếu không truyền KhachHangId nhưng có HoaDonId, lấy KhachHangId từ hóa đơn
-            var hoaDon = await _invoiceRepository.GetByIdAsync(request.HoaDonId.Value, ct);
-            resolvedKhachHangId = hoaDon?.KhachHangId;
+            _ = await _customerRepo.GetByIdAsync(resolvedKhachHangId.Value, ct)
+                ?? throw new NotFoundException("Khách hàng", resolvedKhachHangId.Value);
         }
 
-        // ── 3. Tạo phiếu ──────────────────────────────────────────────────
-        var maPhieu = await _phieuThuChiRepository.GenerateMaPhieuAsync(request.LoaiPhieu, ct);
+        // ── 3. Tạo phiếu ─────────────────────────────────────────────────
+        var maPhieu = await _phieuThuChiRepo.GenerateMaPhieuAsync(request.LoaiPhieu, ct);
 
         var phieu = new DomainPhieuThuChi
         {
@@ -139,31 +134,35 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
             KhachHangId = resolvedKhachHangId,
             HoaDonId = request.HoaDonId,
             SoTien = request.SoTien,
-            NguoiLapId = _currentUserService.UserId.HasValue ? (uint?)_currentUserService.UserId.Value : null,
+            NguoiLapId = _currentUser.UserId,   // uint? trực tiếp, không cần cast
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        var created = await _phieuThuChiRepository.AddAsync(phieu, ct);
+        var created = await _phieuThuChiRepo.AddAsync(phieu, ct);
 
-        // ── 4. Cập nhật SoTienDaThu + TrangThaiThanhToan của hóa đơn ──────
-        // (chỉ áp dụng cho phiếu Thu gắn với hóa đơn)
+        // ── 4. Cập nhật SoTienDaThu hóa đơn (chỉ Phiếu Thu) ─────────────
+        // Dùng SQL UPDATE cộng dồn để tránh race condition khi nhiều phiếu thu
+        // được tạo đồng thời cho cùng một hóa đơn.
         if (request.LoaiPhieu == PaymentVoucherType.Thu && request.HoaDonId.HasValue)
         {
-            await _invoiceRepository.UpdateSoTienDaThuAsync(request.HoaDonId.Value, request.SoTien, ct);
+            await _invoiceRepo.UpdateSoTienDaThuAsync(request.HoaDonId.Value, request.SoTien, ct);
         }
 
-        // ── 5. Lấy DTO đầy đủ để trả về ──────────────────────────────────
-        var dto = await _phieuThuChiRepository.GetByIdEnrichedAsync(created.Id, ct)
+        // ── 5. Trả về DTO đầy đủ ─────────────────────────────────────────
+        var dto = await _phieuThuChiRepo.GetByIdEnrichedAsync(created.Id, ct)
             ?? throw new BusinessRuleException("Tạo phiếu thu/chi thất bại.");
 
-        // ── 6. Audit log ───────────────────────────────────────────────────
+        // ── 6. Audit log ──────────────────────────────────────────────────
         try
         {
-            await _auditLogPublisher.PublishAsync(AuditTable, created.Id, "INSERT",
+            await _auditLog.PublishAsync(AuditTable, created.Id, "INSERT",
                 oldData: null, newData: dto, ct);
         }
-        catch (Exception ex) { _logger.LogWarning(ex, "Audit log failed for phieu {Id}", created.Id); }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Audit log failed for PhieuThuChi {Id}", created.Id);
+        }
 
         return dto;
     }

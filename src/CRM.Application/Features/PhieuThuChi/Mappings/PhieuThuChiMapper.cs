@@ -6,7 +6,10 @@ namespace CRM.Application.Features.PhieuThuChi.Mappings;
 public static class PhieuThuChiMapper
 {
     public static PhieuThuChiDto ToDto(
-        DomainPhieuThuChi p, string? tenKhachHang = null, string? maHoaDon = null, string? tenNguoiLap = null) => new()
+        DomainPhieuThuChi p,
+        string? tenKhachHang = null,
+        string? maHoaDon = null,
+        string? tenNguoiLap = null) => new()
     {
         Id = p.Id,
         MaPhieu = p.MaPhieu,
