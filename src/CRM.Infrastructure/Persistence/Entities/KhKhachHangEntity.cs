@@ -14,6 +14,9 @@ public class KhKhachHangEntity
     public string? SoDienThoai { get; set; }
     public string? MaSoThue { get; set; }
     public uint? NhanVienPhuTrachId { get; set; }
+    public ushort? HangKhachHang_Id { get; set; }   // FK → KH_XepHang
+    public DateOnly? NgaySinh { get; set; }           // B2C: sinh nhật cá nhân
+    public DateOnly? NgayThanhLap { get; set; }       // B2B: ngày thành lập công ty
     public bool IsDeleted { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

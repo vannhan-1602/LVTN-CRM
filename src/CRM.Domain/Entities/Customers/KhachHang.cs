@@ -12,5 +12,8 @@ public class KhachHang : SoftDeletableEntity<ulong>
     public string? SoDienThoai { get; set; }
     public string? MaSoThue { get; set; }
     public uint? NhanVienPhuTrachId { get; set; }
+    public DateOnly? NgaySinh { get; set; }
+    public DateOnly? NgayThanhLap { get; set; }
+    public ushort? HangKhachHangId { get; set; }
 }
 

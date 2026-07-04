@@ -51,6 +51,11 @@ public partial class CrmDbContext : DbContext
     // Loyalty (KH_ mới)
     public virtual DbSet<KhXepHangEntity> KhXepHangs { get; set; }
     public virtual DbSet<KhNgayLeEntity> KhNgayLes { get; set; }
+    public virtual DbSet<KhDiemThuongEntity> KhDiemThuongs { get; set; }
+    public virtual DbSet<KhLichSuHangEntity> KhLichSuHangs { get; set; }
+    public virtual DbSet<KhVoucherEntity> KhVouchers { get; set; }
+    public virtual DbSet<KhVoucherTokenEntity> KhVoucherTokens { get; set; }
+    public virtual DbSet<KhEmailLogEntity> KhEmailLogs { get; set; }
 
     // Hệ thống (SYS_)
     public virtual DbSet<SysAuditLogEntity> SysAuditLogs { get; set; }

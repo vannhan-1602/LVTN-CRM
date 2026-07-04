@@ -192,6 +192,9 @@ public class CustomerRepository : ICustomerRepository
         SoDienThoai = e.SoDienThoai,
         MaSoThue = e.MaSoThue,
         NhanVienPhuTrachId = e.NhanVienPhuTrachId,
+        NgaySinh           = e.NgaySinh,
+        NgayThanhLap       = e.NgayThanhLap,
+        HangKhachHangId    = e.HangKhachHang_Id,
         IsDeleted = e.IsDeleted,
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt

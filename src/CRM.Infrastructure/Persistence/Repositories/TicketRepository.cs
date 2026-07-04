@@ -197,6 +197,41 @@ namespace CRM.Infrastructure.Persistence.Repositories
             UpdatedAt = t.UpdatedAt
         };
 
+
+        public async Task<ushort?> GetLoaiTicketIdByNameAsync(string tenLoai, CancellationToken ct = default) =>
+            await _context.TkLoaiTickets
+                .AsNoTracking()
+                .Where(x => x.TenLoai == tenLoai && x.IsActive)
+                .Select(x => (ushort?)x.Id)
+                .FirstOrDefaultAsync(ct);
+
+        public async Task<ulong> CreateTicketForVoucherAsync(
+            ulong khachHangId, ushort? loaiTicketId,
+            string tieuDe, string moTa,
+            CancellationToken ct = default)
+        {
+            var maTicket = await GenerateMaTicketAsync(ct);
+
+            var entity = new TkTicketEntity
+            {
+                MaTicket          = maTicket,
+                TieuDe            = tieuDe,
+                MoTa              = moTa,
+                LoaiTicket_Id     = loaiTicketId,
+                KhachHang_Id      = khachHangId,
+                MucDoUuTien       = "TrungBinh",
+                NguonTiepNhan     = "Web",       // khách bấm link web
+                TrangThai         = "Moi",
+                IsDeleted         = false,
+                CreatedAt         = DateTime.UtcNow,
+                UpdatedAt         = DateTime.UtcNow,
+            };
+
+            _context.TkTickets.Add(entity);
+            await _context.SaveChangesAsync(ct);
+            return entity.Id;
+        }
+
         private static TicketPhanHoi MapPhanHoiToDomain(TkTicketPhanHoiEntity e) => new()
         {
             Id = e.Id,

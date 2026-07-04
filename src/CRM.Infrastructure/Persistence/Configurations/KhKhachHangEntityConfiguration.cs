@@ -58,5 +58,16 @@ public class KhKhachHangEntityConfiguration : IEntityTypeConfiguration<KhKhachHa
 
         builder.HasIndex(e => e.MaKhachHang)
             .IsUnique();
+
+        builder.Property(e => e.HangKhachHang_Id)
+            .HasColumnName("HangKhachHang_Id");
+
+        builder.Property(e => e.NgaySinh)
+            .HasColumnName("NgaySinh")
+            .HasColumnType("date");
+
+        builder.Property(e => e.NgayThanhLap)
+            .HasColumnName("NgayThanhLap")
+            .HasColumnType("date");
     }
 }

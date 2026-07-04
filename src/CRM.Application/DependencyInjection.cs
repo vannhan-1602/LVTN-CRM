@@ -1,5 +1,6 @@
 using System.Reflection;
 using CRM.Application.Common.Behaviors;
+using CRM.Application.Services;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -28,5 +28,17 @@ namespace CRM.Application.Interfaces.Tickets
 
         Task<bool> LoaiTicketExistsAsync(ushort id, CancellationToken cancellationToken = default);
         Task<bool> KhachHangExistsAsync(ulong id, CancellationToken cancellationToken = default);
+
+        /// <summary>Lấy Id của loại ticket theo tên — dùng cho VoucherRedeemController.</summary>
+        Task<ushort?> GetLoaiTicketIdByNameAsync(string tenLoai, CancellationToken ct = default);
+
+        /// <summary>
+        /// Tạo ticket tự động khi khách bấm link voucher trong email.
+        /// Trả về Id của ticket vừa tạo.
+        /// </summary>
+        Task<ulong> CreateTicketForVoucherAsync(
+            ulong khachHangId, ushort? loaiTicketId,
+            string tieuDe, string moTa,
+            CancellationToken ct = default);
     }
 }

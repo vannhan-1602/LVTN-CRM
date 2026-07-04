@@ -5,7 +5,7 @@ using CRM.Infrastructure.Persistence.Contexts;
 using CRM.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace CRM.Infrastructure.Persistence.Repositories.DanhMuc;
+namespace CRM.Infrastructure.Persistence.Repositories;
 
 public class DanhMucRepository : IDanhMucRepository
 {

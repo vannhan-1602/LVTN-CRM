@@ -5,6 +5,7 @@ using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Invoices;
 using CRM.Application.Interfaces.PhieuThuChi;
+using CRM.Application.Services;
 using CRM.Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -69,6 +70,7 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
     private readonly ICustomerRepository _customerRepo;
     private readonly ICurrentUserService _currentUser;
     private readonly IAuditLogPublisher _auditLog;
+    private readonly LoyaltyService _loyaltyService;
     private readonly ILogger<CreatePhieuThuChiCommandHandler> _logger;
 
     public CreatePhieuThuChiCommandHandler(
@@ -77,6 +79,7 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
         ICustomerRepository customerRepo,
         ICurrentUserService currentUser,
         IAuditLogPublisher auditLog,
+        LoyaltyService loyaltyService,
         ILogger<CreatePhieuThuChiCommandHandler> logger)
     {
         _phieuThuChiRepo = phieuThuChiRepo;
@@ -84,6 +87,7 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
         _customerRepo = customerRepo;
         _currentUser = currentUser;
         _auditLog = auditLog;
+        _loyaltyService = loyaltyService;
         _logger = logger;
     }
 
@@ -149,11 +153,43 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
             await _invoiceRepo.UpdateSoTienDaThuAsync(request.HoaDonId.Value, request.SoTien, ct);
         }
 
-        // ── 5. Trả về DTO đầy đủ ─────────────────────────────────────────
+        // ── 5. Xử lý Loyalty (tích điểm + tính hạng + voucher + email) ──────
+        // Fire-and-forget theo pattern: chạy sau giao dịch chính, lỗi không rollback.
+        if (request.LoaiPhieu == PaymentVoucherType.Thu && request.HoaDonId.HasValue)
+        {
+            var hoaDonForLoyalty = await _invoiceRepo.GetByIdAsync(request.HoaDonId.Value, ct);
+            var customerForEmail = resolvedKhachHangId.HasValue
+                ? await _customerRepo.GetByIdAsync(resolvedKhachHangId.Value, ct)
+                : null;
+
+            if (hoaDonForLoyalty is not null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _loyaltyService.XuLySauPhieuThuAsync(
+                            khachHangId:    hoaDonForLoyalty.KhachHangId,
+                            tenKhachHang:   customerForEmail?.TenKhachHang ?? "Quý khách",
+                            khachHangEmail: customerForEmail?.Email,
+                            maHoaDon:       hoaDonForLoyalty.MaHoaDon,
+                            soTienThu:      request.SoTien,
+                            hoaDonId:       hoaDonForLoyalty.Id,
+                            phieuThuChiId:  created.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "[Loyalty] Background task lỗi KH {Id}", hoaDonForLoyalty.KhachHangId);
+                    }
+                }, CancellationToken.None); // Dùng None vì request CT đã completed
+            }
+        }
+
+        // ── 6. Trả về DTO đầy đủ ─────────────────────────────────────────
         var dto = await _phieuThuChiRepo.GetByIdEnrichedAsync(created.Id, ct)
             ?? throw new BusinessRuleException("Tạo phiếu thu/chi thất bại.");
 
-        // ── 6. Audit log ──────────────────────────────────────────────────
+        // ── 7. Audit log ──────────────────────────────────────────────────
         try
         {
             await _auditLog.PublishAsync(AuditTable, created.Id, "INSERT",
