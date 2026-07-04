@@ -6,30 +6,9 @@ export const ROLES = {
   Accountant: "Accountant",
 };
 
-// KH_LoaiKhachHang: 1=VIP, 2=B2B, 3=B2C
-export const LOAI_KHACH_HANG_OPTIONS = [
-  { value: 1, label: "VIP" },
-  { value: 2, label: "B2B (Doanh nghiệp)" },
-  { value: 3, label: "B2C (Cá nhân)" },
-];
-export const LOAI_KHACH_HANG_MAP = { 1: "VIP", 2: "B2B", 3: "B2C" };
-export const LOAI_BADGE_COLOR = {
-  1: "bg-warning-50 text-warning-700",
-  2: "bg-info-50 text-info-700",
-  3: "bg-success-50 text-success-700",
-};
-
-// KH_TinhTrangKhachHang: 1=Đang giao dịch, 2=Tiềm năng, 3=Ngừng giao dịch
-export const TINH_TRANG_KHACH_HANG_OPTIONS = [
-  { value: 1, label: "Đang giao dịch" },
-  { value: 2, label: "Tiềm năng" },
-  { value: 3, label: "Ngừng giao dịch" },
-];
-export const TINH_TRANG_BADGE_COLOR = {
-  1: "bg-success-50 text-success-700",
-  2: "bg-accent-50 text-accent-700",
-  3: "bg-ink-100 text-ink-500",
-};
+// Loại khách hàng & Tình trạng khách hàng: KHÔNG hardcode ở đây.
+// Đây là danh mục DB-driven (bảng KH_LoaiKhachHang, KH_TinhTrangKhachHang), quản lý CRUD ở trang Settings.
+// Dùng useDanhMucStore (stores/danhMucStore.js) để lấy danh sách + tên; dùng badgeToneForId() (utils/formatters.js) cho màu badge.
 
 export const LEAD_TINH_TRANG_OPTIONS = [
   { value: "Moi", label: "Mới" },

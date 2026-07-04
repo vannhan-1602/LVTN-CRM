@@ -25,3 +25,12 @@ export function formatCurrency(amount) {
     currency: "VND",
   }).format(amount);
 }
+
+// Danh mục lấy từ DB (LoaiKhachHang, TinhTrang...) không có cột màu,
+// và id có thể đổi bất cứ lúc nào qua CRUD ở Settings, nên không map màu cứng theo id.
+// Thay vào đó xoay vòng bảng màu cố định của Badge để màu ổn định theo id nhưng không phụ thuộc thứ tự tạo.
+const BADGE_TONE_CYCLE = ["info", "success", "warning", "danger", "neutral"];
+export function badgeToneForId(id) {
+  if (id == null) return "neutral";
+  return BADGE_TONE_CYCLE[Number(id) % BADGE_TONE_CYCLE.length];
+}

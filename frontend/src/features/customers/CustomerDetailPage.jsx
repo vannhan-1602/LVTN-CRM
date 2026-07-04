@@ -11,12 +11,8 @@ import Button from "../../components/common/Button";
 import EmptyState from "../../components/common/EmptyState";
 import CustomerFormModal from "./CustomerFormModal";
 import ActivitySection from "../activities/ActivitySection";
-import {
-  ROLES,
-  LOAI_BADGE_COLOR,
-  TINH_TRANG_BADGE_COLOR,
-} from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { ROLES } from "../../utils/constants";
+import { formatDateTime, badgeToneForId } from "../../utils/formatters";
 
 const LOAI_DIA_CHI_OPTIONS = [
   { value: "Office", label: "Văn phòng" },
@@ -407,7 +403,7 @@ export default function CustomerDetailPage() {
               label={
                 customer.tenTinhTrang ?? `Tình trạng ${customer.tinhTrangId}`
               }
-              colorClass={TINH_TRANG_BADGE_COLOR[customer.tinhTrangId]}
+              tone={badgeToneForId(customer.tinhTrangId)}
             />
           )
         }
@@ -456,7 +452,7 @@ export default function CustomerDetailPage() {
                         customer.tenLoaiKhachHang ??
                         `Loại ${customer.loaiKhachHangId}`
                       }
-                      colorClass={LOAI_BADGE_COLOR[customer.loaiKhachHangId]}
+                      tone={badgeToneForId(customer.loaiKhachHangId)}
                     />
                   ) : (
                     "—"
