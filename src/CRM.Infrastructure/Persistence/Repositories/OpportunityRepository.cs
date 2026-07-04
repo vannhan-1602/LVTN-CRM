@@ -96,10 +96,26 @@ public class OpportunityRepository : IOpportunityRepository
         return true;
     }
 
-    public async Task<OpportunitySummaryDto> GetSummaryAsync(CancellationToken ct = default)
+    public async Task ReassignLeadOpportunitiesToCustomerAsync(ulong leadId, ulong customerId, CancellationToken ct = default)
     {
-        var all = await _ctx.Set<BhCoHoiBanHangEntity>()
-            .Where(x => !x.IsDeleted).ToListAsync(ct);
+        var opportunities = await _ctx.Set<BhCoHoiBanHangEntity>()
+            .Where(x => x.Lead_Id == leadId && !x.IsDeleted)
+            .ToListAsync(ct);
+
+        foreach (var o in opportunities)
+        {
+            o.KhachHang_Id = customerId;
+            o.UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public async Task<OpportunitySummaryDto> GetSummaryAsync(uint? ownerUserId, CancellationToken ct = default)
+    {
+        var q = _ctx.Set<BhCoHoiBanHangEntity>().Where(x => !x.IsDeleted);
+        if (ownerUserId.HasValue)
+            q = q.Where(x => x.NhanVienPhuTrach_Id == (int)ownerUserId.Value);
+
+        var all = await q.ToListAsync(ct);
 
         var countByStage = all.GroupBy(x => x.GiaiDoan)
             .ToDictionary(g => g.Key, g => g.Count());

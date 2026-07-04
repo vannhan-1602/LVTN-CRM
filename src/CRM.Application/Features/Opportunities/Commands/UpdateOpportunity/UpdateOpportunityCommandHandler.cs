@@ -5,6 +5,7 @@ using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Opportunities;
 using CRM.Domain.Entities.Sales;
+using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -32,6 +33,11 @@ public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunity
 
         if (_currentUser.Role == Roles.Sale && existing.NhanVienPhuTrachId != _currentUser.UserId)
             throw new ForbiddenException("Bạn không có quyền sửa cơ hội của nhân viên khác.");
+
+        // Cơ hội đã chốt (Thành công/Thất bại) là bản ghi lịch sử, không cho sửa nữa.
+        if (existing.GiaiDoan == CoHoiGiaiDoan.ThanhCong.ToString() || existing.GiaiDoan == CoHoiGiaiDoan.ThatBai.ToString())
+            throw new BusinessRuleException(
+                $"Cơ hội đã ở trạng thái '{existing.GiaiDoan}', không thể chỉnh sửa.");
 
         var oldDto = await _repo.GetByIdEnrichedAsync(req.Id, ct);
 

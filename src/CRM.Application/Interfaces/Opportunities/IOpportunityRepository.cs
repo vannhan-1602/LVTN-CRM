@@ -20,6 +20,11 @@ public interface IOpportunityRepository
     Task UpdateAsync(CoHoiBanHang entity, CancellationToken ct = default);
     Task<bool> SoftDeleteAsync(ulong id, CancellationToken ct = default);
 
+    // Khi Lead được convert thành Customer, gán lại các Cơ hội đang gắn LeadId đó sang KhachHangId mới
+    // để không bị "mồ côi" khỏi trang chi tiết Khách hàng. Không tự SaveChanges — theo UnitOfWork của caller.
+    Task ReassignLeadOpportunitiesToCustomerAsync(ulong leadId, ulong customerId, CancellationToken ct = default);
+
     //Dữ liệu thống kê để AI phân tích — số cơ hội theo giai đoạn, tỷ lệ, doanh thu.
-    Task<OpportunitySummaryDto> GetSummaryAsync(CancellationToken ct = default);
+    // ownerUserId: null = toàn công ty (Manager/Admin); có giá trị = chỉ tính cơ hội của nhân viên đó (Sale).
+    Task<OpportunitySummaryDto> GetSummaryAsync(uint? ownerUserId, CancellationToken ct = default);
 }

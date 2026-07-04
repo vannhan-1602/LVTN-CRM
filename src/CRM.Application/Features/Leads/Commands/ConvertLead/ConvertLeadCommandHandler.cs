@@ -6,6 +6,7 @@ using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Leads;
+using CRM.Application.Interfaces.Opportunities;
 using CRM.Domain.Entities.Customers;
 using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
@@ -18,6 +19,7 @@ public class ConvertLeadCommandHandler : IRequestHandler<ConvertLeadCommand, Cus
 {
     private readonly ILeadRepository _leadRepository;
     private readonly ICustomerRepository _customerRepository;
+    private readonly IOpportunityRepository _opportunityRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLogPublisher;
     private readonly ICurrentUserService _currentUser;
@@ -26,6 +28,7 @@ public class ConvertLeadCommandHandler : IRequestHandler<ConvertLeadCommand, Cus
     public ConvertLeadCommandHandler(
         ILeadRepository leadRepository,
         ICustomerRepository customerRepository,
+        IOpportunityRepository opportunityRepository,
         IUnitOfWork unitOfWork,
         IAuditLogPublisher auditLogPublisher,
         ICurrentUserService currentUser,
@@ -33,6 +36,7 @@ public class ConvertLeadCommandHandler : IRequestHandler<ConvertLeadCommand, Cus
     {
         _leadRepository = leadRepository;
         _customerRepository = customerRepository;
+        _opportunityRepository = opportunityRepository;
         _unitOfWork = unitOfWork;
         _auditLogPublisher = auditLogPublisher;
         _currentUser = currentUser;
@@ -76,6 +80,11 @@ public class ConvertLeadCommandHandler : IRequestHandler<ConvertLeadCommand, Cus
 
         createdCustomer = await _customerRepository.GetByMaKhachHangAsync(maKhachHang, cancellationToken)
             ?? createdCustomer;
+
+        // Cơ hội đang gắn với Lead này chuyển sang gắn KhachHangId mới, tránh "mồ côi" khỏi trang chi tiết Khách hàng.
+        await _opportunityRepository.ReassignLeadOpportunitiesToCustomerAsync(
+            lead.Id, createdCustomer.Id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = CustomerMapper.ToDto(createdCustomer);
 

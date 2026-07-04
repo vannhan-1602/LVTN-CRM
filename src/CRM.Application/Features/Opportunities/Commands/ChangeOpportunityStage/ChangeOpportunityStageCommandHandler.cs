@@ -34,6 +34,11 @@ public class ChangeOpportunityStageCommandHandler : IRequestHandler<ChangeOpport
         if (_currentUser.Role == Roles.Sale && entity.NhanVienPhuTrachId != _currentUser.UserId)
             throw new ForbiddenException("Bạn không có quyền cập nhật cơ hội của nhân viên khác.");
 
+        // Cơ hội đã chốt (Thành công/Thất bại) là bản ghi lịch sử, không cho đổi giai đoạn tiếp.
+        if (entity.GiaiDoan == CoHoiGiaiDoan.ThanhCong.ToString() || entity.GiaiDoan == CoHoiGiaiDoan.ThatBai.ToString())
+            throw new BusinessRuleException(
+                $"Cơ hội đã ở trạng thái '{entity.GiaiDoan}', không thể đổi giai đoạn nữa.");
+
         // Khi ThanhCong → TyLeThanhCong = 100; ThatBai → 0
         if (req.GiaiDoan == CoHoiGiaiDoan.ThanhCong.ToString()) entity.TyLeThanhCong = 100;
         if (req.GiaiDoan == CoHoiGiaiDoan.ThatBai.ToString()) entity.TyLeThanhCong = 0;
