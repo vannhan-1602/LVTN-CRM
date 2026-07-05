@@ -13,16 +13,19 @@ public class LeadRepository : ILeadRepository
     private readonly CrmDbContext _context;
     public LeadRepository(CrmDbContext context) => _context = context;
 
-    public async Task<Lead?> GetByIdAsync(ulong id, CancellationToken ct = default)
+    public async Task<Lead?> GetByIdAsync(ulong id, bool includeDeleted = false, CancellationToken ct = default)
     {
-        var e = await _context.Set<KhLeadEntity>().FindAsync([id], ct);
+        var e = await _context.Set<KhLeadEntity>()
+            .FirstOrDefaultAsync(x => x.Id == id && (includeDeleted || !x.IsDeleted), ct);
         return e is null ? null : MapToDomain(e);
     }
 
     public async Task<PagedResult<Lead>> GetPagedAsync(
-        int pageNumber, int pageSize, string? search, uint? ownerUserId, CancellationToken ct = default)
+        int pageNumber, int pageSize, string? search, uint? ownerUserId,
+        bool? isDeleted = null, CancellationToken ct = default)
     {
-        var query = _context.Set<KhLeadEntity>().AsNoTracking();
+        var query = _context.Set<KhLeadEntity>().AsNoTracking()
+            .Where(x => x.IsDeleted == (isDeleted ?? false));
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(x =>
@@ -71,12 +74,25 @@ public class LeadRepository : ILeadRepository
         // Không SaveChanges ở đây — Handler gọi qua IUnitOfWork để giữ 1 transaction/Command.
     }
 
+    // Xóa mềm (IsDeleted = true) — trước đây hàm này Remove() thẳng khỏi DB, không có đường
+    // quay lại. Đổi sang soft-delete để đồng bộ với Customer/Product và cho phép khôi phục.
     public async Task<bool> DeleteAsync(ulong id, CancellationToken ct = default)
     {
-        var entity = await _context.Set<KhLeadEntity>().FindAsync([id], ct);
+        var entity = await _context.Set<KhLeadEntity>()
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
         if (entity is null) return false;
-        _context.Set<KhLeadEntity>().Remove(entity);
-        // Không SaveChanges ở đây — Handler gọi qua IUnitOfWork để giữ 1 transaction/Command.
+        entity.IsDeleted = true;
+        entity.UpdatedAt = DateTime.UtcNow;
+        return true;
+    }
+
+    public async Task<bool> RestoreAsync(ulong id, CancellationToken ct = default)
+    {
+        var entity = await _context.Set<KhLeadEntity>()
+            .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted, ct);
+        if (entity is null) return false;
+        entity.IsDeleted = false;
+        entity.UpdatedAt = DateTime.UtcNow;
         return true;
     }
 
@@ -89,6 +105,7 @@ public class LeadRepository : ILeadRepository
         Email = e.Email,
         TinhTrang = e.TinhTrang ?? LeadTinhTrang.Moi,
         NhanVienPhuTrachId = e.NhanVienPhuTrach_Id,
+        IsDeleted = e.IsDeleted,
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt
     };
@@ -101,6 +118,7 @@ public class LeadRepository : ILeadRepository
         Email = lead.Email,
         TinhTrang = lead.TinhTrang,
         NhanVienPhuTrach_Id = lead.NhanVienPhuTrachId,
+        IsDeleted = lead.IsDeleted,
         CreatedAt = lead.CreatedAt,
         UpdatedAt = lead.UpdatedAt
     };

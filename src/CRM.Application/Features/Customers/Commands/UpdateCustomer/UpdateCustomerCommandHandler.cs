@@ -55,6 +55,9 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
         customer.Email = request.Email?.Trim();
         customer.SoDienThoai = request.SoDienThoai?.Trim();
         customer.MaSoThue = request.MaSoThue?.Trim();
+        customer.NgaySinh = request.NgaySinh;
+        customer.NgayThanhLap = request.NgayThanhLap;
+        customer.HangKhachHangId = request.HangKhachHangId;
 
         // Sale không được đổi người phụ trách (tránh chuyển Customer ra khỏi/vào
         // phạm vi kiểm soát của mình một cách tùy tiện) — chỉ Manager mới đổi được.

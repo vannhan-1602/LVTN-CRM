@@ -17,6 +17,7 @@ public class HdBaoGiaEntityConfiguration : IEntityTypeConfiguration<HdBaoGiaEnti
         b.Property(x => x.TongTien).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
         b.Property(x => x.TrangThai).HasMaxLength(30).HasDefaultValue("Nhap");
         b.Property(x => x.NhanVien_Id).IsRequired(false);
+        b.Property(x => x.LyDoTuChoi).HasMaxLength(500).IsRequired(false);
         b.Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         b.Property(x => x.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
 

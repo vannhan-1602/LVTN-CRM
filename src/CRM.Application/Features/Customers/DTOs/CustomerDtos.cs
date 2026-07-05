@@ -14,6 +14,10 @@ public class CustomerDto
     public string? MaSoThue { get; set; }
     public uint? NhanVienPhuTrachId { get; set; }
     public string? TenNhanVienPhuTrach { get; set; }    
+    public DateOnly? NgaySinh { get; set; }
+    public DateOnly? NgayThanhLap { get; set; }
+    public ushort? HangKhachHangId { get; set; }
+    public string? TenHangKhachHang { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
@@ -27,6 +31,9 @@ public class CreateCustomerRequestDto
     public string? SoDienThoai { get; set; }
     public string? MaSoThue { get; set; }
     public uint? NhanVienPhuTrachId { get; set; }
+    public DateOnly? NgaySinh { get; set; }
+    public DateOnly? NgayThanhLap { get; set; }
+    public ushort? HangKhachHangId { get; set; }
 }
 
 public class UpdateCustomerRequestDto
@@ -38,4 +45,7 @@ public class UpdateCustomerRequestDto
     public string? SoDienThoai { get; set; }
     public string? MaSoThue { get; set; }
     public uint? NhanVienPhuTrachId { get; set; }
+    public DateOnly? NgaySinh { get; set; }
+    public DateOnly? NgayThanhLap { get; set; }
+    public ushort? HangKhachHangId { get; set; }
 }

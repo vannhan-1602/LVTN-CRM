@@ -15,7 +15,7 @@ public interface IQuoteRepository
 
     Task<BaoGia> AddAsync(BaoGia quote, List<BaoGiaChiTietInput> chiTiet, CancellationToken ct = default);
     Task UpdateAsync(BaoGia quote, List<BaoGiaChiTietInput> chiTiet, CancellationToken ct = default);
-    Task UpdateStatusAsync(ulong id, string trangThai, CancellationToken ct = default);
+    Task UpdateStatusAsync(ulong id, string trangThai, string? lyDoTuChoi = null, CancellationToken ct = default);
     Task<bool> DeleteAsync(ulong id, CancellationToken ct = default);
 
     Task<string> GenerateMaBaoGiaAsync(CancellationToken ct = default);

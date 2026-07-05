@@ -17,6 +17,9 @@ public static class CustomerMapper
             SoDienThoai = customer.SoDienThoai,
             MaSoThue = customer.MaSoThue,
             NhanVienPhuTrachId = customer.NhanVienPhuTrachId,
+            NgaySinh = customer.NgaySinh,
+            NgayThanhLap = customer.NgayThanhLap,
+            HangKhachHangId = customer.HangKhachHangId,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };
@@ -26,7 +29,8 @@ public static class CustomerMapper
         KhachHang customer,
         string? tenLoai,
         string? tenTinhTrang,
-        string? tenNhanVien) =>
+        string? tenNhanVien,
+        string? tenHangKhachHang = null) =>
         new()
         {
             Id = customer.Id,
@@ -41,6 +45,10 @@ public static class CustomerMapper
             MaSoThue = customer.MaSoThue,
             NhanVienPhuTrachId = customer.NhanVienPhuTrachId,
             TenNhanVienPhuTrach = tenNhanVien,
+            NgaySinh = customer.NgaySinh,
+            NgayThanhLap = customer.NgayThanhLap,
+            HangKhachHangId = customer.HangKhachHangId,
+            TenHangKhachHang = tenHangKhachHang,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };

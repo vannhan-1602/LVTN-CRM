@@ -17,6 +17,7 @@ namespace CRM.Infrastructure.Persistence.Configurations
             builder.Property(x => x.Email).HasMaxLength(150);
             builder.Property(x => x.TinhTrang).HasMaxLength(50);
             builder.Property(x => x.NhanVienPhuTrach_Id).HasColumnName("NhanVienPhuTrach_Id");
+            builder.Property(x => x.IsDeleted).HasColumnName("IsDeleted");
             builder.Property(x => x.CreatedAt).ValueGeneratedOnAdd();
             builder.Property(x => x.UpdatedAt).ValueGeneratedOnAddOrUpdate();
         }

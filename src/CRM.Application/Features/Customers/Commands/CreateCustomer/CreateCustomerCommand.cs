@@ -11,4 +11,7 @@ public record CreateCustomerCommand(
     string? Email,
     string? SoDienThoai,
     string? MaSoThue,
-    uint? NhanVienPhuTrachId) : IRequest<CustomerDto>;
+    uint? NhanVienPhuTrachId,
+    DateOnly? NgaySinh,
+    DateOnly? NgayThanhLap,
+    ushort? HangKhachHangId) : IRequest<CustomerDto>;

@@ -9,5 +9,6 @@ public record GetAllCustomersQuery(
     int PageSize,
     string? Search,
     ushort? LoaiKhachHangId,    
-    ushort? TinhTrangId          
+    ushort? TinhTrangId,
+    bool? IsDeleted = null
 ) : IRequest<PagedResult<CustomerDto>>;

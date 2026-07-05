@@ -35,7 +35,7 @@ public class UpdateLeadCommandHandler : IRequestHandler<UpdateLeadCommand, LeadD
 
     public async Task<LeadDto> Handle(UpdateLeadCommand request, CancellationToken cancellationToken)
     {
-        var lead = await _leadRepository.GetByIdAsync(request.Id, cancellationToken)
+        var lead = await _leadRepository.GetByIdAsync(request.Id, cancellationToken: cancellationToken)
             ?? throw new NotFoundException(nameof(Lead), request.Id);
 
         //  Chặn Sale sửa Lead không phải của mình.

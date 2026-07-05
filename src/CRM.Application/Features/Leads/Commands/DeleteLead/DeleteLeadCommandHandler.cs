@@ -34,7 +34,7 @@ namespace CRM.Application.Features.Leads.Commands.DeleteLead
 
         public async Task<bool> Handle(DeleteLeadCommand request, CancellationToken cancellationToken)
         {
-            var lead = await _leadRepository.GetByIdAsync(request.Id, cancellationToken)
+            var lead = await _leadRepository.GetByIdAsync(request.Id, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException(nameof(Lead), request.Id);
 
             var oldDto = LeadMapper.ToDto(lead);

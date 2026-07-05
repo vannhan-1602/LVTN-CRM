@@ -156,15 +156,34 @@ public class ProductRepository : IProductRepository
         string? maChungTu, string? ghiChu, uint? nguoiThucHienId,
         CancellationToken ct = default)
     {
-        var product = await _context.Set<BhSanPhamEntity>().FirstOrDefaultAsync(x => x.Id == sanPhamId, ct)
-            ?? throw new NotFoundException(nameof(SanPham), sanPhamId);
+        // Cập nhật tồn kho bằng 1 câu UPDATE cộng dồn atomic (SET SoLuongTon = SoLuongTon + @delta),
+        // kèm điều kiện SoLuongTon + @delta >= 0 ngay trong WHERE.
+        // Nhờ đó DB tự khoá dòng (row lock) khi thực thi UPDATE, hai giao dịch xuất/nhập kho đồng
+        // thời trên cùng 1 sản phẩm sẽ tuần tự hoá ở mức DB thay vì đọc-sửa-ghi ở tầng ứng dụng
+        // (kiểu cũ có thể làm mất phần trừ của giao dịch trước → tồn kho âm thực tế dù có check).
+        // Toàn bộ handler chạy trong 1 transaction (TransactionBehavior), nên row lock của UPDATE
+        // này được giữ tới khi commit, đảm bảo SELECT + INSERT bên dưới nhất quán với giá trị vừa ghi.
+        var rowsAffected = await _context.Set<BhSanPhamEntity>()
+            .Where(x => x.Id == sanPhamId && x.SoLuongTon + soLuongThayDoi >= 0)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.SoLuongTon, x => x.SoLuongTon + soLuongThayDoi)
+                .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
 
-        var tonTruoc = product.SoLuongTon;
-        var tonSau = tonTruoc + soLuongThayDoi;
+        if (rowsAffected == 0)
+        {
+            var exists = await _context.Set<BhSanPhamEntity>().AnyAsync(x => x.Id == sanPhamId, ct);
+            if (!exists)
+                throw new NotFoundException(nameof(SanPham), sanPhamId);
 
-        // Cập nhật tồn kho lũy kế ngay trên bảng sản phẩm 
-        product.SoLuongTon = tonSau;
-        product.UpdatedAt = DateTime.UtcNow;
+            throw new BusinessRuleException(
+                "Không đủ tồn kho để thực hiện giao dịch này (tồn kho có thể vừa được thay đổi bởi giao dịch khác).");
+        }
+
+        var tonSau = await _context.Set<BhSanPhamEntity>()
+            .Where(x => x.Id == sanPhamId)
+            .Select(x => x.SoLuongTon)
+            .FirstAsync(ct);
+        var tonTruoc = tonSau - soLuongThayDoi;
 
         var transaction = new KhoTheKhoEntity
         {

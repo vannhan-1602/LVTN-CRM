@@ -4,6 +4,7 @@ using CRM.Application.Features.Customers.DTOs;
 using CRM.Application.Features.Leads.Commands.ConvertLead;
 using CRM.Application.Features.Leads.Commands.CreateLead;
 using CRM.Application.Features.Leads.Commands.DeleteLead;
+using CRM.Application.Features.Leads.Commands.RestoreLead;
 using CRM.Application.Features.Leads.Commands.UpdateLead;
 using CRM.Application.Features.Leads.DTOs;
 using CRM.Application.Features.Leads.Queries.GetAllLeads;
@@ -27,9 +28,10 @@ namespace CRM.API.Controllers
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10,
             [FromQuery] string? search = null,
+            [FromQuery] bool? isDeleted = null,
             CancellationToken ct = default)
         {
-            var result = await _mediator.Send(new GetAllLeadsQuery(pageNumber, pageSize, search), ct);
+            var result = await _mediator.Send(new GetAllLeadsQuery(pageNumber, pageSize, search, isDeleted), ct);
             return Ok(ApiResponse<PagedResult<LeadDto>>.Ok(result));
         }
 
@@ -66,6 +68,15 @@ namespace CRM.API.Controllers
         {
             await _mediator.Send(new DeleteLeadCommand(id), ct);
             return Ok(ApiResponse.Ok("Xóa lead thành công."));
+        }
+
+        // ManagerOnly — khôi phục lead đã bị khóa/xóa mềm
+        [HttpPost("{id:long}/restore")]
+        [Authorize(Policy = Policies.ManagerOnly)]
+        public async Task<IActionResult> Restore(ulong id, CancellationToken ct)
+        {
+            await _mediator.Send(new RestoreLeadCommand(id), ct);
+            return Ok(ApiResponse.Ok("Khôi phục lead thành công."));
         }
 
         // Convert của Sale "chuyển đổi lead thành khách hàng"

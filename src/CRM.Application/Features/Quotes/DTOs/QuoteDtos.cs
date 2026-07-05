@@ -10,6 +10,7 @@ public class QuoteDto
     public string TrangThai { get; set; } = string.Empty;
     public uint? NhanVienId { get; set; }
     public string? TenNhanVien { get; set; }
+    public string? LyDoTuChoi { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

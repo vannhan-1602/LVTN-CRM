@@ -45,7 +45,7 @@ public class ConvertLeadCommandHandler : IRequestHandler<ConvertLeadCommand, Cus
 
     public async Task<CustomerDto> Handle(ConvertLeadCommand request, CancellationToken cancellationToken)
     {
-        var lead = await _leadRepository.GetByIdAsync(request.LeadId, cancellationToken)
+        var lead = await _leadRepository.GetByIdAsync(request.LeadId, cancellationToken: cancellationToken)
             ?? throw new NotFoundException(nameof(Lead), request.LeadId);
 
         // Chặn Sale chuyển đổi Lead không phải mình phụ trách.

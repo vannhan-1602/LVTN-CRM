@@ -25,7 +25,7 @@ namespace CRM.Application.Features.Leads.Queries.GetAllLeads
             uint? ownerNhanSuId = _currentUser.Role == Roles.Sale ? _currentUser.NhanSuId : null;
 
             var result = await _leadRepository.GetPagedAsync(
-                request.PageNumber, request.PageSize, request.Search, ownerNhanSuId, cancellationToken);
+                request.PageNumber, request.PageSize, request.Search, ownerNhanSuId, request.IsDeleted, cancellationToken);
 
             return new PagedResult<LeadDto>
             {

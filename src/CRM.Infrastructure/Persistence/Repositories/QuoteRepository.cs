@@ -40,7 +40,7 @@ public class QuoteRepository : IQuoteRepository
         {
             Id = dto.Id, MaBaoGia = dto.MaBaoGia, KhachHangId = dto.KhachHangId,
             TenKhachHang = dto.TenKhachHang, TongTien = dto.TongTien, TrangThai = dto.TrangThai,
-            NhanVienId = dto.NhanVienId, TenNhanVien = dto.TenNhanVien,
+            NhanVienId = dto.NhanVienId, TenNhanVien = dto.TenNhanVien, LyDoTuChoi = dto.LyDoTuChoi,
             CreatedAt = dto.CreatedAt, UpdatedAt = dto.UpdatedAt, ChiTiet = chiTiet
         };
     }
@@ -129,11 +129,15 @@ public class QuoteRepository : IQuoteRepository
         }
     }
 
-    public async Task UpdateStatusAsync(ulong id, string trangThai, CancellationToken ct = default)
+    public async Task UpdateStatusAsync(ulong id, string trangThai, string? lyDoTuChoi = null, CancellationToken ct = default)
     {
         var entity = await _context.Set<HdBaoGiaEntity>().FindAsync([id], ct);
         if (entity is null) return;
         entity.TrangThai = trangThai;
+        // Chỉ ghi đè khi có giá trị mới được truyền vào (vd: khi Reject) — tránh Accept/Send
+        // vô tình xoá mất lý do từ chối đã lưu trước đó.
+        if (lyDoTuChoi is not null)
+            entity.LyDoTuChoi = lyDoTuChoi;
         entity.UpdatedAt = DateTime.UtcNow;
     }
 
@@ -180,13 +184,14 @@ public class QuoteRepository : IQuoteRepository
     {
         Id = e.Id, MaBaoGia = e.MaBaoGia, KhachHangId = e.KhachHang_Id,
         TongTien = e.TongTien, TrangThai = e.TrangThai, NhanVienId = e.NhanVien_Id,
+        LyDoTuChoi = e.LyDoTuChoi,
         CreatedAt = e.CreatedAt, UpdatedAt = e.UpdatedAt
     };
 
     private static HdBaoGiaEntity MapToEntity(BaoGia d) => new()
     {
         MaBaoGia = d.MaBaoGia, KhachHang_Id = d.KhachHangId, TongTien = d.TongTien,
-        TrangThai = d.TrangThai, NhanVien_Id = d.NhanVienId,
+        TrangThai = d.TrangThai, NhanVien_Id = d.NhanVienId, LyDoTuChoi = d.LyDoTuChoi,
         CreatedAt = d.CreatedAt, UpdatedAt = d.UpdatedAt
     };
 
@@ -194,6 +199,7 @@ public class QuoteRepository : IQuoteRepository
     {
         Id = e.Id, MaBaoGia = e.MaBaoGia, KhachHangId = e.KhachHang_Id, TenKhachHang = tenKhachHang,
         TongTien = e.TongTien, TrangThai = e.TrangThai, NhanVienId = e.NhanVien_Id, TenNhanVien = tenNhanVien,
+        LyDoTuChoi = e.LyDoTuChoi,
         CreatedAt = e.CreatedAt, UpdatedAt = e.UpdatedAt
     };
 }

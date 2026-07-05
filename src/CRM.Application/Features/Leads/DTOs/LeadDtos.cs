@@ -15,6 +15,7 @@ namespace CRM.Application.Features.Leads.DTOs
         public string? Email { get; set; }
         public string? TinhTrang { get; set; }
         public uint? NhanVienPhuTrachId { get; set; }
+        public bool IsDeleted { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

@@ -56,7 +56,7 @@ public class RejectQuoteCommandHandler : IRequestHandler<RejectQuoteCommand, Quo
         if (quote.TrangThai != QuoteStatus.DaGui)
             throw new BusinessRuleException("Chỉ có thể từ chối báo giá đang ở trạng thái Đã gửi.");
 
-        await _quoteRepository.UpdateStatusAsync(request.Id, QuoteStatus.TuChoi, ct);
+        await _quoteRepository.UpdateStatusAsync(request.Id, QuoteStatus.TuChoi, request.LyDo, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         var dto = await _quoteRepository.GetByIdEnrichedAsync(request.Id, ct)

@@ -17,15 +17,19 @@ public interface ICustomerRepository
         ushort? tinhTrangId,
         //  null = không giới hạn (Manager); có giá trị = chỉ Customer của Sale đó
         uint? ownerUserId,
+        //  null/false = chỉ lấy chưa xóa (mặc định); true = chỉ lấy đã xóa (đã khóa)
+        bool? isDeleted = null,
         CancellationToken cancellationToken = default);
 
     Task<KhachHang> AddAsync(KhachHang customer, CancellationToken cancellationToken = default);
     Task UpdateAsync(KhachHang customer, CancellationToken cancellationToken = default);
     Task<bool> SoftDeleteAsync(ulong id, CancellationToken cancellationToken = default);
+    Task<bool> RestoreAsync(ulong id, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsMaKhachHangAsync(string maKhachHang, ulong? excludeId = null, CancellationToken cancellationToken = default);
     Task<string> GenerateMaKhachHangAsync(CancellationToken cancellationToken = default);
     Task<bool> LoaiKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default);
     Task<bool> TinhTrangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default);
+    Task<bool> HangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default);
     Task<KhachHang?> GetByMaKhachHangAsync(string maKhachHang, CancellationToken cancellationToken = default);
 }

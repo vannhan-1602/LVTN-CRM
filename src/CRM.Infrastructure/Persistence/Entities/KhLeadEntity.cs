@@ -12,6 +12,7 @@ public class KhLeadEntity
     public string? Email { get; set; }
     public string? TinhTrang { get; set; }
     public uint? NhanVienPhuTrach_Id { get; set; }
+    public bool IsDeleted { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

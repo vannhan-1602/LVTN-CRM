@@ -31,26 +31,29 @@ public class CustomerRepository : ICustomerRepository
     {
         var result = await (
             from kh in _context.KhKhachHangs
-            where kh.Id == id && !kh.IsDeleted
+            where kh.Id == id
             join loai in _context.KhLoaiKhachHangs on kh.LoaiKhachHangId equals loai.Id into loaiJoin
             from loai in loaiJoin.DefaultIfEmpty()
             join tinh in _context.KhTinhTrangKhachHangs on kh.TinhTrangId equals tinh.Id into tinhJoin
             from tinh in tinhJoin.DefaultIfEmpty()
             join ns in _context.HtThongTinNhanSu on (uint?)kh.NhanVienPhuTrachId equals (uint?)ns.Id into nsJoin
             from ns in nsJoin.DefaultIfEmpty()
+            join hang in _context.Set<KhXepHangEntity>() on kh.HangKhachHang_Id equals hang.Id into hangJoin
+            from hang in hangJoin.DefaultIfEmpty()
             select new
             {
                 KhachHang = kh,
                 TenLoai = loai != null ? loai.TenLoai : null,
                 TenTinhTrang = tinh != null ? tinh.TenTinhTrang : null,
-                TenNhanVien = ns != null ? ns.HoTen : null
+                TenNhanVien = ns != null ? ns.HoTen : null,
+                TenHang = hang != null ? hang.TenHang : null
             }
         ).FirstOrDefaultAsync(cancellationToken);
 
         if (result is null) return null;
 
         return CustomerMapper.ToDto(MapToDomain(result.KhachHang),
-            result.TenLoai, result.TenTinhTrang, result.TenNhanVien);
+            result.TenLoai, result.TenTinhTrang, result.TenNhanVien, result.TenHang);
     }
 
     public async Task<PagedResult<CustomerDto>> GetPagedAsync(
@@ -60,23 +63,27 @@ public class CustomerRepository : ICustomerRepository
         ushort? loaiKhachHangId,
         ushort? tinhTrangId,
         uint? ownerUserId,
+        bool? isDeleted = null,
         CancellationToken cancellationToken = default)
     {
         var query =
             from kh in _context.KhKhachHangs.AsNoTracking()
-            where !kh.IsDeleted
+            where kh.IsDeleted == (isDeleted ?? false)
             join loai in _context.KhLoaiKhachHangs on kh.LoaiKhachHangId equals loai.Id into loaiJoin
             from loai in loaiJoin.DefaultIfEmpty()
             join tinh in _context.KhTinhTrangKhachHangs on kh.TinhTrangId equals tinh.Id into tinhJoin
             from tinh in tinhJoin.DefaultIfEmpty()
             join ns in _context.HtThongTinNhanSu on (uint?)kh.NhanVienPhuTrachId equals (uint?)ns.Id into nsJoin
             from ns in nsJoin.DefaultIfEmpty()
+            join hang in _context.Set<KhXepHangEntity>() on kh.HangKhachHang_Id equals hang.Id into hangJoin
+            from hang in hangJoin.DefaultIfEmpty()
             select new
             {
                 KhachHang = kh,
                 TenLoai = loai != null ? loai.TenLoai : null,
                 TenTinhTrang = tinh != null ? tinh.TenTinhTrang : null,
-                TenNhanVien = ns != null ? ns.HoTen : null
+                TenNhanVien = ns != null ? ns.HoTen : null,
+                TenHang = hang != null ? hang.TenHang : null
             };
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -110,7 +117,7 @@ public class CustomerRepository : ICustomerRepository
 
         var dtos = items.Select(x =>
             CustomerMapper.ToDto(MapToDomain(x.KhachHang),
-                x.TenLoai, x.TenTinhTrang, x.TenNhanVien))
+                x.TenLoai, x.TenTinhTrang, x.TenNhanVien, x.TenHang))
             .ToList();
 
         return new PagedResult<CustomerDto>
@@ -150,6 +157,19 @@ public class CustomerRepository : ICustomerRepository
         return true;
     }
 
+    public async Task<bool> RestoreAsync(ulong id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _context.KhKhachHangs
+            .FirstOrDefaultAsync(c => c.Id == id && c.IsDeleted, cancellationToken);
+
+        if (entity is null) return false;
+
+        entity.IsDeleted = false;
+        entity.UpdatedAt = DateTime.UtcNow;
+        _context.KhKhachHangs.Update(entity);
+        return true;
+    }
+
     public Task<bool> ExistsMaKhachHangAsync(string maKhachHang, ulong? excludeId = null,
         CancellationToken cancellationToken = default) =>
         _context.KhKhachHangs.AnyAsync(
@@ -172,6 +192,9 @@ public class CustomerRepository : ICustomerRepository
 
     public Task<bool> TinhTrangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default) =>
         _context.KhTinhTrangKhachHangs.AnyAsync(t => t.Id == id && t.IsActive, cancellationToken);
+
+    public Task<bool> HangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default) =>
+        _context.Set<KhXepHangEntity>().AnyAsync(h => h.Id == id && h.IsActive, cancellationToken);
 
     public async Task<KhachHang?> GetByMaKhachHangAsync(string maKhachHang, CancellationToken cancellationToken = default)
     {
@@ -211,6 +234,9 @@ public class CustomerRepository : ICustomerRepository
         SoDienThoai = d.SoDienThoai,
         MaSoThue = d.MaSoThue,
         NhanVienPhuTrachId = d.NhanVienPhuTrachId,
+        NgaySinh = d.NgaySinh,
+        NgayThanhLap = d.NgayThanhLap,
+        HangKhachHang_Id = d.HangKhachHangId,
         IsDeleted = d.IsDeleted,
         CreatedAt = d.CreatedAt,
         UpdatedAt = d.UpdatedAt

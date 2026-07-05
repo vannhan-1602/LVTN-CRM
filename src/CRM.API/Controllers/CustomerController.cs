@@ -2,6 +2,7 @@ using CRM.Application.Common.Constants;
 using CRM.Application.Common.Models;
 using CRM.Application.Features.Customers.Commands.CreateCustomer;
 using CRM.Application.Features.Customers.Commands.DeleteCustomer;
+using CRM.Application.Features.Customers.Commands.RestoreCustomer;
 using CRM.Application.Features.Customers.Commands.UpdateCustomer;
 using CRM.Application.Features.Customers.DTOs;
 using CRM.Application.Features.Customers.Queries.GetAllCustomers;
@@ -35,10 +36,11 @@ public class CustomerController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] ushort? loaiKhachHangId = null,
         [FromQuery] ushort? tinhTrangId = null,
+        [FromQuery] bool? isDeleted = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _mediator.Send(
-            new GetAllCustomersQuery(pageNumber, pageSize, search, loaiKhachHangId, tinhTrangId),
+            new GetAllCustomersQuery(pageNumber, pageSize, search, loaiKhachHangId, tinhTrangId, isDeleted),
             cancellationToken);
 
         return Ok(ApiResponse<PagedResult<CustomerDto>>.Ok(result));
@@ -70,7 +72,10 @@ public class CustomerController : ControllerBase
                 request.Email,
                 request.SoDienThoai,
                 request.MaSoThue,
-                request.NhanVienPhuTrachId),
+                request.NhanVienPhuTrachId,
+                request.NgaySinh,
+                request.NgayThanhLap,
+                request.HangKhachHangId),
             cancellationToken);
 
         return CreatedAtAction(
@@ -97,7 +102,10 @@ public class CustomerController : ControllerBase
                 request.Email,
                 request.SoDienThoai,
                 request.MaSoThue,
-                request.NhanVienPhuTrachId),
+                request.NhanVienPhuTrachId,
+                request.NgaySinh,
+                request.NgayThanhLap,
+                request.HangKhachHangId),
             cancellationToken);
 
         return Ok(ApiResponse<CustomerDto>.Ok(result, "Cập nhật khách hàng thành công."));
@@ -112,5 +120,16 @@ public class CustomerController : ControllerBase
     {
         await _mediator.Send(new DeleteCustomerCommand(id), cancellationToken);
         return Ok(ApiResponse.Ok("Xóa khách hàng thành công (soft delete)."));
+    }
+
+    // ManagerOnly — khôi phục khách hàng đã bị khóa/xóa mềm
+    [HttpPost("{id:long}/restore")]
+    [Authorize(Policy = Policies.ManagerOnly)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Restore(ulong id, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new RestoreCustomerCommand(id), cancellationToken);
+        return Ok(ApiResponse.Ok("Khôi phục khách hàng thành công."));
     }
 }

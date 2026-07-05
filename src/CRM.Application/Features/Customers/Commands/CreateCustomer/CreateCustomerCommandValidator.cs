@@ -33,5 +33,20 @@ public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCo
             .MustAsync(async (id, ct) => !id.HasValue || await customerRepository.TinhTrangKhachHangExistsAsync(id.Value, ct))
             .WithMessage("Tình trạng khách hàng không tồn tại.")
             .When(x => x.TinhTrangId.HasValue);
+
+        RuleFor(x => x.HangKhachHangId)
+            .MustAsync(async (id, ct) => !id.HasValue || await customerRepository.HangKhachHangExistsAsync(id.Value, ct))
+            .WithMessage("Hạng khách hàng không tồn tại.")
+            .When(x => x.HangKhachHangId.HasValue);
+
+        RuleFor(x => x.NgaySinh)
+            .LessThanOrEqualTo(x => DateOnly.FromDateTime(DateTime.UtcNow))
+            .WithMessage("Ngày sinh không được ở tương lai.")
+            .When(x => x.NgaySinh.HasValue);
+
+        RuleFor(x => x.NgayThanhLap)
+            .LessThanOrEqualTo(x => DateOnly.FromDateTime(DateTime.UtcNow))
+            .WithMessage("Ngày thành lập không được ở tương lai.")
+            .When(x => x.NgayThanhLap.HasValue);
     }
 }

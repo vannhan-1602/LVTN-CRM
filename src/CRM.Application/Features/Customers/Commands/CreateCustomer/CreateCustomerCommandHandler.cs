@@ -55,6 +55,9 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
             SoDienThoai = request.SoDienThoai?.Trim(),
             MaSoThue = request.MaSoThue?.Trim(),
             NhanVienPhuTrachId = nhanVienPhuTrachId,
+            NgaySinh = request.NgaySinh,
+            NgayThanhLap = request.NgayThanhLap,
+            HangKhachHangId = request.HangKhachHangId,
             IsDeleted = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

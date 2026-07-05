@@ -53,7 +53,7 @@ public class SendQuoteCommandHandler : IRequestHandler<SendQuoteCommand, QuoteDt
         if (quote.TrangThai != QuoteStatus.Nhap)
             throw new BusinessRuleException("Chỉ có thể gửi báo giá đang ở trạng thái Nháp.");
 
-        await _quoteRepository.UpdateStatusAsync(request.Id, QuoteStatus.DaGui, ct);
+        await _quoteRepository.UpdateStatusAsync(request.Id, QuoteStatus.DaGui, ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         var dto = await _quoteRepository.GetByIdEnrichedAsync(request.Id, ct)

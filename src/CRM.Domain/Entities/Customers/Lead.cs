@@ -3,7 +3,7 @@ using CRM.Domain.Enums;
 
 namespace CRM.Domain.Entities.Customers;
 
-public class Lead : AuditableEntity<ulong>
+public class Lead : SoftDeletableEntity<ulong>
 {
     public string TenLead { get; set; } = string.Empty;
     public string? TenCongTy { get; set; }

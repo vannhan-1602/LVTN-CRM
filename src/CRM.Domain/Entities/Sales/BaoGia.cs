@@ -9,4 +9,5 @@ public class BaoGia : AuditableEntity<ulong>
     public decimal TongTien { get; set; }
     public string TrangThai { get; set; } = Enums.QuoteStatus.Nhap;
     public uint? NhanVienId { get; set; }
+    public string? LyDoTuChoi { get; set; }
 }

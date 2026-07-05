@@ -34,6 +34,7 @@ public class GetAllCustomersQueryHandler
             request.LoaiKhachHangId,
             request.TinhTrangId,
             ownerUserId,
+            request.IsDeleted,
             cancellationToken);
 
         return new PagedResult<CustomerDto>

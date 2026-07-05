@@ -22,7 +22,7 @@ public class GetLeadByIdQueryHandler : IRequestHandler<GetLeadByIdQuery, LeadDto
 
     public async Task<LeadDto> Handle(GetLeadByIdQuery request, CancellationToken cancellationToken)
     {
-        var lead = await _leadRepository.GetByIdAsync(request.Id, cancellationToken)
+        var lead = await _leadRepository.GetByIdAsync(request.Id, includeDeleted: true, cancellationToken: cancellationToken)
             ?? throw new NotFoundException(nameof(Lead), request.Id);
 
         // Chặn Sale xem Lead không phải của mình (kể cả khi biết Id qua URL trực tiếp)

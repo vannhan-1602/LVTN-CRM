@@ -11,6 +11,7 @@ public class HdBaoGiaEntity
     public decimal TongTien { get; set; }
     public string TrangThai { get; set; } = "Nhap";
     public uint? NhanVien_Id { get; set; }
+    public string? LyDoTuChoi { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
