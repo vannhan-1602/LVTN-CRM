@@ -16,6 +16,7 @@ public interface ILeadRepository
         uint? ownerUserId,
         //  null/false = chỉ lấy chưa xóa (mặc định); true = chỉ lấy đã xóa (đã khóa)
         bool? isDeleted = null,
+        string? tinhTrang = null,
         CancellationToken cancellationToken = default);
 
     Task<Lead> AddAsync(Lead lead, CancellationToken cancellationToken = default);

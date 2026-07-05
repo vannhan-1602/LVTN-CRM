@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import leadApi from "../../api/leadApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
@@ -13,7 +13,11 @@ export default function ConvertLeadModal({
   onClose,
   onConverted,
 }) {
-  const { loaiKhachHang, tinhTrang } = useDanhMucStore();
+  const { loaiKhachHang, tinhTrang, load: loadDanhMuc } = useDanhMucStore();
+
+  useEffect(() => {
+    loadDanhMuc();
+  }, [loadDanhMuc]);
   const [form, setForm] = useState({
     tenKhachHang: lead.tenLead,
     loaiKhachHangId: "",

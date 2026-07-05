@@ -21,7 +21,11 @@ const toInt = (v) => (v === "" || v == null ? null : Number(v));
 
 export default function CustomerFormModal({ customer, onClose, onSaved }) {
   const isEdit = Boolean(customer);
-  const { loaiKhachHang, tinhTrang } = useDanhMucStore();
+  const { loaiKhachHang, tinhTrang, load: loadDanhMuc } = useDanhMucStore();
+
+  useEffect(() => {
+    loadDanhMuc();
+  }, [loadDanhMuc]);
 
   const [form, setForm] = useState(
     isEdit

@@ -22,7 +22,7 @@ public class LeadRepository : ILeadRepository
 
     public async Task<PagedResult<Lead>> GetPagedAsync(
         int pageNumber, int pageSize, string? search, uint? ownerUserId,
-        bool? isDeleted = null, CancellationToken ct = default)
+        bool? isDeleted = null, string? tinhTrang = null, CancellationToken ct = default)
     {
         var query = _context.Set<KhLeadEntity>().AsNoTracking()
             .Where(x => x.IsDeleted == (isDeleted ?? false));
@@ -31,6 +31,9 @@ public class LeadRepository : ILeadRepository
             query = query.Where(x =>
                 x.TenLead.Contains(search) ||
                 (x.TenCongTy != null && x.TenCongTy.Contains(search)));
+
+        if (!string.IsNullOrWhiteSpace(tinhTrang))
+            query = query.Where(x => x.TinhTrang == tinhTrang);
 
         // Sale chỉ thấy Lead mình phụ trách (NhanVienPhuTrach_Id tham chiếu HT_User.Id)
         if (ownerUserId.HasValue)

@@ -29,9 +29,10 @@ namespace CRM.API.Controllers
             [FromQuery] int pageSize = 10,
             [FromQuery] string? search = null,
             [FromQuery] bool? isDeleted = null,
+            [FromQuery] string? tinhTrang = null,
             CancellationToken ct = default)
         {
-            var result = await _mediator.Send(new GetAllLeadsQuery(pageNumber, pageSize, search, isDeleted), ct);
+            var result = await _mediator.Send(new GetAllLeadsQuery(pageNumber, pageSize, search, isDeleted, tinhTrang), ct);
             return Ok(ApiResponse<PagedResult<LeadDto>>.Ok(result));
         }
 

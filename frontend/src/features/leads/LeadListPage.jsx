@@ -25,6 +25,7 @@ import Button from "../../components/common/Button";
 import LeadFormModal from "./LeadFormModal";
 import {
   ROLES,
+  LEAD_TINH_TRANG_OPTIONS,
   LEAD_TINH_TRANG_LABEL,
   LEAD_TINH_TRANG_COLOR,
 } from "../../utils/constants";
@@ -46,6 +47,7 @@ export default function LeadListPage() {
   const [editingLead, setEditingLead] = useState(null);
 
   const [search, setSearch] = useState("");
+  const [filterTinhTrang, setFilterTinhTrang] = useState("");
   const [filterDeleted, setFilterDeleted] = useState("false");
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -78,6 +80,7 @@ export default function LeadListPage() {
         pageSize,
         search: search.trim() || undefined,
         isDeleted: filterDeleted === "true",
+        tinhTrang: filterTinhTrang || undefined,
       });
       setItems(res.data?.items ?? []);
       setTotalPages(res.data?.totalPages ?? 1);
@@ -100,7 +103,7 @@ export default function LeadListPage() {
 
   useEffect(() => {
     loadLeads();
-  }, [pageNumber, filterDeleted]);
+  }, [pageNumber, filterDeleted, filterTinhTrang]);
   useEffect(() => {
     loadNhanVien();
   }, []);
@@ -258,17 +261,34 @@ export default function LeadListPage() {
               className="border border-ink-200 rounded-lg pl-9 pr-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
             />
           </div>
-          <select
-            value={filterDeleted}
-            onChange={(e) => {
-              setFilterDeleted(e.target.value);
-              setPageNumber(1);
-            }}
-            className="border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
-          >
-            <option value="false">Đang hoạt động</option>
-            <option value="true">Đã khóa</option>
-          </select>
+          <div className="flex gap-2">
+            <select
+              value={filterTinhTrang}
+              onChange={(e) => {
+                setFilterTinhTrang(e.target.value);
+                setPageNumber(1);
+              }}
+              className="border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            >
+              <option value="">Tất cả trạng thái</option>
+              {LEAD_TINH_TRANG_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filterDeleted}
+              onChange={(e) => {
+                setFilterDeleted(e.target.value);
+                setPageNumber(1);
+              }}
+              className="border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            >
+              <option value="false">Đang hoạt động</option>
+              <option value="true">Đã khóa</option>
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -322,7 +342,10 @@ export default function LeadListPage() {
                       <div className="flex items-center gap-2">
                         {item.tenLead}
                         {item.isDeleted && (
-                          <Badge label="Đã khóa" colorClass="bg-danger-50 text-danger-600" />
+                          <Badge
+                            label="Đã khóa"
+                            colorClass="bg-danger-50 text-danger-600"
+                          />
                         )}
                       </div>
                     </td>
@@ -371,7 +394,9 @@ export default function LeadListPage() {
                             onClick: () => navigate(`/leads/${item.id}`),
                           },
                           // Chỉ được sửa khi chưa chuyển đổi và chưa bị khóa
-                          ...(canEdit && item.tinhTrang !== "DaChuyenDoi" && !item.isDeleted
+                          ...(canEdit &&
+                          item.tinhTrang !== "DaChuyenDoi" &&
+                          !item.isDeleted
                             ? [
                                 {
                                   label: "Sửa",
@@ -381,7 +406,9 @@ export default function LeadListPage() {
                               ]
                             : []),
                           // Mới → Đang chăm sóc
-                          ...(canEdit && item.tinhTrang === "Moi" && !item.isDeleted
+                          ...(canEdit &&
+                          item.tinhTrang === "Moi" &&
+                          !item.isDeleted
                             ? [
                                 {
                                   label: "Bắt đầu chăm sóc",
@@ -391,7 +418,9 @@ export default function LeadListPage() {
                               ]
                             : []),
                           // Đang chăm sóc → Ngừng / Chuyển KH
-                          ...(canEdit && item.tinhTrang === "DangChamSoc" && !item.isDeleted
+                          ...(canEdit &&
+                          item.tinhTrang === "DangChamSoc" &&
+                          !item.isDeleted
                             ? [
                                 {
                                   label: "Ngừng chăm sóc",

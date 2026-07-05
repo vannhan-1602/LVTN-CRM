@@ -26,8 +26,13 @@ import useDanhMucStore from "../../stores/danhMucStore";
 
 export default function CustomerListPage() {
   const { user } = useAuthStore();
-  const { loaiKhachHang, tinhTrang, getTenLoaiKH, getTenTinhTrang } =
-    useDanhMucStore();
+  const {
+    loaiKhachHang,
+    tinhTrang,
+    getTenLoaiKH,
+    getTenTinhTrang,
+    load: loadDanhMuc,
+  } = useDanhMucStore();
   const navigate = useNavigate();
   const canDelete = user?.role === ROLES.Manager;
   const canEdit = user?.role === ROLES.Manager || user?.role === ROLES.Sale;
@@ -40,6 +45,13 @@ export default function CustomerListPage() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
+
+  // Gọi trực tiếp ở đây (idempotent nhờ cờ loaded/loading trong store) — không phụ thuộc
+  // hoàn toàn vào useEffect ở App.jsx theo dõi token, tránh trường hợp component này mount
+  // trước khi danh mục load xong (vd: F5 lại đúng trang /customers) khiến dropdown lọc trống.
+  useEffect(() => {
+    loadDanhMuc();
+  }, [loadDanhMuc]);
 
   const [search, setSearch] = useState("");
   const [filterLoai, setFilterLoai] = useState("");
@@ -300,7 +312,10 @@ export default function CustomerListPage() {
                       <div className="font-medium text-ink-900 flex items-center gap-2">
                         {item.tenKhachHang}
                         {item.isDeleted && (
-                          <Badge label="Đã khóa" colorClass="bg-danger-50 text-danger-600" />
+                          <Badge
+                            label="Đã khóa"
+                            colorClass="bg-danger-50 text-danger-600"
+                          />
                         )}
                       </div>
                       {item.maSoThue && (
