@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Package, Plus, Search, Eye, Pencil, Lock, Boxes } from "lucide-react";
+import { Package, Plus, Search, Eye, Pencil, Lock, LockOpen, Boxes } from "lucide-react";
 import productApi from "../../api/productApi";
 import useAuthStore from "../auth/authStore";
 import Pagination from "../../components/common/Pagination";
@@ -71,6 +71,21 @@ export default function ProductListPage() {
     if (!window.confirm("Khóa kinh doanh sản phẩm này? Sản phẩm sẽ không xuất hiện khi lập báo giá mới.")) return;
     try { await productApi.delete(id); setSuccess("Đã khóa kinh doanh sản phẩm"); await loadProducts(); }
     catch (err) { setError(err?.message || "Không thể khóa sản phẩm"); }
+  };
+
+  const handleReactivate = async (item) => {
+    if (!window.confirm("Mở lại kinh doanh sản phẩm này? Sản phẩm sẽ xuất hiện lại khi lập báo giá mới.")) return;
+    try {
+      await productApi.update(item.id, {
+        loaiSanPhamId: item.loaiSanPhamId,
+        tenSP: item.tenSP,
+        donVi: item.donVi,
+        giaBan: item.giaBan,
+        dangKinhDoanh: true,
+      });
+      setSuccess("Đã mở lại kinh doanh sản phẩm");
+      await loadProducts();
+    } catch (err) { setError(err?.message || "Không thể mở lại sản phẩm"); }
   };
 
   return (
@@ -169,6 +184,9 @@ export default function ProductListPage() {
                         ...(canManage ? [{ label: "Sửa", icon: Pencil, onClick: () => setEditingProduct(item) }] : []),
                         ...(canManage && item.dangKinhDoanh
                           ? [{ label: "Khóa kinh doanh", icon: Lock, danger: true, onClick: () => handleDeactivate(item.id) }]
+                          : []),
+                        ...(canManage && !item.dangKinhDoanh
+                          ? [{ label: "Mở lại kinh doanh", icon: LockOpen, onClick: () => handleReactivate(item) }]
                           : []),
                       ]}
                     />

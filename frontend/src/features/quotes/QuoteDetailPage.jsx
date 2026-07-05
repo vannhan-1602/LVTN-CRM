@@ -31,6 +31,8 @@ export default function QuoteDetailPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   const load = async () => {
     setLoading(true); setError("");
@@ -59,6 +61,12 @@ export default function QuoteDetailPage() {
     if (!window.confirm("Xóa báo giá nháp này?")) return;
     try { await quoteApi.delete(id); navigate("/quotes"); }
     catch (err) { setError(err?.message || "Không thể xóa"); }
+  };
+
+  const handleConfirmReject = async () => {
+    await doAction(() => quoteApi.reject(quote.id, rejectReason.trim() || null));
+    setShowRejectForm(false);
+    setRejectReason("");
   };
 
   if (loading) return <div className="text-sm text-ink-400 py-10 text-center">Đang tải...</div>;
@@ -149,10 +157,36 @@ export default function QuoteDetailPage() {
                     onClick={() => doAction(() => quoteApi.accept(quote.id))}>
                     Khách chấp nhận
                   </Button>
-                  <Button size="sm" variant="danger" icon={XCircle} className="w-full" disabled={busy}
-                    onClick={() => doAction(() => quoteApi.reject(quote.id, null))}>
-                    Khách từ chối
-                  </Button>
+                  {!showRejectForm ? (
+                    <Button size="sm" variant="danger" icon={XCircle} className="w-full" disabled={busy}
+                      onClick={() => setShowRejectForm(true)}>
+                      Khách từ chối
+                    </Button>
+                  ) : (
+                    <div className="space-y-2 border border-ink-100 rounded-lg p-2.5">
+                      <label className="block text-xs font-medium text-ink-700">
+                        Lý do từ chối (không bắt buộc)
+                      </label>
+                      <textarea
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        maxLength={500}
+                        rows={3}
+                        placeholder="VD: Giá chưa phù hợp, khách chọn nhà cung cấp khác..."
+                        className="w-full border border-ink-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="danger" className="flex-1" disabled={busy}
+                          onClick={handleConfirmReject}>
+                          Xác nhận từ chối
+                        </Button>
+                        <Button size="sm" variant="secondary" disabled={busy}
+                          onClick={() => { setShowRejectForm(false); setRejectReason(""); }}>
+                          Hủy
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
               {quote.trangThai === "ChapNhan" && (
@@ -161,7 +195,12 @@ export default function QuoteDetailPage() {
                 </p>
               )}
               {quote.trangThai === "TuChoi" && (
-                <p className="text-xs text-ink-400">Khách hàng đã từ chối báo giá này.</p>
+                <div className="text-xs text-ink-500 bg-ink-50 rounded-lg p-2.5 space-y-1">
+                  <p className="text-ink-700 font-medium">Khách hàng đã từ chối báo giá này.</p>
+                  {quote.lyDoTuChoi && (
+                    <p><span className="text-ink-400">Lý do: </span>{quote.lyDoTuChoi}</p>
+                  )}
+                </div>
               )}
             </div>
           </Card>

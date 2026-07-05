@@ -7,6 +7,7 @@ import {
   Eye,
   Pencil,
   Trash2,
+  RotateCcw,
   Crown,
   Building2,
 } from "lucide-react";
@@ -43,6 +44,7 @@ export default function CustomerListPage() {
   const [search, setSearch] = useState("");
   const [filterLoai, setFilterLoai] = useState("");
   const [filterTinhTrang, setFilterTinhTrang] = useState("");
+  const [filterDeleted, setFilterDeleted] = useState("false");
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -67,6 +69,7 @@ export default function CustomerListPage() {
         search: search.trim() || undefined,
         loaiKhachHangId: filterLoai || undefined,
         tinhTrangId: filterTinhTrang || undefined,
+        isDeleted: filterDeleted === "true",
       });
       setItems(res.data?.items ?? []);
       setTotalPages(res.data?.totalPages ?? 1);
@@ -80,10 +83,10 @@ export default function CustomerListPage() {
 
   useEffect(() => {
     loadCustomers();
-  }, [pageNumber, filterLoai, filterTinhTrang]);
+  }, [pageNumber, filterLoai, filterTinhTrang, filterDeleted]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Xóa khách hàng này? Hành động không thể hoàn tác."))
+    if (!window.confirm("Xóa khách hàng này? Có thể khôi phục lại sau."))
       return;
     try {
       await customerApi.delete(id);
@@ -91,6 +94,17 @@ export default function CustomerListPage() {
       await loadCustomers();
     } catch (err) {
       setError(err?.message || "Không thể xóa khách hàng");
+    }
+  };
+
+  const handleRestore = async (id) => {
+    if (!window.confirm("Khôi phục khách hàng này?")) return;
+    try {
+      await customerApi.restore(id);
+      setSuccess("Khôi phục khách hàng thành công");
+      await loadCustomers();
+    } catch (err) {
+      setError(err?.message || "Không thể khôi phục khách hàng");
     }
   };
 
@@ -218,6 +232,17 @@ export default function CustomerListPage() {
                 </option>
               ))}
             </select>
+            <select
+              value={filterDeleted}
+              onChange={(e) => {
+                setFilterDeleted(e.target.value);
+                setPageNumber(1);
+              }}
+              className="border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            >
+              <option value="false">Đang hoạt động</option>
+              <option value="true">Đã khóa</option>
+            </select>
           </div>
         </div>
 
@@ -272,8 +297,11 @@ export default function CustomerListPage() {
                       {item.maKhachHang}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="font-medium text-ink-900">
+                      <div className="font-medium text-ink-900 flex items-center gap-2">
                         {item.tenKhachHang}
+                        {item.isDeleted && (
+                          <Badge label="Đã khóa" colorClass="bg-danger-50 text-danger-600" />
+                        )}
                       </div>
                       {item.maSoThue && (
                         <div className="text-xs text-ink-400">
@@ -330,7 +358,7 @@ export default function CustomerListPage() {
                               icon: Eye,
                               onClick: () => navigate(`/customers/${item.id}`),
                             },
-                            ...(canEdit
+                            ...(canEdit && !item.isDeleted
                               ? [
                                   {
                                     label: "Sửa",
@@ -339,13 +367,22 @@ export default function CustomerListPage() {
                                   },
                                 ]
                               : []),
-                            ...(canDelete
+                            ...(canDelete && !item.isDeleted
                               ? [
                                   {
                                     label: "Xóa",
                                     icon: Trash2,
                                     danger: true,
                                     onClick: () => handleDelete(item.id),
+                                  },
+                                ]
+                              : []),
+                            ...(canDelete && item.isDeleted
+                              ? [
+                                  {
+                                    label: "Khôi phục",
+                                    icon: RotateCcw,
+                                    onClick: () => handleRestore(item.id),
                                   },
                                 ]
                               : []),

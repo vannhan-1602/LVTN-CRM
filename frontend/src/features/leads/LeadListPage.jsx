@@ -7,6 +7,7 @@ import {
   Eye,
   Pencil,
   Trash2,
+  RotateCcw,
   ArrowRightLeft,
   PlayCircle,
   StopCircle,
@@ -45,6 +46,7 @@ export default function LeadListPage() {
   const [editingLead, setEditingLead] = useState(null);
 
   const [search, setSearch] = useState("");
+  const [filterDeleted, setFilterDeleted] = useState("false");
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -75,6 +77,7 @@ export default function LeadListPage() {
         pageNumber,
         pageSize,
         search: search.trim() || undefined,
+        isDeleted: filterDeleted === "true",
       });
       setItems(res.data?.items ?? []);
       setTotalPages(res.data?.totalPages ?? 1);
@@ -97,19 +100,30 @@ export default function LeadListPage() {
 
   useEffect(() => {
     loadLeads();
-  }, [pageNumber]);
+  }, [pageNumber, filterDeleted]);
   useEffect(() => {
     loadNhanVien();
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Xóa lead này?")) return;
+    if (!window.confirm("Xóa lead này? Có thể khôi phục lại sau.")) return;
     try {
       await leadApi.delete(id);
       setSuccess("Xóa lead thành công");
       await loadLeads();
     } catch (err) {
       setError(err?.message || "Không thể xóa lead");
+    }
+  };
+
+  const handleRestore = async (id) => {
+    if (!window.confirm("Khôi phục lead này?")) return;
+    try {
+      await leadApi.restore(id);
+      setSuccess("Khôi phục lead thành công");
+      await loadLeads();
+    } catch (err) {
+      setError(err?.message || "Không thể khôi phục lead");
     }
   };
 
@@ -224,7 +238,7 @@ export default function LeadListPage() {
       )}
 
       <div className="bg-surface rounded-card border border-ink-100 overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-ink-100">
+        <div className="px-5 py-3.5 border-b border-ink-100 flex items-center justify-between gap-3 flex-wrap">
           <div className="relative w-72">
             <Search
               size={15}
@@ -244,6 +258,17 @@ export default function LeadListPage() {
               className="border border-ink-200 rounded-lg pl-9 pr-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
             />
           </div>
+          <select
+            value={filterDeleted}
+            onChange={(e) => {
+              setFilterDeleted(e.target.value);
+              setPageNumber(1);
+            }}
+            className="border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+          >
+            <option value="false">Đang hoạt động</option>
+            <option value="true">Đã khóa</option>
+          </select>
         </div>
 
         <div className="overflow-x-auto">
@@ -294,7 +319,12 @@ export default function LeadListPage() {
                     onClick={() => navigate(`/leads/${item.id}`)}
                   >
                     <td className="px-5 py-3.5 font-medium text-ink-900">
-                      {item.tenLead}
+                      <div className="flex items-center gap-2">
+                        {item.tenLead}
+                        {item.isDeleted && (
+                          <Badge label="Đã khóa" colorClass="bg-danger-50 text-danger-600" />
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3.5 text-ink-700">
                       <div>{item.email || "—"}</div>
@@ -340,8 +370,8 @@ export default function LeadListPage() {
                             icon: Eye,
                             onClick: () => navigate(`/leads/${item.id}`),
                           },
-                          // Chỉ được sửa khi chưa chuyển đổi
-                          ...(canEdit && item.tinhTrang !== "DaChuyenDoi"
+                          // Chỉ được sửa khi chưa chuyển đổi và chưa bị khóa
+                          ...(canEdit && item.tinhTrang !== "DaChuyenDoi" && !item.isDeleted
                             ? [
                                 {
                                   label: "Sửa",
@@ -351,7 +381,7 @@ export default function LeadListPage() {
                               ]
                             : []),
                           // Mới → Đang chăm sóc
-                          ...(canEdit && item.tinhTrang === "Moi"
+                          ...(canEdit && item.tinhTrang === "Moi" && !item.isDeleted
                             ? [
                                 {
                                   label: "Bắt đầu chăm sóc",
@@ -361,7 +391,7 @@ export default function LeadListPage() {
                               ]
                             : []),
                           // Đang chăm sóc → Ngừng / Chuyển KH
-                          ...(canEdit && item.tinhTrang === "DangChamSoc"
+                          ...(canEdit && item.tinhTrang === "DangChamSoc" && !item.isDeleted
                             ? [
                                 {
                                   label: "Ngừng chăm sóc",
@@ -375,13 +405,22 @@ export default function LeadListPage() {
                                 },
                               ]
                             : []),
-                          ...(canDelete
+                          ...(canDelete && !item.isDeleted
                             ? [
                                 {
                                   label: "Xóa",
                                   icon: Trash2,
                                   danger: true,
                                   onClick: () => handleDelete(item.id),
+                                },
+                              ]
+                            : []),
+                          ...(canDelete && item.isDeleted
+                            ? [
+                                {
+                                  label: "Khôi phục",
+                                  icon: RotateCcw,
+                                  onClick: () => handleRestore(item.id),
                                 },
                               ]
                             : []),
