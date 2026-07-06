@@ -89,6 +89,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IOpenAiService, OpenAiService>();
         services.AddHostedService<AuditLogConsumerHostedService>();
+        services.AddHostedService<LoyaltyDailyJobHostedService>();
 
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
             ?? throw new InvalidOperationException("JwtSettings configuration is missing.");

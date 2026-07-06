@@ -13,6 +13,7 @@ import ticketApi from "../../api/ticketApi";
 import customerApi from "../../api/customerApi";
 import authApi from "../../api/authApi";
 import useAuthStore from "../auth/authStore";
+import useDanhMucStore from "../../stores/danhMucStore";
 import Pagination from "../../components/common/Pagination";
 import PageHeader from "../../components/common/PageHeader";
 import StatCard from "../../components/common/StatCard";
@@ -34,10 +35,18 @@ import { formatDateTime } from "../../utils/formatters";
 
 export default function TicketListPage() {
   const { user } = useAuthStore();
+  const loadDanhMuc = useDanhMucStore((s) => s.load);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const khachHangIdFilter = searchParams.get("khachHangId");
   const canDelete = user?.role === ROLES.Manager;
+
+  // Gọi trực tiếp ở đây (idempotent nhờ cờ loaded/loading trong store) — tránh trường hợp
+  // component này mount trước khi danh mục (loaiTicket) load xong, vd: F5 lại đúng trang
+  // /tickets, khiến dropdown "Loại ticket" trong CreateTicketModal bị trống.
+  useEffect(() => {
+    loadDanhMuc();
+  }, [loadDanhMuc]);
 
   const [items, setItems] = useState([]);
   const [nhanVienList, setNhanVienList] = useState([]);

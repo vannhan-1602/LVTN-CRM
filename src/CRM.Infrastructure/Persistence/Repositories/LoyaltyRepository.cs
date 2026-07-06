@@ -171,6 +171,17 @@ public class LoyaltyRepository : ILoyaltyRepository
             .Select(x => x.HangKhachHang_Id)
             .FirstOrDefaultAsync(ct);
 
+    public async Task<(string TenKhachHang, string? Email)?> GetTenVaEmailAsync(ulong khachHangId, CancellationToken ct = default)
+    {
+        var kh = await _context.KhKhachHangs
+            .AsNoTracking()
+            .Where(x => x.Id == khachHangId)
+            .Select(x => new { x.TenKhachHang, x.Email })
+            .FirstOrDefaultAsync(ct);
+
+        return kh is null ? null : (kh.TenKhachHang, kh.Email);
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // VOUCHER
     // ══════════════════════════════════════════════════════════════════════════

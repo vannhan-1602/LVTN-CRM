@@ -225,6 +225,20 @@ public class ProductRepository : IProductRepository
     }
 
 
+    private static StockTransactionDto MapTransactionToDto(KhoTheKhoEntity e, string? tenNguoiThucHien) => new()
+    {
+        Id = e.Id,
+        SanPhamId = e.SanPham_Id,
+        MaChungTu = e.MaChungTu,
+        LoaiGiaoDich = e.LoaiGiaoDich,
+        SoLuongThayDoi = e.SoLuongThayDoi,
+        TonCuoi = e.TonCuoi,
+        NgayGiaoDich = e.NgayGiaoDich,
+        NguoiThucHienId = e.NguoiThucHien_Id,
+        TenNguoiThucHien = tenNguoiThucHien,
+        GhiChu = e.GhiChu
+    };
+
     private static SanPham MapToDomain(BhSanPhamEntity e) => new()
     {
         Id = e.Id,

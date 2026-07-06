@@ -398,7 +398,12 @@ public class LoyaltyService
                 if (await _repo.DaGuiEmailTrongNamAsync(id, "CanhBaoXuongHang", DateTime.UtcNow.Year, ct))
                     continue;
 
-                var kh = await _repo.GetKhachHangNgayDacBietAsync(0, ct); // không dùng — lấy tên/email riêng bên dưới
+                var thongTin = await _repo.GetTenVaEmailAsync(id, ct);
+                if (thongTin is null || string.IsNullOrWhiteSpace(thongTin.Value.Email)) continue;
+
+                await _email.GuiEmailCanhBaoXuongHangAsync(
+                    id, thongTin.Value.TenKhachHang, thongTin.Value.Email!,
+                    hangInfo.TenHang, tongDiem, hangInfo.DiemToiThieu, ct);
             }
             catch (Exception ex)
             {
