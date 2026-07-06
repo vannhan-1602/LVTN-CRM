@@ -1,5 +1,6 @@
 using CRM.Application.Features.Users.DTOs;
 using CRM.Application.Interfaces.Users;
+using CRM.Infrastructure.Identity;
 using CRM.Infrastructure.Persistence.Contexts;
 using CRM.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +10,12 @@ namespace CRM.Infrastructure.Persistence.Repositories;
 public class UserManagementRepository : IUserManagementRepository
 {
     private readonly CrmDbContext _context;
+    private readonly TokenVersionCache _tokenVersionCache;
 
-    public UserManagementRepository(CrmDbContext context)
+    public UserManagementRepository(CrmDbContext context, TokenVersionCache tokenVersionCache)
     {
         _context = context;
+        _tokenVersionCache = tokenVersionCache;
     }
 
     public async Task<List<UserDto>> GetAllAsync(CancellationToken ct = default)
@@ -155,6 +158,22 @@ public class UserManagementRepository : IUserManagementRepository
 
         user.TrangThai = trangThai;
         user.UpdatedAt = DateTime.UtcNow;
+
+        // Xóa cache ngay cả khi MỞ LẠI tài khoản (không chỉ lúc khóa): nếu không, cache cũ
+        // (TrangThai="Locked" từ trước) có thể còn hiệu lực tới 30s sau khi user vừa đăng nhập
+        // lại thành công, khiến token MỚI hợp lệ vẫn bị middleware từ chối nhầm.
+        _tokenVersionCache.Invalidate(userId);
+    }
+
+    // Dùng ExecuteUpdateAsync (atomic, cộng dồn) thay vì đọc-sửa-ghi, tránh mất lượt tăng nếu
+    // có 2 thao tác quản trị xảy ra gần như đồng thời trên cùng 1 tài khoản.
+    public async Task IncrementTokenVersionAsync(uint userId, CancellationToken ct = default)
+    {
+        await _context.HtUsers
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.TokenVersion, u => u.TokenVersion + 1), ct);
+
+        _tokenVersionCache.Invalidate(userId);
     }
 
     public async Task<bool> DeleteAsync(uint userId, CancellationToken ct = default)

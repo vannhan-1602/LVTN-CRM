@@ -40,6 +40,18 @@ public class UserRepository : IUserRepository
         return users.Select(MapToUserAccount).ToList();
     }
 
+    public async Task<(int TokenVersion, string TrangThai)?> GetTokenVersionAsync(
+        uint userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _context.HtUsers
+            .AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => new { u.TokenVersion, u.TrangThai })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return user is null ? null : (user.TokenVersion, user.TrangThai);
+    }
+
     private static UserAccount MapToUserAccount(Persistence.Entities.HtUserEntity user) =>
         new()
         {
@@ -52,6 +64,7 @@ public class UserRepository : IUserRepository
             NhanSuId = user.NhanSuId,
             HoTen = user.NhanSu?.HoTen,
             Email = user.NhanSu?.Email,
+            TokenVersion = user.TokenVersion,
             CreatedAt = user.CreatedAt
         };
 }

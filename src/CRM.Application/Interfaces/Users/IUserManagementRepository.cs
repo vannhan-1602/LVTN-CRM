@@ -30,6 +30,12 @@ public interface IUserManagementRepository
     Task UpdatePasswordAsync(uint userId, string passwordHash, CancellationToken ct = default);
     Task UpdateStatusAsync(uint userId, string trangThai, CancellationToken ct = default);
 
+    /// <summary>
+    /// Tăng TokenVersion — vô hiệu hóa mọi JWT đã phát trước đó cho tài khoản này ngay lập tức
+    /// (khóa/vô hiệu hóa, đổi vai trò, đổi mật khẩu). Xem thêm TokenVersionCacheService.
+    /// </summary>
+    Task IncrementTokenVersionAsync(uint userId, CancellationToken ct = default);
+
     /// Xóa cứng tài khoản (giữ lại bản ghi nhân sự, chỉ gỡ liên kết đăng nhập).
     Task<bool> DeleteAsync(uint userId, CancellationToken ct = default);
 

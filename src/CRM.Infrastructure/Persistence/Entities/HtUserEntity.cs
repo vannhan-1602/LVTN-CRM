@@ -11,6 +11,7 @@ public class HtUserEntity
     public string Password { get; set; } = string.Empty;
     public uint? RoleId { get; set; }
     public string TrangThai { get; set; } = "Active";
+    public int TokenVersion { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 

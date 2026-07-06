@@ -65,6 +65,8 @@ public static class DependencyInjection
         services.AddAutoMapper(typeof(PersistenceMappingProfile).Assembly);
 
         services.AddHttpContextAccessor();
+        services.AddMemoryCache();
+        services.AddSingleton<TokenVersionCache>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();

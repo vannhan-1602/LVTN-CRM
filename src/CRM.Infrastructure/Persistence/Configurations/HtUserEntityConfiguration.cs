@@ -17,6 +17,7 @@ public class HtUserEntityConfiguration : IEntityTypeConfiguration<HtUserEntity>
         builder.Property(e => e.Password).HasColumnName("Password").HasMaxLength(255).IsRequired();
         builder.Property(e => e.RoleId).HasColumnName("Role_Id");
         builder.Property(e => e.TrangThai).HasColumnName("TrangThai").HasConversion<string>().HasMaxLength(20);
+        builder.Property(e => e.TokenVersion).HasColumnName("TokenVersion");
         builder.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
         builder.Property(e => e.UpdatedAt).HasColumnName("UpdatedAt");
 

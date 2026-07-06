@@ -51,6 +51,11 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
         var hash = _passwordHasher.Hash(request.NewPassword);
         await _repository.UpdatePasswordAsync(request.Id, hash, ct);
+
+        // Đổi mật khẩu (do Admin reset hộ): thu hồi ngay JWT cũ, buộc đăng nhập lại bằng
+        // mật khẩu mới thay vì tiếp tục dùng phiên cũ cho tới khi hết hạn.
+        await _repository.IncrementTokenVersionAsync(request.Id, ct);
+
         await _unitOfWork.SaveChangesAsync(ct);
 
         try

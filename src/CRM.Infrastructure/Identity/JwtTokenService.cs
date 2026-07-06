@@ -28,7 +28,11 @@ public class JwtTokenService : IJwtTokenService
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(ClaimTypes.NameIdentifier, authUser.Id.ToString()),
             new(ClaimTypes.Name, authUser.Username),
-            new(ClaimTypes.Role, authUser.RoleName)
+            new(ClaimTypes.Role, authUser.RoleName),
+            // Dùng để thu hồi token: nếu tài khoản bị khóa / đổi vai trò / đổi mật khẩu,
+            // TokenVersion trong DB tăng lên, token cũ mang giá trị cũ sẽ bị middleware
+            // xác thực từ chối dù chưa hết hạn theo thời gian (xem TokenVersionValidationHandler).
+            new("tv", authUser.TokenVersion.ToString())
         };
 
         if (!string.IsNullOrWhiteSpace(authUser.Email))

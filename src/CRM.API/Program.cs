@@ -6,6 +6,11 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// appsettings.Local.json chứa các secret thật (SMTP password, connection string thật...) —
+// đã có trong .gitignore, không commit lên git. Nếu file không tồn tại (vd: máy CI/máy khác),
+// optional:true nên vẫn chạy bình thường, chỉ là dùng giá trị placeholder trong appsettings.json.
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 

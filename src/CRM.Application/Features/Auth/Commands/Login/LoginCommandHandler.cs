@@ -50,7 +50,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
             RoleName = account.RoleName,
             HoTen = account.HoTen,
             Email = account.Email,
-            NhanSuId = account.NhanSuId   
+            NhanSuId = account.NhanSuId,
+            TokenVersion = account.TokenVersion
         };
 
         var tokenResult = _jwtTokenService.GenerateToken(authUser);
@@ -64,7 +65,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
             Role = account.RoleName,
             HoTen = account.HoTen,
             Email = account.Email,
-            NhanSuId = account.NhanSuId   
+            NhanSuId = account.NhanSuId
         };
     }
 }

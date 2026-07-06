@@ -1,3 +1,4 @@
+using CRM.Application.Common.Constants;
 using CRM.Application.Common.Models;
 using CRM.Application.Features.Invoices.Commands.CreateInvoice;
 using CRM.Application.Features.Invoices.DTOs;
@@ -53,6 +54,7 @@ public class InvoiceController : ControllerBase
     ///   Không truyền HopDongId, bắt buộc truyền KhachHangId.
     /// </summary>
     [HttpPost]
+    [Authorize(Policy = Policies.FinanceTeam)]
     public async Task<IActionResult> Create(
         [FromBody] CreateInvoiceRequestDto request,
         CancellationToken ct)

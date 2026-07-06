@@ -431,7 +431,13 @@ public class LoyaltyService
             {
                 var (hangMoiId, daThayDoi, hangCuId) = await _repo.TinhLaiHangAsync(id, ct);
                 if (!daThayDoi) continue;
-                // Email cần tên/email khách — bỏ qua nếu không lấy được (đã log lỗi ở TinhLaiHangAsync nếu có).
+
+                var thongTin = await _repo.GetTenVaEmailAsync(id, ct);
+                if (thongTin is null || string.IsNullOrWhiteSpace(thongTin.Value.Email)) continue;
+
+                await XuLyThayDoiHangAsync(
+                    id, thongTin.Value.TenKhachHang, thongTin.Value.Email!,
+                    hangCuId, hangMoiId, ct);
             }
             catch (Exception ex)
             {

@@ -1,3 +1,4 @@
+using CRM.Application.Common.Constants;
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Users.DTOs;
 using CRM.Application.Interfaces.Audit;
@@ -60,6 +61,22 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
         if (!await _repository.RoleExistsAsync(request.RoleId, ct))
             throw new BusinessRuleException("Vai trò không hợp lệ.");
 
+        // Không cho hạ quyền Admin cuối cùng còn đang hoạt động trong hệ thống — nếu không sẽ
+        // không còn ai có quyền quản trị (tạo user, mở khóa tài khoản...) trong hệ thống nữa.
+        if (string.Equals(existing.RoleName, Roles.Admin, StringComparison.OrdinalIgnoreCase) &&
+            request.RoleId != existing.RoleId)
+        {
+            var allUsers = await _repository.GetAllAsync(ct);
+            var soAdminKhac = allUsers.Count(u =>
+                u.Id != request.Id &&
+                string.Equals(u.RoleName, Roles.Admin, StringComparison.OrdinalIgnoreCase) &&
+                u.TrangThai == "Active");
+
+            if (soAdminKhac == 0)
+                throw new BusinessRuleException(
+                    "Không thể hạ quyền Admin cuối cùng đang hoạt động trong hệ thống.");
+        }
+
         if (await _repository.EmailExistsAsync(request.Email, existing.NhanSuId, ct))
             throw new BusinessRuleException($"Email '{request.Email}' đã được sử dụng bởi nhân sự khác.");
 
@@ -73,6 +90,11 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
             request.Id, request.RoleId,
             request.HoTen.Trim(), request.Email?.Trim(), request.SoDienThoai?.Trim(),
             request.PhongBanId, request.ChucVuId, ct);
+
+        // Đổi vai trò: JWT cũ còn mang Role claim cũ, phải thu hồi ngay để tránh dùng
+        // quyền cũ cho tới khi token hết hạn tự nhiên.
+        if (request.RoleId != existing.RoleId)
+            await _repository.IncrementTokenVersionAsync(request.Id, ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
 

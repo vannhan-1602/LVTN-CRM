@@ -1,3 +1,4 @@
+using CRM.Application.Common.Constants;
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Users.DTOs;
 using CRM.Application.Interfaces.Audit;
@@ -49,7 +50,28 @@ public class ToggleUserStatusCommandHandler : IRequestHandler<ToggleUserStatusCo
         var existing = await _repository.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException("User", request.Id);
 
+        // Không cho khóa/vô hiệu hóa Admin cuối cùng còn đang hoạt động trong hệ thống —
+        // nếu không sẽ không còn ai có quyền quản trị để tự mở lại tài khoản này.
+        if (request.TrangThai != "Active" &&
+            string.Equals(existing.RoleName, Roles.Admin, StringComparison.OrdinalIgnoreCase))
+        {
+            var allUsers = await _repository.GetAllAsync(ct);
+            var soAdminDangHoatDong = allUsers.Count(u =>
+                u.Id != request.Id &&
+                string.Equals(u.RoleName, Roles.Admin, StringComparison.OrdinalIgnoreCase) &&
+                u.TrangThai == "Active");
+
+            if (soAdminDangHoatDong == 0)
+                throw new BusinessRuleException(
+                    "Không thể khóa/vô hiệu hóa Admin cuối cùng đang hoạt động trong hệ thống.");
+        }
+
         await _repository.UpdateStatusAsync(request.Id, request.TrangThai, ct);
+
+        // Khóa/vô hiệu hóa tài khoản: thu hồi ngay mọi JWT đã phát trước đó (không cần chờ
+        // token hết hạn tự nhiên theo thời gian sống 60 phút).
+        if (request.TrangThai != "Active")
+            await _repository.IncrementTokenVersionAsync(request.Id, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         var updated = await _repository.GetByIdAsync(request.Id, ct)

@@ -1,3 +1,4 @@
+using CRM.Application.Common.Constants;
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
@@ -46,6 +47,21 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>
         // Chặn Admin tự xóa chính mình -> tránh khóa hệ thống không còn ai quản trị
         if (_currentUser.UserId.HasValue && _currentUser.UserId.Value == request.Id)
             throw new BusinessRuleException("Không thể xóa chính tài khoản đang đăng nhập.");
+
+        // Chặn xóa Admin cuối cùng còn đang hoạt động (trường hợp Admin A xóa Admin B
+        // khi B là Admin active duy nhất còn lại).
+        if (string.Equals(existing.RoleName, Roles.Admin, StringComparison.OrdinalIgnoreCase))
+        {
+            var allUsers = await _repository.GetAllAsync(ct);
+            var soAdminKhac = allUsers.Count(u =>
+                u.Id != request.Id &&
+                string.Equals(u.RoleName, Roles.Admin, StringComparison.OrdinalIgnoreCase) &&
+                u.TrangThai == "Active");
+
+            if (soAdminKhac == 0)
+                throw new BusinessRuleException(
+                    "Không thể xóa Admin cuối cùng đang hoạt động trong hệ thống.");
+        }
 
         var deleted = await _repository.DeleteAsync(request.Id, ct);
         if (!deleted) throw new NotFoundException("User", request.Id);
