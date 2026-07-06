@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const API_BASE_URL = "https://localhost:7071/api";
+// Gốc server (không có /api) — dùng để build URL đầy đủ cho ảnh tĩnh trong wwwroot/uploads/...
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
+
 const axiosClient = axios.create({
-  baseURL: "https://localhost:7071/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },

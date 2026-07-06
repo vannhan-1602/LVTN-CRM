@@ -37,6 +37,9 @@ public interface ILoyaltyRepository
 
     Task<ushort?> GetHangHienTaiAsync(ulong khachHangId, CancellationToken ct = default);
 
+    /// <summary>Lấy tên và email khách hàng theo Id — dùng cho các job nền cần gửi email.</summary>
+    Task<(string TenKhachHang, string? Email)?> GetTenVaEmailAsync(ulong khachHangId, CancellationToken ct = default);
+
     // ── Voucher ───────────────────────────────────────────────────────────────
 
     Task<Voucher> PhatVoucherAsync(ulong khachHangId, ushort xepHangId,
@@ -71,6 +74,13 @@ public interface ILoyaltyRepository
     /// </summary>
     Task<List<KhachHangNgayDacBiet>> GetKhachHangNgayDacBietAsync(
         int soNgayToi, CancellationToken ct = default);
+
+    /// <summary>
+    /// Lấy danh sách khách hàng phù hợp với 1 ngày lễ/ưu đãi cụ thể (theo loại KH và hạng tối thiểu).
+    /// Dùng cho job hàng ngày gửi email ngày lễ.
+    /// </summary>
+    Task<List<KhachHangNgayDacBiet>> GetKhachHangChoNgayLeAsync(
+        string apDungChoLoaiKH, ushort? hangToiThieuApDung, CancellationToken ct = default);
 
     /// <summary>Lấy toàn bộ khách hàng để job đầu tháng tính lại hạng.</summary>
     Task<List<ulong>> GetAllKhachHangIdsAsync(CancellationToken ct = default);

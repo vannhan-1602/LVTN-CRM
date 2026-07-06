@@ -84,7 +84,10 @@ public class ProductRepository : IProductRepository
 
         return new PagedResult<ProductDto>
         {
-            Items = dtos, PageNumber = pageNumber, PageSize = pageSize, TotalCount = total
+            Items = dtos,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = total
         };
     }
 
@@ -265,17 +268,98 @@ public class ProductRepository : IProductRepository
         UpdatedAt = e.UpdatedAt
     };
 
-    private static StockTransactionDto MapTransactionToDto(KhoTheKhoEntity e, string? tenNguoiThucHien) => new()
+    // ── Quản lý hình ảnh sản phẩm (1 ảnh chính + nhiều ảnh phụ) ──────────────────
+    public async Task<List<ProductImageDto>> GetImagesAsync(uint sanPhamId, CancellationToken ct = default) =>
+        await _context.Set<BhSanPhamHinhAnhEntity>()
+            .AsNoTracking()
+            .Where(h => h.SanPham_Id == sanPhamId)
+            .OrderByDescending(h => h.IsMain)
+            .ThenBy(h => h.Id)
+            .Select(h => MapImageToDto(h))
+            .ToListAsync(ct);
+
+    public async Task<ProductImageDto> AddImageAsync(uint sanPhamId, string urlHinhAnh, bool isMain, CancellationToken ct = default)
+    {
+        // Nếu đây là ảnh chính, hoặc sản phẩm chưa có ảnh chính nào, đảm bảo chỉ 1 ảnh IsMain=true.
+        var hasMain = await _context.Set<BhSanPhamHinhAnhEntity>()
+            .AnyAsync(h => h.SanPham_Id == sanPhamId && h.IsMain, ct);
+
+        var shouldBeMain = isMain || !hasMain;
+
+        if (shouldBeMain && hasMain)
+        {
+            await _context.Set<BhSanPhamHinhAnhEntity>()
+                .Where(h => h.SanPham_Id == sanPhamId && h.IsMain)
+                .ExecuteUpdateAsync(s => s.SetProperty(h => h.IsMain, false), ct);
+        }
+
+        var entity = new BhSanPhamHinhAnhEntity
+        {
+            SanPham_Id = sanPhamId,
+            UrlHinhAnh = urlHinhAnh,
+            IsMain = shouldBeMain
+        };
+        await _context.Set<BhSanPhamHinhAnhEntity>().AddAsync(entity, ct);
+        await _context.SaveChangesAsync(ct);
+
+        return MapImageToDto(entity);
+    }
+
+    public async Task<bool> SetMainImageAsync(uint sanPhamId, ulong imageId, CancellationToken ct = default)
+    {
+        var target = await _context.Set<BhSanPhamHinhAnhEntity>()
+            .FirstOrDefaultAsync(h => h.Id == imageId && h.SanPham_Id == sanPhamId, ct);
+        if (target is null) return false;
+
+        // Bỏ cờ IsMain của ảnh chính cũ (nếu khác ảnh đang chọn) rồi gán cho ảnh mới.
+        await _context.Set<BhSanPhamHinhAnhEntity>()
+            .Where(h => h.SanPham_Id == sanPhamId && h.IsMain && h.Id != imageId)
+            .ExecuteUpdateAsync(s => s.SetProperty(h => h.IsMain, false), ct);
+
+        target.IsMain = true;
+        await _context.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<bool> DeleteImageAsync(ulong imageId, CancellationToken ct = default)
+    {
+        var entity = await _context.Set<BhSanPhamHinhAnhEntity>().FirstOrDefaultAsync(h => h.Id == imageId, ct);
+        if (entity is null) return false;
+
+        var wasMain = entity.IsMain;
+        var sanPhamId = entity.SanPham_Id;
+        _context.Set<BhSanPhamHinhAnhEntity>().Remove(entity);
+        await _context.SaveChangesAsync(ct);
+
+        // Nếu vừa xóa ảnh chính, tự động chọn 1 ảnh phụ còn lại (nếu có) làm ảnh chính mới,
+        // để sản phẩm không bị "mất ảnh đại diện" đột ngột.
+        if (wasMain && sanPhamId.HasValue)
+        {
+            var next = await _context.Set<BhSanPhamHinhAnhEntity>()
+                .Where(h => h.SanPham_Id == sanPhamId.Value)
+                .OrderBy(h => h.Id)
+                .FirstOrDefaultAsync(ct);
+            if (next is not null)
+            {
+                next.IsMain = true;
+                await _context.SaveChangesAsync(ct);
+            }
+        }
+        return true;
+    }
+
+    public async Task<ProductImageDto?> GetImageByIdAsync(ulong imageId, CancellationToken ct = default) =>
+        await _context.Set<BhSanPhamHinhAnhEntity>()
+            .AsNoTracking()
+            .Where(h => h.Id == imageId)
+            .Select(h => MapImageToDto(h))
+            .FirstOrDefaultAsync(ct);
+
+    private static ProductImageDto MapImageToDto(BhSanPhamHinhAnhEntity e) => new()
     {
         Id = e.Id,
-        SanPhamId = e.SanPham_Id,
-        MaChungTu = e.MaChungTu,
-        LoaiGiaoDich = e.LoaiGiaoDich,
-        SoLuongThayDoi = e.SoLuongThayDoi,
-        TonCuoi = e.TonCuoi,
-        NgayGiaoDich = e.NgayGiaoDich,
-        NguoiThucHienId = e.NguoiThucHien_Id,
-        TenNguoiThucHien = tenNguoiThucHien,
-        GhiChu = e.GhiChu
+        SanPhamId = e.SanPham_Id ?? 0,
+        UrlHinhAnh = e.UrlHinhAnh,
+        IsMain = e.IsMain
     };
 }

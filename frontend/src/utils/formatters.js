@@ -1,3 +1,5 @@
+import { API_ORIGIN } from "../api/axiosClient";
+
 export function formatDate(dateStr) {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("vi-VN", {
@@ -33,4 +35,12 @@ const BADGE_TONE_CYCLE = ["info", "success", "warning", "danger", "neutral"];
 export function badgeToneForId(id) {
   if (id == null) return "neutral";
   return BADGE_TONE_CYCLE[Number(id) % BADGE_TONE_CYCLE.length];
+}
+
+// Ảnh sản phẩm được backend trả về dạng đường dẫn tương đối (vd: "/uploads/products/xxx.jpg"),
+// cần ghép với gốc server (không phải gốc /api) mới load được trên <img>.
+export function getImageUrl(relativeOrAbsoluteUrl) {
+  if (!relativeOrAbsoluteUrl) return null;
+  if (/^https?:\/\//i.test(relativeOrAbsoluteUrl)) return relativeOrAbsoluteUrl;
+  return `${API_ORIGIN}${relativeOrAbsoluteUrl}`;
 }

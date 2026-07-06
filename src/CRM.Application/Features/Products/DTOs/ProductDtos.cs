@@ -23,6 +23,14 @@ public class ProductTypeDto
     public string? MoTa { get; set; }
 }
 
+public class ProductImageDto
+{
+    public ulong Id { get; set; }
+    public uint SanPhamId { get; set; }
+    public string UrlHinhAnh { get; set; } = string.Empty;
+    public bool IsMain { get; set; }
+}
+
 public class CreateProductRequestDto
 {
     public uint? LoaiSanPhamId { get; set; }

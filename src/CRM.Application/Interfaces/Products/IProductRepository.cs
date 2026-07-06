@@ -31,4 +31,11 @@ public interface IProductRepository
         string? maChungTu, string? ghiChu, uint? nguoiThucHienId,
         CancellationToken ct = default);
     Task<List<StockTransactionDto>> GetStockHistoryAsync(uint sanPhamId, CancellationToken ct = default);
+
+    // Quản lý hình ảnh (1 ảnh chính + nhiều ảnh phụ)
+    Task<List<ProductImageDto>> GetImagesAsync(uint sanPhamId, CancellationToken ct = default);
+    Task<ProductImageDto> AddImageAsync(uint sanPhamId, string urlHinhAnh, bool isMain, CancellationToken ct = default);
+    Task<bool> SetMainImageAsync(uint sanPhamId, ulong imageId, CancellationToken ct = default);
+    Task<bool> DeleteImageAsync(ulong imageId, CancellationToken ct = default);
+    Task<ProductImageDto?> GetImageByIdAsync(ulong imageId, CancellationToken ct = default);
 }

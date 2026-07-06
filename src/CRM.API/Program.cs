@@ -68,6 +68,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowFrontend");
 
+// Phục vụ file tĩnh trong wwwroot (ảnh sản phẩm upload lên /uploads/products/...)
+var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads", "products");
+Directory.CreateDirectory(uploadsPath);
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
