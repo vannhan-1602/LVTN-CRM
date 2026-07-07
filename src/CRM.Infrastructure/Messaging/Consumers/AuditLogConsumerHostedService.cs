@@ -14,6 +14,9 @@ namespace CRM.Infrastructure.Messaging.Consumers;
 
 public class AuditLogConsumerHostedService : BackgroundService
 {
+    private const string RetryCountHeader = "x-retry-count";
+    private const int MaxRetries = 3;
+
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly RabbitMqSettings _settings;
     private readonly ILogger<AuditLogConsumerHostedService> _logger;
@@ -64,13 +67,9 @@ public class AuditLogConsumerHostedService : BackgroundService
         _connection = await factory.CreateConnectionAsync(stoppingToken);
         _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
-        await _channel.QueueDeclareAsync(
-            queue: _settings.AuditLogQueue,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null,
-            cancellationToken: stoppingToken);
+        // Declare qua topology dùng chung (khai báo cả DLX + DLQ + queue chính với
+        // arg x-dead-letter-exchange) — bắt buộc để arguments khớp với Publisher.
+        await RabbitMqTopology.EnsureAuditLogTopologyAsync(_channel, _settings, stoppingToken);
 
         await _channel.BasicQosAsync(0, 1, false, stoppingToken);
 
@@ -92,8 +91,7 @@ public class AuditLogConsumerHostedService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to process audit log message");
-                await _channel.BasicNackAsync(eventArgs.DeliveryTag, false, true, stoppingToken);
+                await HandleFailureAsync(eventArgs, ex, stoppingToken);
             }
         };
 
@@ -106,6 +104,67 @@ public class AuditLogConsumerHostedService : BackgroundService
         _logger.LogInformation("Audit log consumer started on queue {QueueName}", _settings.AuditLogQueue);
 
         await Task.Delay(Timeout.Infinite, stoppingToken);
+    }
+
+    /// <summary>
+    /// Trước đây: nack(requeue:true) vô điều kiện → message lỗi vĩnh viễn (vd JSON hỏng)
+    /// bị requeue lặp lại VÔ HẠN, tốn CPU và không ai biết nó đang lỗi.
+    /// Giờ: đếm số lần retry qua header, retry tối đa <see cref="MaxRetries"/> lần rồi
+    /// đẩy sang DLQ (crm.audit-log.dlq) để xem/xử lý thủ công thay vì lặp vô hạn.
+    /// </summary>
+    private async Task HandleFailureAsync(BasicDeliverEventArgs eventArgs, Exception ex, CancellationToken ct)
+    {
+        var headers = eventArgs.BasicProperties.Headers;
+        var retryCount = 0;
+        if (headers is not null && headers.TryGetValue(RetryCountHeader, out var raw))
+        {
+            retryCount = raw switch
+            {
+                int i => i,
+                long l => (int)l,
+                byte[] b => int.Parse(Encoding.UTF8.GetString(b)),
+                _ => 0
+            };
+        }
+
+        if (retryCount >= MaxRetries)
+        {
+            _logger.LogError(ex,
+                "Audit log message failed after {RetryCount} retries, sending to DLQ {DlqName}",
+                retryCount, _settings.AuditLogDeadLetterQueue);
+            // requeue:false + queue có x-dead-letter-exchange => RabbitMQ tự route sang DLQ
+            await _channel!.BasicNackAsync(eventArgs.DeliveryTag, false, false, ct);
+            return;
+        }
+
+        _logger.LogWarning(ex,
+            "Failed to process audit log message (attempt {Attempt}/{Max}), retrying",
+            retryCount + 1, MaxRetries);
+
+        // Không thể "sửa header rồi requeue" bằng BasicNack (header giữ nguyên bản gốc),
+        // nên ack bản cũ rồi tự publish lại với header đã tăng retry count.
+        // Dựng BasicProperties mới thủ công (không dùng copy-constructor từ
+        // IReadOnlyBasicProperties) để chắc chắn tương thích với RabbitMQ.Client 7.x.
+        var newHeaders = new Dictionary<string, object?>(headers ?? new Dictionary<string, object?>())
+        {
+            [RetryCountHeader] = retryCount + 1
+        };
+        var newProps = new BasicProperties
+        {
+            Persistent = true,
+            ContentType = eventArgs.BasicProperties.ContentType,
+            Headers = newHeaders
+        };
+
+        await _channel!.BasicPublishAsync(
+            exchange: string.Empty,
+            routingKey: _settings.AuditLogQueue,
+            mandatory: false,
+            basicProperties: newProps,
+            body: eventArgs.Body,
+            cancellationToken: ct);
+
+        await _channel.BasicAckAsync(eventArgs.DeliveryTag, false, ct);
     }
 
     private async Task PersistAuditLogAsync(AuditLogMessage message, CancellationToken cancellationToken)

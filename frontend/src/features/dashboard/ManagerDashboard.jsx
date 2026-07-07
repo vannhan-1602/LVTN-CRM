@@ -13,6 +13,7 @@ import Card from "../../components/common/Card";
 import StatCard from "../../components/common/StatCard";
 import Button from "../../components/common/Button";
 import { GIAI_DOAN_LIST, GIAI_DOAN_LABEL, GIAI_DOAN_HEADER_COLOR } from "../../utils/constants";
+import AiSalesAnalysisCard from "./AiSalesAnalysisCard";
 
 function formatMoney(n) {
   if (!n && n !== 0) return "—";
@@ -181,6 +182,8 @@ export default function ManagerDashboard() {
           </Card>
         </div>
       </div>
+
+      <AiSalesAnalysisCard />
     </div>
   );
 }

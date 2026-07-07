@@ -37,13 +37,22 @@ public class RabbitMqPublisher : IMessagePublisher, IDisposable
         CancellationToken cancellationToken = default)
         where TMessage : class
     {
-        await _channel.QueueDeclareAsync(
-            queue: queueName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null,
-            cancellationToken: cancellationToken);
+        // Queue có DLQ (hiện tại: AuditLogQueue) phải declare qua topology dùng chung
+        // để arguments khớp với bên consumer; các queue khác giữ declare đơn giản.
+        if (queueName == _settings.AuditLogQueue)
+        {
+            await RabbitMqTopology.EnsureAuditLogTopologyAsync(_channel, _settings, cancellationToken);
+        }
+        else
+        {
+            await _channel.QueueDeclareAsync(
+                queue: queueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null,
+                cancellationToken: cancellationToken);
+        }
 
         var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 

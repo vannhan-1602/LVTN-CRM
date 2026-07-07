@@ -83,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<IAddressRepository, AddressRepository>();
         services.AddScoped<IDanhMucRepository, DanhMucRepository>();
         services.AddScoped<ILoyaltyRepository, LoyaltyRepository>();
+        services.AddScoped<CRM.Application.Interfaces.Analytics.IAnalyticsRepository, CRM.Infrastructure.Persistence.Repositories.AnalyticsRepository>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IPhieuThuChiRepository, PhieuThuChiRepository>();

@@ -33,6 +33,14 @@ public class LoyaltyDailyJobHostedService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
+            // Chờ tới giờ hẹn rồi mới chạy — tránh chạy ngay mỗi lần app khởi động/restart
+            // (lúc dev restart nhiều lần sẽ không bị chạy job lặp lại liên tục nữa).
+            var delay = TinhThoiGianChoLanChayKeTiep();
+            _logger.LogInformation("[LoyaltyDailyJob] Lần chạy kế tiếp sau {Delay}", delay);
+            await Task.Delay(delay, stoppingToken);
+
+            if (stoppingToken.IsCancellationRequested) break;
+
             try
             {
                 await ChayJobAsync(stoppingToken);
@@ -41,10 +49,6 @@ public class LoyaltyDailyJobHostedService : BackgroundService
             {
                 _logger.LogError(ex, "[LoyaltyDailyJob] Lỗi không mong muốn khi chạy job hàng ngày");
             }
-
-            var delay = TinhThoiGianChoLanChayKeTiep();
-            _logger.LogInformation("[LoyaltyDailyJob] Lần chạy kế tiếp sau {Delay}", delay);
-            await Task.Delay(delay, stoppingToken);
         }
     }
 
