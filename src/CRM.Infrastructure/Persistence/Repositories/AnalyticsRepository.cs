@@ -77,4 +77,48 @@ public class AnalyticsRepository : IAnalyticsRepository
             TongCongNoChuaThu = tongCongNo
         };
     }
+
+    public async Task<DashboardTrendsDto> GetDashboardTrendsAsync(CancellationToken ct = default)
+    {
+        var now = DateTime.UtcNow;
+        var dauThangNay = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var dauThangTruoc = dauThangNay.AddMonths(-1);
+
+        // Đếm bản ghi tạo trong [dauThangTruoc, dauThangNay) = "tháng trước",
+        // và [dauThangNay, now] = "tháng này" (tính tới thời điểm hiện tại, không phải hết tháng).
+        var khachHang = await _context.KhKhachHangs.AsNoTracking()
+            .Where(x => !x.IsDeleted && x.CreatedAt != null)
+            .Select(x => x.CreatedAt!.Value)
+            .ToListAsync(ct);
+
+        var hopDong = await _context.HdHopDongs.AsNoTracking()
+            .Where(x => x.CreatedAt != null)
+            .Select(x => x.CreatedAt!.Value)
+            .ToListAsync(ct);
+
+        var baoGia = await _context.HdBaoGias.AsNoTracking()
+            .Where(x => x.CreatedAt != null)
+            .Select(x => x.CreatedAt!.Value)
+            .ToListAsync(ct);
+
+        var ticket = await _context.TkTickets.AsNoTracking()
+            .Where(x => !x.IsDeleted && x.CreatedAt != null)
+            .Select(x => x.CreatedAt!.Value)
+            .ToListAsync(ct);
+
+        int DemThangNay(List<DateTime> ds) => ds.Count(d => d >= dauThangNay);
+        int DemThangTruoc(List<DateTime> ds) => ds.Count(d => d >= dauThangTruoc && d < dauThangNay);
+
+        return new DashboardTrendsDto
+        {
+            KhachHangMoiThangNay = DemThangNay(khachHang),
+            KhachHangMoiThangTruoc = DemThangTruoc(khachHang),
+            HopDongMoiThangNay = DemThangNay(hopDong),
+            HopDongMoiThangTruoc = DemThangTruoc(hopDong),
+            BaoGiaMoiThangNay = DemThangNay(baoGia),
+            BaoGiaMoiThangTruoc = DemThangTruoc(baoGia),
+            TicketMoiThangNay = DemThangNay(ticket),
+            TicketMoiThangTruoc = DemThangTruoc(ticket)
+        };
+    }
 }

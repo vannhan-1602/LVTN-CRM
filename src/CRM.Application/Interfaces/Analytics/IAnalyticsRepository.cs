@@ -11,4 +11,8 @@ public interface IAnalyticsRepository
     /// chỉ số liệu thô; phần diễn giải do AI sinh ra ở lớp trên.
     /// </summary>
     Task<SalesAnalyticsDataDto> GetSalesAnalyticsDataAsync(int soThang, CancellationToken ct = default);
+
+    /// <summary>So sánh số khách hàng/hợp đồng/báo giá/ticket mới tạo tháng này với tháng trước —
+    /// dùng cho mũi tên xu hướng (tăng/giảm) trên 4 stat card đầu Dashboard.</summary>
+    Task<DashboardTrendsDto> GetDashboardTrendsAsync(CancellationToken ct = default);
 }

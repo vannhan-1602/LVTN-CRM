@@ -31,6 +31,19 @@ public class SanPhamBanChayDto
     public int SoLuongBan { get; set; }
 }
 
+/// <summary>So sánh số bản ghi mới tạo tháng này với tháng trước — dùng cho mũi tên xu hướng trên Dashboard.</summary>
+public class DashboardTrendsDto
+{
+    public int KhachHangMoiThangNay { get; set; }
+    public int KhachHangMoiThangTruoc { get; set; }
+    public int HopDongMoiThangNay { get; set; }
+    public int HopDongMoiThangTruoc { get; set; }
+    public int BaoGiaMoiThangNay { get; set; }
+    public int BaoGiaMoiThangTruoc { get; set; }
+    public int TicketMoiThangNay { get; set; }
+    public int TicketMoiThangTruoc { get; set; }
+}
+
 /// <summary>Kết quả trả về cho frontend — số liệu thô (để vẽ biểu đồ) + đề xuất có cấu trúc từ AI.</summary>
 public class AiSalesAnalysisResultDto
 {

@@ -2,6 +2,7 @@ using CRM.Application.Common.Constants;
 using CRM.Application.Common.Models;
 using CRM.Application.Features.Analytics.DTOs;
 using CRM.Application.Features.Analytics.Queries.GenerateAiSalesAnalysis;
+using CRM.Application.Features.Analytics.Queries.GetDashboardTrends;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,5 +28,13 @@ public class AnalyticsController : ControllerBase
     {
         var result = await _mediator.Send(new GenerateAiSalesAnalysisQuery(soThang), ct);
         return Ok(ApiResponse<AiSalesAnalysisResultDto>.Ok(result));
+    }
+
+    /// <summary>Số bản ghi mới tạo tháng này so với tháng trước — cho mũi tên xu hướng trên Dashboard.</summary>
+    [HttpGet("dashboard-trends")]
+    public async Task<IActionResult> GetDashboardTrends(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetDashboardTrendsQuery(), ct);
+        return Ok(ApiResponse<DashboardTrendsDto>.Ok(result));
     }
 }
