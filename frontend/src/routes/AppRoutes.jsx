@@ -23,17 +23,7 @@ import OpportunityDetailPage from "../features/opportunities/OpportunityDetailPa
 import InvoiceListPage from "../features/invoices/InvoiceListPage";
 import InvoiceDetailPage from "../features/invoices/InvoiceDetailPage";
 import SettingsPage from "../features/settings/SettingsPage";
-
-function Dashboard() {
-  return (
-    <div className="bg-white rounded-xl border shadow-sm p-8">
-      <h2 className="text-xl font-bold text-gray-800 mb-2">Dashboard</h2>
-      <p className="text-gray-500">
-        Chào mừng đến với CRM System. Chọn module từ menu bên trái.
-      </p>
-    </div>
-  );
-}
+import DashboardPage from "../features/dashboard/DashboardPage";
 
 function UnauthorizedPage() {
   return (
@@ -57,7 +47,7 @@ export default function AppRoutes() {
 
       <Route element={<MainLayout />}>
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<DashboardPage />} />
         </Route>
 
         {/* Sale + Manager */}
