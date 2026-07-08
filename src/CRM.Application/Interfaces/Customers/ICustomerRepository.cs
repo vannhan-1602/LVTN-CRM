@@ -32,4 +32,9 @@ public interface ICustomerRepository
     Task<bool> TinhTrangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default);
     Task<bool> HangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default);
     Task<KhachHang?> GetByMaKhachHangAsync(string maKhachHang, CancellationToken cancellationToken = default);
+
+    /// <summary>Tìm các khách hàng đang hoạt động trùng Email/SĐT/MST — dùng cảnh báo trùng lặp khi tạo mới.</summary>
+    Task<List<(ulong Id, string MaKhachHang, string TenKhachHang, string TrungTruong)>> FindDuplicatesAsync(
+        string? email, string? soDienThoai, string? maSoThue, ulong? excludeId,
+        CancellationToken cancellationToken = default);
 }

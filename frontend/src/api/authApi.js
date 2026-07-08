@@ -9,6 +9,14 @@ const authApi = {
 
   //  mọi role đã đăng nhập, dùng cho dropdown "Nhân viên phụ trách/xử lý"
   getStaffList: () => axiosClient.get("/Auth/staff-list"),
+
+  // UC-AUTH-03 — tự đổi mật khẩu
+  changePassword: (currentPassword, newPassword, confirmNewPassword) =>
+    axiosClient.post("/Auth/change-password", {
+      currentPassword,
+      newPassword,
+      confirmNewPassword,
+    }),
 };
 
 export default authApi;

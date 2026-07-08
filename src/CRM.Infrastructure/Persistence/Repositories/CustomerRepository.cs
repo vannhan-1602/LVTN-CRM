@@ -204,6 +204,41 @@ public class CustomerRepository : ICustomerRepository
         return entity is null ? null : MapToDomain(entity);
     }
 
+    public async Task<List<(ulong Id, string MaKhachHang, string TenKhachHang, string TrungTruong)>> FindDuplicatesAsync(
+        string? email, string? soDienThoai, string? maSoThue, ulong? excludeId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = new List<(ulong, string, string, string)>();
+        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(soDienThoai) && string.IsNullOrWhiteSpace(maSoThue))
+            return result;
+
+        var query = _context.KhKhachHangs.AsNoTracking()
+            .Where(c => !c.IsDeleted && (!excludeId.HasValue || c.Id != excludeId.Value));
+
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            var matches = await query.Where(c => c.Email == email)
+                .Select(c => new { c.Id, c.MaKhachHang, c.TenKhachHang }).ToListAsync(cancellationToken);
+            result.AddRange(matches.Select(m => (m.Id, m.MaKhachHang, m.TenKhachHang, "Email")));
+        }
+
+        if (!string.IsNullOrWhiteSpace(soDienThoai))
+        {
+            var matches = await query.Where(c => c.SoDienThoai == soDienThoai)
+                .Select(c => new { c.Id, c.MaKhachHang, c.TenKhachHang }).ToListAsync(cancellationToken);
+            result.AddRange(matches.Select(m => (m.Id, m.MaKhachHang, m.TenKhachHang, "SoDienThoai")));
+        }
+
+        if (!string.IsNullOrWhiteSpace(maSoThue))
+        {
+            var matches = await query.Where(c => c.MaSoThue == maSoThue)
+                .Select(c => new { c.Id, c.MaKhachHang, c.TenKhachHang }).ToListAsync(cancellationToken);
+            result.AddRange(matches.Select(m => (m.Id, m.MaKhachHang, m.TenKhachHang, "MaSoThue")));
+        }
+
+        return result;
+    }
+
     private static KhachHang MapToDomain(KhKhachHangEntity e) => new()
     {
         Id = e.Id,

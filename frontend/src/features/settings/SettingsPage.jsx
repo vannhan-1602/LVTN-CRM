@@ -299,7 +299,7 @@ function NgayLeSection() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-surface-alt">
-              {["Tên ngày lễ", "Ngày", "Gửi trước", "Áp dụng cho", "Trạng thái", ""].map(h => (
+              {["Tên ngày lễ", "Ngày", "Gửi trước", "Áp dụng cho", "Hạng áp dụng", "Trạng thái", ""].map(h => (
                 <th key={h} className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">{h}</th>
               ))}
             </tr>
@@ -311,6 +311,11 @@ function NgayLeSection() {
                 <td className="px-5 py-3 text-ink-700">{String(item.ngay).padStart(2, "0")}/{String(item.thang).padStart(2, "0")}</td>
                 <td className="px-5 py-3 text-ink-700">{item.soNgayGuiTruoc} ngày</td>
                 <td className="px-5 py-3 text-ink-600">{LOAI_KH_LABEL[item.apDungChoLoaiKH] ?? item.apDungChoLoaiKH}</td>
+                <td className="px-5 py-3 text-ink-600">
+                  {item.hangToiThieuApDung
+                    ? (xepHang.find(h => h.id === item.hangToiThieuApDung)?.tenHang ?? `Hạng #${item.hangToiThieuApDung}`)
+                    : <span className="text-ink-400">Mọi hạng</span>}
+                </td>
                 <td className="px-5 py-3">
                   {item.isActive
                     ? <span className="text-success-600 text-xs flex items-center gap-1"><Check size={13} />Hoạt động</span>

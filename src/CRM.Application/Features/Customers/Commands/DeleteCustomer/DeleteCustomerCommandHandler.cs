@@ -1,6 +1,7 @@
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Customers.Mappings;
 using CRM.Application.Interfaces.Audit;
+using CRM.Application.Interfaces.Contracts;
 using CRM.Application.Interfaces.Customers;
 using CRM.Domain.Entities.Customers;
 using CRM.Domain.Interfaces.Repositories;
@@ -15,17 +16,20 @@ public class DeleteCustomerCommandHandler : IRequestHandler<DeleteCustomerComman
     private const string AuditActionDelete = "DELETE";
 
     private readonly ICustomerRepository _customerRepository;
+    private readonly IContractRepository _contractRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLogPublisher;
     private readonly ILogger<DeleteCustomerCommandHandler> _logger;
 
     public DeleteCustomerCommandHandler(
         ICustomerRepository customerRepository,
+        IContractRepository contractRepository,
         IUnitOfWork unitOfWork,
         IAuditLogPublisher auditLogPublisher,
         ILogger<DeleteCustomerCommandHandler> logger)
     {
         _customerRepository = customerRepository;
+        _contractRepository = contractRepository;
         _unitOfWork = unitOfWork;
         _auditLogPublisher = auditLogPublisher;
         _logger = logger;
@@ -35,6 +39,15 @@ public class DeleteCustomerCommandHandler : IRequestHandler<DeleteCustomerComman
     {
         var customer = await _customerRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(KhachHang), request.Id);
+
+        // Luồng thay thế UC-KH-01: không cho khóa KH nếu còn hợp đồng đang hiệu lực
+        // (tránh mất dấu vết một hợp đồng đang chạy khi khách hàng bị khóa giữa chừng).
+        if (await _contractRepository.HasActiveContractAsync(request.Id, cancellationToken))
+        {
+            throw new BusinessRuleException(
+                "Không thể khóa khách hàng này vì còn hợp đồng đang hiệu lực. " +
+                "Vui lòng thanh lý/tạm dừng hợp đồng trước khi khóa khách hàng.");
+        }
 
         var oldDto = CustomerMapper.ToDto(customer);
 

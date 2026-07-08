@@ -208,6 +208,10 @@ public class ContractRepository : IContractRepository
     public Task<bool> ExistsForBaoGiaAsync(ulong baoGiaId, CancellationToken ct = default) =>
         _context.HdHopDongs.AnyAsync(x => x.BaoGiaId == baoGiaId, ct);
 
+    public Task<bool> HasActiveContractAsync(ulong khachHangId, CancellationToken ct = default) =>
+        _context.HdHopDongs.AnyAsync(
+            x => x.KhachHangId == khachHangId && x.TrangThai == CRM.Domain.Enums.ContractStatus.DangThucHien, ct);
+
     // ── Mappers ───────────────────────────────────────────────────────────────
     private static HopDong MapToDomain(HdHopDongEntity e) => new()
     {

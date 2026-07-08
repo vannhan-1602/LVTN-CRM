@@ -5,8 +5,11 @@ using CRM.Application.Features.Customers.Commands.DeleteCustomer;
 using CRM.Application.Features.Customers.Commands.RestoreCustomer;
 using CRM.Application.Features.Customers.Commands.UpdateCustomer;
 using CRM.Application.Features.Customers.DTOs;
+using CRM.Application.Features.Customers.Queries.CheckDuplicateCustomer;
 using CRM.Application.Features.Customers.Queries.GetAllCustomers;
 using CRM.Application.Features.Customers.Queries.GetCustomerById;
+using CRM.Application.Features.Loyalty.DTOs;
+using CRM.Application.Features.Loyalty.Queries.GetCustomerLoyaltyInfo;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,6 +57,30 @@ public class CustomerController : ControllerBase
     {
         var result = await _mediator.Send(new GetCustomerByIdQuery(id), cancellationToken);
         return Ok(ApiResponse<CustomerDto>.Ok(result));
+    }
+
+    // Tab "Khách hàng thân thiết" ở trang chi tiết KH — điểm/hạng/voucher/lịch sử.
+    [HttpGet("{id:long}/loyalty")]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
+    [ProducesResponseType(typeof(ApiResponse<CustomerLoyaltyInfoDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetLoyaltyInfo(ulong id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetCustomerLoyaltyInfoQuery(id), cancellationToken);
+        return Ok(ApiResponse<CustomerLoyaltyInfoDto>.Ok(result));
+    }
+
+    // Cảnh báo trùng lặp Email/SĐT/MST trước khi Lưu — không chặn cứng, chỉ gợi ý xem hồ sơ có sẵn.
+    [HttpGet("check-duplicate")]
+    [Authorize(Policy = Policies.SalesTeam)]
+    [ProducesResponseType(typeof(ApiResponse<CheckDuplicateCustomerResult>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CheckDuplicate(
+        [FromQuery] string? email, [FromQuery] string? soDienThoai, [FromQuery] string? maSoThue,
+        [FromQuery] ulong? excludeId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new CheckDuplicateCustomerQuery(email, soDienThoai, maSoThue, excludeId), cancellationToken);
+        return Ok(ApiResponse<CheckDuplicateCustomerResult>.Ok(result));
     }
 
     [HttpPost]

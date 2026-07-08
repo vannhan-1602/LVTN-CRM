@@ -1,4 +1,5 @@
 using CRM.Application.Common.Models;
+using CRM.Application.Features.Auth.Commands.ChangePassword;
 using CRM.Application.Features.Auth.Commands.Login;
 using CRM.Application.Features.Auth.DTOs;
 using CRM.Application.Features.Auth.Queries.GetStaffList;
@@ -33,6 +34,21 @@ public class AuthController : ControllerBase
             cancellationToken);
 
         return Ok(ApiResponse<LoginResponseDto>.Ok(result, "Đăng nhập thành công."));
+    }
+
+    // UC-AUTH-03 — Người dùng tự đổi mật khẩu của chính mình.
+    [HttpPost("change-password")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequestDto request, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new ChangePasswordCommand(request.CurrentPassword, request.NewPassword, request.ConfirmNewPassword),
+            cancellationToken);
+
+        return Ok(ApiResponse.Ok("Đổi mật khẩu thành công. Vui lòng đăng nhập lại."));
     }
 
     // Danh sách tài khoản đầy đủ — chỉ Admin 

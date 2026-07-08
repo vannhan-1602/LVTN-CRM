@@ -52,6 +52,46 @@ public class UserRepository : IUserRepository
         return user is null ? null : (user.TokenVersion, user.TrangThai);
     }
 
+    public async Task<UserAccount?> GetByIdWithPasswordAsync(
+        uint userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _context.HtUsers
+            .AsNoTracking()
+            .Include(u => u.Role)
+            .Include(u => u.NhanSu)
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+        return user is null ? null : MapToUserAccount(user);
+    }
+
+    private const int SoLanToiDaTruocKhiKhoa = 5;
+    private static readonly TimeSpan ThoiGianKhoaTam = TimeSpan.FromMinutes(15);
+
+    public async Task<int> GhiNhanDangNhapSaiAsync(uint userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _context.HtUsers.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        if (user is null) return 0;
+
+        user.SoLanDangNhapSai += 1;
+        if (user.SoLanDangNhapSai >= SoLanToiDaTruocKhiKhoa)
+        {
+            user.KhoaDenThoiDiem = DateTime.UtcNow.Add(ThoiGianKhoaTam);
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return user.SoLanDangNhapSai;
+    }
+
+    public async Task ResetDangNhapSaiAsync(uint userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _context.HtUsers.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        if (user is null) return;
+
+        user.SoLanDangNhapSai = 0;
+        user.KhoaDenThoiDiem = null;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
     private static UserAccount MapToUserAccount(Persistence.Entities.HtUserEntity user) =>
         new()
         {
@@ -65,6 +105,8 @@ public class UserRepository : IUserRepository
             HoTen = user.NhanSu?.HoTen,
             Email = user.NhanSu?.Email,
             TokenVersion = user.TokenVersion,
+            SoLanDangNhapSai = user.SoLanDangNhapSai,
+            KhoaDenThoiDiem = user.KhoaDenThoiDiem,
             CreatedAt = user.CreatedAt
         };
 }

@@ -75,6 +75,7 @@ public static class DependencyInjection
         services.AddScoped<ILeadRepository, LeadRepository>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IUserManagementRepository, UserManagementRepository>();
+        services.AddScoped<IAuditLogReader, AuditLogReader>();
         services.AddScoped<IQuoteRepository, QuoteRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IContractRepository, ContractRepository>();

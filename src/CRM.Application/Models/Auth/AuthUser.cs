@@ -30,5 +30,7 @@ public class UserAccount
     public string? HoTen { get; set; }
     public string? Email { get; set; }
     public int TokenVersion { get; set; }
+    public int SoLanDangNhapSai { get; set; }
+    public DateTime? KhoaDenThoiDiem { get; set; }
     public DateTime? CreatedAt { get; set; }
 }

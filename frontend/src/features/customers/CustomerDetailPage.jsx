@@ -11,6 +11,7 @@ import Button from "../../components/common/Button";
 import EmptyState from "../../components/common/EmptyState";
 import CustomerFormModal from "./CustomerFormModal";
 import ActivitySection from "../activities/ActivitySection";
+import CustomerLoyaltySection from "./CustomerLoyaltySection";
 import { ROLES } from "../../utils/constants";
 import { formatDateTime, badgeToneForId } from "../../utils/formatters";
 
@@ -483,6 +484,8 @@ export default function CustomerDetailPage() {
         </div>
 
         <div className="space-y-4">
+          <CustomerLoyaltySection khachHangId={customer.id} />
+
           <Card title="Liên kết nhanh">
             <div className="space-y-2">
               <Button

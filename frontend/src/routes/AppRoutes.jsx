@@ -23,6 +23,7 @@ import OpportunityDetailPage from "../features/opportunities/OpportunityDetailPa
 import InvoiceListPage from "../features/invoices/InvoiceListPage";
 import InvoiceDetailPage from "../features/invoices/InvoiceDetailPage";
 import SettingsPage from "../features/settings/SettingsPage";
+import AuditLogPage from "../features/audit/AuditLogPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
 
 function UnauthorizedPage() {
@@ -100,6 +101,7 @@ export default function AppRoutes() {
           <Route path="/users" element={<UserManagementPage />} />
           <Route path="/users/:id" element={<UserDetailPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/audit-log" element={<AuditLogPage />} />
         </Route>
       </Route>
 

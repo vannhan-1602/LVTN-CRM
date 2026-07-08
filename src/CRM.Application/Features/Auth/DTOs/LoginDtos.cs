@@ -19,6 +19,13 @@ public class LoginResponseDto
     public uint? NhanSuId { get; set; }
 }
 
+public class ChangePasswordRequestDto
+{
+    public string CurrentPassword { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+    public string ConfirmNewPassword { get; set; } = string.Empty;
+}
+
 public class UserSummaryDto
 {
     public uint Id { get; set; }

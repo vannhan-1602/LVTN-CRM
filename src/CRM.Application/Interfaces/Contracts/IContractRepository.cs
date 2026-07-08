@@ -22,4 +22,7 @@ public interface IContractRepository
     //Kiểm tra báo giá đã được dùng để tạo hợp đồng khác chưa (tránh tạo 2 hợp
     /// đồng từ cùng 1 báo giá
     Task<bool> ExistsForBaoGiaAsync(ulong baoGiaId, CancellationToken ct = default);
+
+    /// <summary>Khách hàng còn hợp đồng đang hiệu lực (DangThucHien) hay không — dùng để chặn xóa KH.</summary>
+    Task<bool> HasActiveContractAsync(ulong khachHangId, CancellationToken ct = default);
 }

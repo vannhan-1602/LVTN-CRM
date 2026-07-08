@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -12,9 +13,11 @@ import {
   LogOut,
   Settings,
   TrendingUp,
-  ClipboardList,
+  KeyRound,
+  ScrollText,
 } from "lucide-react";
 import useAuthStore from "../../features/auth/authStore";
+import ChangePasswordModal from "../../features/auth/ChangePasswordModal";
 import { ROLES } from "../../utils/constants";
 
 function SidebarLink({ to, icon: Icon, children }) {
@@ -55,6 +58,7 @@ export default function MainLayout() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -157,6 +161,9 @@ export default function MainLayout() {
               <SidebarLink to="/settings" icon={Settings}>
                 Cài đặt danh mục
               </SidebarLink>
+              <SidebarLink to="/audit-log" icon={ScrollText}>
+                Nhật ký hệ thống
+              </SidebarLink>
             </>
           )}
         </nav>
@@ -181,19 +188,32 @@ export default function MainLayout() {
               {user?.role}
             </span>
           </div>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-danger-600 hover:bg-danger-50 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            <LogOut size={15} />
-            Đăng xuất
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowChangePassword(true)}
+              className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900 hover:bg-ink-100 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <KeyRound size={15} />
+              Đổi mật khẩu
+            </button>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-danger-600 hover:bg-danger-50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <LogOut size={15} />
+              Đăng xuất
+            </button>
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto bg-canvas p-6">
           <Outlet />
         </main>
       </div>
+
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
     </div>
   );
 }

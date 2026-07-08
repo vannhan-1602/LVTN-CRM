@@ -7,6 +7,7 @@ const customerApi = {
   update: (id, data) => axiosClient.put(`/Customer/${id}`, data),
   delete: (id) => axiosClient.delete(`/Customer/${id}`),
   restore: (id) => axiosClient.post(`/Customer/${id}/restore`),
+  getLoyaltyInfo: (id) => axiosClient.get(`/Customer/${id}/loyalty`),
 };
 
 export default customerApi;
