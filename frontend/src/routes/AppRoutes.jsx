@@ -66,13 +66,11 @@ export default function AppRoutes() {
             path="/opportunities/:id"
             element={<OpportunityDetailPage />}
           />
-          <Route path="/quotes" element={<QuoteListPage />} />
-          <Route path="/quotes/:id" element={<QuoteDetailPage />} />
           <Route path="/products" element={<ProductListPage />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />
         </Route>
 
-        {/* Customer + Contract: Sale + Manager (đọc/ghi) + Accountant (chỉ đọc) */}
+        {/* Customer + Contract + Quote: Sale + Manager (đọc/ghi) + Accountant (chỉ đọc) */}
         <Route
           element={
             <ProtectedRoute
@@ -84,6 +82,8 @@ export default function AppRoutes() {
           <Route path="/customers/:id" element={<CustomerDetailPage />} />
           <Route path="/contracts" element={<ContractListPage />} />
           <Route path="/contracts/:id" element={<ContractDetailPage />} />
+          <Route path="/quotes" element={<QuoteListPage />} />
+          <Route path="/quotes/:id" element={<QuoteDetailPage />} />
         </Route>
 
         {/* Hóa đơn: Accountant + Manager */}

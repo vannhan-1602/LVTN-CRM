@@ -26,7 +26,7 @@ public class LoyaltyController : ControllerBase
     [HttpPost("run-daily-job")]
     public async Task<IActionResult> RunDailyJob(CancellationToken ct)
     {
-        await _loyaltyService.ChayJobHangNgayAsync(ct);
-        return Ok(ApiResponse.Ok("Đã chạy xong job loyalty hàng ngày. Kiểm tra bảng KH_EmailLog và KH_Voucher để xem kết quả."));
+        var summary = await _loyaltyService.ChayJobHangNgayAsync(ct);
+        return Ok(ApiResponse.Ok(summary));
     }
 }

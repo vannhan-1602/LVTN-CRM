@@ -58,8 +58,8 @@ public class LoyaltyDailyJobHostedService : BackgroundService
         var loyaltyService = scope.ServiceProvider.GetRequiredService<LoyaltyService>();
 
         _logger.LogInformation("[LoyaltyDailyJob] Bắt đầu chạy job hàng ngày lúc {Now}", DateTime.UtcNow);
-        await loyaltyService.ChayJobHangNgayAsync(ct);
-        _logger.LogInformation("[LoyaltyDailyJob] Hoàn tất job hàng ngày lúc {Now}", DateTime.UtcNow);
+        var summary = await loyaltyService.ChayJobHangNgayAsync(ct);
+        _logger.LogInformation("[LoyaltyDailyJob] Hoàn tất job hàng ngày lúc {Now}: {Summary}", DateTime.UtcNow, summary);
     }
 
     private static TimeSpan TinhThoiGianChoLanChayKeTiep()
