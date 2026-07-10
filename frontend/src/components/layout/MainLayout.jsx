@@ -137,11 +137,14 @@ export default function MainLayout() {
               <SidebarLink to="/invoices" icon={Wallet}>
                 Hóa đơn & Công nợ
               </SidebarLink>
-              {/* Accountant chỉ xem Customer + Contract (read-only) */}
+              {/* Accountant chỉ xem Customer + Contract + Quote (read-only) */}
               {user?.role === ROLES.Accountant && (
                 <>
                   <SidebarLink to="/customers" icon={Users}>
                     Khách hàng (xem)
+                  </SidebarLink>
+                  <SidebarLink to="/quotes" icon={Receipt}>
+                    Báo giá (xem)
                   </SidebarLink>
                   <SidebarLink to="/contracts" icon={FileText}>
                     Hợp đồng (xem)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Settings, ChevronRight, Pencil, Trash2, Plus, Check, X } from "lucide-react";
+import { Settings, ChevronRight, Pencil, Trash2, Plus, Check, X, Mail, Loader2 } from "lucide-react";
 import danhMucApi from "../../api/danhMucApi";
+import loyaltyApi from "../../api/loyaltyApi";
 import PageHeader from "../../components/common/PageHeader";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
@@ -433,6 +434,23 @@ const TABS = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("khachhang");
+  const [runningJob, setRunningJob] = useState(false);
+  const [jobMessage, setJobMessage] = useState("");
+  const [jobError, setJobError] = useState("");
+
+  const handleRunDailyJob = async () => {
+    setRunningJob(true);
+    setJobMessage("");
+    setJobError("");
+    try {
+      const res = await loyaltyApi.runDailyJob();
+      setJobMessage(res.message || "Đã chạy job gửi mail (sinh nhật/ngày lễ/thăng-xuống hạng) thành công.");
+    } catch (err) {
+      setJobError(err?.message || "Chạy job thất bại.");
+    } finally {
+      setRunningJob(false);
+    }
+  };
 
   const activeClass = "bg-accent-500/15 text-accent-700 font-medium";
   const inactiveClass = "text-ink-500 hover:bg-ink-100 hover:text-ink-900";
@@ -443,9 +461,30 @@ export default function SettingsPage() {
     <div className="space-y-5">
       <PageHeader breadcrumb="CRM / Admin" title="Cài đặt hệ thống" icon={Settings} />
 
-      <div className="bg-info-50 border border-info-100 rounded-lg p-3 text-sm text-info-700">
-        Chỉ Admin mới có thể chỉnh sửa danh mục. Các thay đổi sẽ ảnh hưởng trực tiếp đến toàn bộ dữ liệu hệ thống.
+      <div className="bg-info-50 border border-info-100 rounded-lg p-3 text-sm text-info-700 flex items-center justify-between gap-4 flex-wrap">
+        <span>
+          Chỉ Admin mới có thể chỉnh sửa danh mục. Các thay đổi sẽ ảnh hưởng trực tiếp đến toàn bộ dữ liệu hệ thống.
+        </span>
+        <Button
+          size="sm"
+          variant="secondary"
+          icon={runningJob ? Loader2 : Mail}
+          onClick={handleRunDailyJob}
+          disabled={runningJob}
+        >
+          {runningJob ? "Đang chạy..." : "Chạy job gửi mail Loyalty"}
+        </Button>
       </div>
+      {jobMessage && (
+        <div className="bg-success-50 border border-success-100 rounded-lg p-3 text-sm text-success-700">
+          {jobMessage}
+        </div>
+      )}
+      {jobError && (
+        <div className="bg-danger-50 border border-danger-100 rounded-lg p-3 text-sm text-danger-700">
+          {jobError}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 bg-surface border border-ink-100 rounded-xl p-1.5">

@@ -12,8 +12,6 @@ public class HtUserEntity
     public uint? RoleId { get; set; }
     public string TrangThai { get; set; } = "Active";
     public int TokenVersion { get; set; }
-    public int SoLanDangNhapSai { get; set; }
-    public DateTime? KhoaDenThoiDiem { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 

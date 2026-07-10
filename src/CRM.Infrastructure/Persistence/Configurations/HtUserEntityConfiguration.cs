@@ -18,8 +18,6 @@ public class HtUserEntityConfiguration : IEntityTypeConfiguration<HtUserEntity>
         builder.Property(e => e.RoleId).HasColumnName("Role_Id");
         builder.Property(e => e.TrangThai).HasColumnName("TrangThai").HasConversion<string>().HasMaxLength(20);
         builder.Property(e => e.TokenVersion).HasColumnName("TokenVersion");
-        builder.Property(e => e.SoLanDangNhapSai).HasColumnName("SoLanDangNhapSai");
-        builder.Property(e => e.KhoaDenThoiDiem).HasColumnName("KhoaDenThoiDiem");
         builder.Property(e => e.CreatedAt).HasColumnName("CreatedAt");
         builder.Property(e => e.UpdatedAt).HasColumnName("UpdatedAt");
 

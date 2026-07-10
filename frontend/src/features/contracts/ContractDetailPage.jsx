@@ -166,7 +166,7 @@ export default function ContractDetailPage() {
               size="sm"
               icon={Users}
               className="w-full"
-              onClick={() => navigate(`/customers?khachHangId=${contract.khachHangId}`)}
+              onClick={() => navigate(`/customers/${contract.khachHangId}`)}
             >
               Xem hồ sơ khách hàng
             </Button>

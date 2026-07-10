@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Upload, X } from "lucide-react";
 import productApi from "../../api/productApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
@@ -18,8 +19,18 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
         }
       : { loaiSanPhamId: "", maSP: "", tenSP: "", donVi: "", giaBan: "", soLuongTonBanDau: "0" },
   );
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const handlePickImage = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,8 +45,11 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
           giaBan: Number(form.giaBan) || 0,
           dangKinhDoanh: true,
         });
+        if (imageFile) {
+          await productApi.uploadImage(product.id, imageFile, false);
+        }
       } else {
-        await productApi.create({
+        const created = await productApi.create({
           loaiSanPhamId: form.loaiSanPhamId ? Number(form.loaiSanPhamId) : null,
           maSP: form.maSP.trim(),
           tenSP: form.tenSP.trim(),
@@ -43,6 +57,11 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
           giaBan: Number(form.giaBan) || 0,
           soLuongTonBanDau: Number(form.soLuongTonBanDau) || 0,
         });
+        // Sản phẩm phải được tạo trước để có Id — ảnh (nếu có chọn) upload ngay sau đó,
+        // tự động làm ảnh chính vì đây là ảnh đầu tiên của sản phẩm.
+        if (imageFile && created?.data?.id) {
+          await productApi.uploadImage(created.data.id, imageFile, true);
+        }
       }
       onSaved();
     } catch (err) { setError(err?.message || "Không thể lưu sản phẩm"); }
@@ -100,6 +119,30 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
                 onChange={(e) => setForm((f) => ({ ...f, soLuongTonBanDau: e.target.value }))}
                 className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
             </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-ink-700 mb-1.5">
+            Hình ảnh {isEdit ? "(thêm ảnh phụ)" : "(ảnh đại diện)"}
+          </label>
+          {imagePreview ? (
+            <div className="relative w-20 h-20">
+              <img src={imagePreview} alt="Xem trước" className="w-20 h-20 rounded-lg object-cover border border-ink-200" />
+              <button
+                type="button"
+                onClick={() => { setImageFile(null); setImagePreview(null); }}
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-danger-500 text-white flex items-center justify-center"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ) : (
+            <label className="flex items-center justify-center gap-2 border border-dashed border-ink-200 rounded-lg py-2.5 text-sm text-ink-500 hover:border-accent-400 hover:text-accent-600 cursor-pointer transition-colors">
+              <Upload size={14} />
+              Chọn ảnh
+              <input type="file" accept=".jpg,.jpeg,.png,.webp,.gif" className="hidden" onChange={handlePickImage} />
+            </label>
           )}
         </div>
 

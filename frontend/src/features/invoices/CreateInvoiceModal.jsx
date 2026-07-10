@@ -89,7 +89,7 @@ export default function CreateInvoiceModal({ onClose, onSaved }) {
           <label className="block text-sm font-medium text-ink-700 mb-1">
             Tổng tiền (VNĐ) <span className="text-danger-500">*</span>
           </label>
-          <input type="number" min="1" step="1000"
+          <input type="number" min="0" step="1"
             {...register("tongTien", {
               required: "Vui lòng nhập tổng tiền",
               min: { value: 1, message: "Tổng tiền phải lớn hơn 0" }

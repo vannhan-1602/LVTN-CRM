@@ -25,12 +25,8 @@ export default function ChangePasswordModal({ onClose }) {
       setError("Mật khẩu xác nhận không khớp với mật khẩu mới.");
       return;
     }
-    if (form.newPassword.length < 8) {
-      setError("Mật khẩu mới phải có tối thiểu 8 ký tự.");
-      return;
-    }
-    if (!/[0-9]/.test(form.newPassword) || !/[^a-zA-Z0-9]/.test(form.newPassword)) {
-      setError("Mật khẩu mới phải chứa ít nhất 1 chữ số và 1 ký tự đặc biệt.");
+    if (form.newPassword.length < 6) {
+      setError("Mật khẩu mới phải có tối thiểu 6 ký tự.");
       return;
     }
     if (form.newPassword === form.currentPassword) {
@@ -91,7 +87,7 @@ export default function ChangePasswordModal({ onClose }) {
             className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
           />
           <p className="text-[11px] text-ink-400 mt-1">
-            Tối thiểu 8 ký tự, có ít nhất 1 số và 1 ký tự đặc biệt.
+            Tối thiểu 6 ký tự.
           </p>
         </div>
 

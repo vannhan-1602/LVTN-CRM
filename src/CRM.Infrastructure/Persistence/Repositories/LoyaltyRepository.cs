@@ -279,6 +279,16 @@ public class LoyaltyRepository : ILoyaltyRepository
         return rows > 0;
     }
 
+    public async Task<bool> DanhDauDaYeuCauAsync(ulong voucherId, CancellationToken ct = default)
+    {
+        var rows = await _context.KhVouchers
+            .Where(x => x.Id == voucherId && x.TrangThaiYeuCau == "ChuaYeuCau")
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.TrangThaiYeuCau, "DaYeuCau")
+                .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+        return rows > 0;
+    }
+
     public async Task<List<Voucher>> GetVouchersByKhachHangAsync(
         ulong khachHangId, CancellationToken ct = default)
     {
