@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { Settings, ChevronRight, Pencil, Trash2, Plus, Check, X, Mail, Loader2 } from "lucide-react";
+import {
+  Settings,
+  ChevronRight,
+  Pencil,
+  Trash2,
+  Plus,
+  Check,
+  X,
+  Mail,
+  Loader2,
+} from "lucide-react";
 import danhMucApi from "../../api/danhMucApi";
 import loyaltyApi from "../../api/loyaltyApi";
 import PageHeader from "../../components/common/PageHeader";
@@ -9,23 +19,39 @@ import { useForm } from "react-hook-form";
 import useDanhMucStore from "../../stores/danhMucStore";
 
 // ── Generic CRUD table cho danh mục đơn giản ────────────────────────────────
-function DanhMucTable({ title, items, loading, onAdd, onEdit, onDelete, columns, canDelete = true }) {
+function DanhMucTable({
+  title,
+  items,
+  loading,
+  onAdd,
+  onEdit,
+  onDelete,
+  columns,
+  canDelete = true,
+}) {
   return (
     <div className="bg-surface rounded-card border border-ink-100 overflow-hidden">
       <div className="px-5 py-3.5 border-b border-ink-100 flex items-center justify-between">
         <h3 className="font-semibold text-ink-900">{title}</h3>
-        <Button size="sm" icon={Plus} onClick={onAdd}>Thêm</Button>
+        <Button size="sm" icon={Plus} onClick={onAdd}>
+          Thêm
+        </Button>
       </div>
       {loading ? (
         <div className="py-8 text-center text-ink-400 text-sm">Đang tải...</div>
       ) : items.length === 0 ? (
-        <div className="py-8 text-center text-ink-400 text-sm">Chưa có dữ liệu</div>
+        <div className="py-8 text-center text-ink-400 text-sm">
+          Chưa có dữ liệu
+        </div>
       ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-surface-alt">
-              {columns.map(c => (
-                <th key={c.key} className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">
+              {columns.map((c) => (
+                <th
+                  key={c.key}
+                  className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide"
+                >
                   {c.label}
                 </th>
               ))}
@@ -33,22 +59,29 @@ function DanhMucTable({ title, items, loading, onAdd, onEdit, onDelete, columns,
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
-            {items.map(item => (
-              <tr key={item.id} className="hover:bg-surface-alt transition-colors">
-                {columns.map(c => (
+            {items.map((item) => (
+              <tr
+                key={item.id}
+                className="hover:bg-surface-alt transition-colors"
+              >
+                {columns.map((c) => (
                   <td key={c.key} className="px-5 py-3 text-ink-700">
-                    {c.render ? c.render(item) : item[c.key] ?? "—"}
+                    {c.render ? c.render(item) : (item[c.key] ?? "—")}
                   </td>
                 ))}
                 <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => onEdit(item)}
-                      className="p-1.5 rounded-lg text-ink-400 hover:text-accent-600 hover:bg-accent-50 transition-colors">
+                    <button
+                      onClick={() => onEdit(item)}
+                      className="p-1.5 rounded-lg text-ink-400 hover:text-accent-600 hover:bg-accent-50 transition-colors"
+                    >
                       <Pencil size={14} />
                     </button>
                     {canDelete && (
-                      <button onClick={() => onDelete(item.id)}
-                        className="p-1.5 rounded-lg text-ink-400 hover:text-danger-600 hover:bg-danger-50 transition-colors">
+                      <button
+                        onClick={() => onDelete(item.id)}
+                        className="p-1.5 rounded-lg text-ink-400 hover:text-danger-600 hover:bg-danger-50 transition-colors"
+                      >
                         <Trash2 size={14} />
                       </button>
                     )}
@@ -64,52 +97,93 @@ function DanhMucTable({ title, items, loading, onAdd, onEdit, onDelete, columns,
 }
 
 // ── Modal chung cho danh mục đơn giản ────────────────────────────────────────
-function SimpleModal({ title, fields, defaultValues, onClose, onSubmit: onSubmitProp }) {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ defaultValues });
+function SimpleModal({
+  title,
+  fields,
+  defaultValues,
+  onClose,
+  onSubmit: onSubmitProp,
+}) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({ defaultValues });
   const [apiError, setApiError] = useState("");
 
   const onSubmit = async (data) => {
     setApiError("");
-    try { await onSubmitProp(data); onClose(); }
-    catch (err) { setApiError(err?.message || "Thao tác thất bại"); }
+    try {
+      await onSubmitProp(data);
+      onClose();
+    } catch (err) {
+      setApiError(err?.message || "Thao tác thất bại");
+    }
   };
 
   return (
     <Modal isOpen title={title} onClose={onClose} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {apiError && <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-3">{apiError}</div>}
-        {fields.map(f => (
+        {apiError && (
+          <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-3">
+            {apiError}
+          </div>
+        )}
+        {fields.map((f) => (
           <div key={f.name}>
             <label className="block text-sm font-medium text-ink-700 mb-1">
-              {f.label} {f.required && <span className="text-danger-500">*</span>}
+              {f.label}{" "}
+              {f.required && <span className="text-danger-500">*</span>}
             </label>
             {f.type === "checkbox" ? (
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" {...register(f.name)} className="rounded" />
+                <input
+                  type="checkbox"
+                  {...register(f.name)}
+                  className="rounded"
+                />
                 <span className="text-sm text-ink-600">Đang hoạt động</span>
               </label>
             ) : f.type === "select" ? (
-              <select {...register(f.name, f.rules)}
-                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400">
-                {f.options.map(o => (
-                  <option key={String(o.value)} value={o.value}>{o.label}</option>
+              <select
+                {...register(f.name, f.rules)}
+                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+              >
+                {f.options.map((o) => (
+                  <option key={String(o.value)} value={o.value}>
+                    {o.label}
+                  </option>
                 ))}
               </select>
             ) : f.type === "textarea" ? (
-              <textarea {...register(f.name, f.rules)}
+              <textarea
+                {...register(f.name, f.rules)}
                 rows={3}
                 className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
-                placeholder={f.placeholder} />
+                placeholder={f.placeholder}
+              />
             ) : (
-              <input type={f.type || "text"} {...register(f.name, f.rules)}
+              <input
+                type={f.type || "text"}
+                {...register(f.name, f.rules)}
                 className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
-                placeholder={f.placeholder} step={f.step} min={f.min} max={f.max} />
+                placeholder={f.placeholder}
+                step={f.step}
+                min={f.min}
+                max={f.max}
+              />
             )}
-            {errors[f.name] && <p className="text-xs text-danger-600 mt-1">{errors[f.name].message}</p>}
+            {errors[f.name] && (
+              <p className="text-xs text-danger-600 mt-1">
+                {errors[f.name].message}
+              </p>
+            )}
           </div>
         ))}
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="secondary" onClick={onClose} type="button">Huỷ</Button>
+          <Button variant="secondary" onClick={onClose} type="button">
+            Huỷ
+          </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Đang lưu..." : "Lưu"}
           </Button>
@@ -130,11 +204,16 @@ function XepHangSection() {
     try {
       const res = await danhMucApi.getXepHang();
       setItems(res.data ?? []);
-    } catch { setError("Không tải được hạng khách hàng"); }
-    finally { setLoading(false); }
+    } catch {
+      setError("Không tải được hạng khách hàng");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const handleUpdate = async (data) => {
     await danhMucApi.updateXepHang(editing.id, {
@@ -161,10 +240,41 @@ function XepHangSection() {
             isActive: editing.isActive,
           }}
           fields={[
-            { name: "diemToiThieu", label: "Mốc điểm tối thiểu (12 tháng)", type: "number", min: "0", rules: { required: "Bắt buộc", min: { value: 0, message: "≥ 0" } } },
-            { name: "soLanThuToiThieu", label: "Số lần thu tối thiểu (12 tháng)", type: "number", min: "0", rules: { required: "Bắt buộc" } },
-            { name: "phanTramGiamVoucher", label: "% giảm voucher khi thăng hạng", type: "number", min: "0", max: "100", step: "0.5", rules: { required: "Bắt buộc", min: { value: 0, message: "≥ 0" }, max: { value: 100, message: "≤ 100" } } },
-            { name: "moTaQuyenLoi", label: "Mô tả quyền lợi (chèn vào email)", type: "textarea" },
+            {
+              name: "diemToiThieu",
+              label: "Mốc điểm tối thiểu (12 tháng)",
+              type: "number",
+              min: "0",
+              rules: {
+                required: "Bắt buộc",
+                min: { value: 0, message: "≥ 0" },
+              },
+            },
+            {
+              name: "soLanThuToiThieu",
+              label: "Số lần thu tối thiểu (12 tháng)",
+              type: "number",
+              min: "0",
+              rules: { required: "Bắt buộc" },
+            },
+            {
+              name: "phanTramGiamVoucher",
+              label: "% giảm voucher khi thăng hạng",
+              type: "number",
+              min: "0",
+              max: "100",
+              step: "0.5",
+              rules: {
+                required: "Bắt buộc",
+                min: { value: 0, message: "≥ 0" },
+                max: { value: 100, message: "≤ 100" },
+              },
+            },
+            {
+              name: "moTaQuyenLoi",
+              label: "Mô tả quyền lợi (chèn vào email)",
+              type: "textarea",
+            },
             { name: "isActive", label: "Trạng thái", type: "checkbox" },
           ]}
           onClose={() => setEditing(null)}
@@ -173,10 +283,12 @@ function XepHangSection() {
       )}
 
       <div className="px-5 py-3.5 border-b border-ink-100">
-        <h3 className="font-semibold text-ink-900">Hạng khách hàng & Tích điểm</h3>
+        <h3 className="font-semibold text-ink-900">
+          Hạng khách hàng & Tích điểm
+        </h3>
         <p className="text-xs text-ink-400 mt-0.5">
-          Điểm tính theo rolling 12 tháng gần nhất. 100.000 VNĐ = 1 điểm.
-          Chỉ chỉnh tiêu chí, không tạo/xóa hạng.
+          Điểm tính theo rolling 12 tháng gần nhất. 100.000 VNĐ = 1 điểm. Chỉ
+          chỉnh tiêu chí, không tạo/xóa hạng.
         </p>
       </div>
 
@@ -187,34 +299,72 @@ function XepHangSection() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-surface-alt">
-              {["Thứ tự", "Hạng", "Mốc điểm", "Số lần thu", "% Voucher", "Trạng thái", ""].map(h => (
-                <th key={h} className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">{h}</th>
+              {[
+                "Thứ tự",
+                "Hạng",
+                "Mốc điểm",
+                "Số lần thu",
+                "% Voucher",
+                "Trạng thái",
+                "",
+              ].map((h) => (
+                <th
+                  key={h}
+                  className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide"
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
-            {items.map(item => (
-              <tr key={item.id} className="hover:bg-surface-alt transition-colors">
+            {items.map((item) => (
+              <tr
+                key={item.id}
+                className="hover:bg-surface-alt transition-colors"
+              >
                 <td className="px-5 py-3 text-ink-400">{item.thuTu}</td>
                 <td className="px-5 py-3">
-                  <span className="font-semibold text-ink-900">{item.tenHang}</span>
-                  <span className="ml-1.5 text-xs text-ink-400 font-mono">({item.maHang})</span>
+                  <span className="font-semibold text-ink-900">
+                    {item.tenHang}
+                  </span>
+                  <span className="ml-1.5 text-xs text-ink-400 font-mono">
+                    ({item.maHang})
+                  </span>
                 </td>
-                <td className="px-5 py-3 text-ink-700">{item.diemToiThieu.toLocaleString()} điểm</td>
-                <td className="px-5 py-3 text-ink-700">{item.soLanThuToiThieu} lần</td>
-                <td className="px-5 py-3">
-                  {item.phanTramGiamVoucher > 0
-                    ? <span className="font-medium text-success-600">{item.phanTramGiamVoucher}%</span>
-                    : <span className="text-ink-400">—</span>}
+                <td className="px-5 py-3 text-ink-700">
+                  {item.diemToiThieu.toLocaleString()} điểm
+                </td>
+                <td className="px-5 py-3 text-ink-700">
+                  {item.soLanThuToiThieu} lần
                 </td>
                 <td className="px-5 py-3">
-                  {item.isActive
-                    ? <span className="flex items-center gap-1 text-success-600 text-xs"><Check size={13} />Hoạt động</span>
-                    : <span className="flex items-center gap-1 text-ink-400 text-xs"><X size={13} />Tắt</span>}
+                  {item.phanTramGiamVoucher > 0 ? (
+                    <span className="font-medium text-success-600">
+                      {item.phanTramGiamVoucher}%
+                    </span>
+                  ) : (
+                    <span className="text-ink-400">—</span>
+                  )}
+                </td>
+                <td className="px-5 py-3">
+                  {item.isActive ? (
+                    <span className="flex items-center gap-1 text-success-600 text-xs">
+                      <Check size={13} />
+                      Hoạt động
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-ink-400 text-xs">
+                      <X size={13} />
+                      Tắt
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-3 text-right">
-                  <button onClick={() => setEditing(item)}
-                    className="p-1.5 rounded-lg text-ink-400 hover:text-accent-600 hover:bg-accent-50 transition-colors">
+                  <button
+                    onClick={() => setEditing(item)}
+                    className="p-1.5 rounded-lg text-ink-400 hover:text-accent-600 hover:bg-accent-50 transition-colors"
+                  >
                     <Pencil size={14} />
                   </button>
                 </td>
@@ -240,15 +390,49 @@ function NgayLeSection() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); loadDanhMuc(); }, []);
+  useEffect(() => {
+    load();
+    loadDanhMuc();
+  }, []);
 
   const fields = [
-    { name: "tenNgayLe", label: "Tên ngày lễ", required: true, rules: { required: "Bắt buộc" } },
-    { name: "thang", label: "Tháng (1-12)", type: "number", min: "1", max: "12", required: true, rules: { required: "Bắt buộc" } },
-    { name: "ngay", label: "Ngày (1-31)", type: "number", min: "1", max: "31", required: true, rules: { required: "Bắt buộc" } },
-    { name: "soNgayGuiTruoc", label: "Gửi email trước (ngày)", type: "number", min: "1", max: "30", required: true, rules: { required: "Bắt buộc" } },
     {
-      name: "apDungChoLoaiKH", label: "Áp dụng cho", type: "select",
+      name: "tenNgayLe",
+      label: "Tên ngày lễ",
+      required: true,
+      rules: { required: "Bắt buộc" },
+    },
+    {
+      name: "thang",
+      label: "Tháng (1-12)",
+      type: "number",
+      min: "1",
+      max: "12",
+      required: true,
+      rules: { required: "Bắt buộc" },
+    },
+    {
+      name: "ngay",
+      label: "Ngày (1-31)",
+      type: "number",
+      min: "1",
+      max: "31",
+      required: true,
+      rules: { required: "Bắt buộc" },
+    },
+    {
+      name: "soNgayGuiTruoc",
+      label: "Gửi email trước (ngày)",
+      type: "number",
+      min: "1",
+      max: "30",
+      required: true,
+      rules: { required: "Bắt buộc" },
+    },
+    {
+      name: "apDungChoLoaiKH",
+      label: "Áp dụng cho",
+      type: "select",
       options: [
         { value: "TatCa", label: "Tất cả khách hàng" },
         { value: "B2C", label: "Chỉ cá nhân (B2C)" },
@@ -256,25 +440,45 @@ function NgayLeSection() {
       ],
     },
     {
-      name: "hangToiThieuApDung", label: "Hạng tối thiểu áp dụng", type: "select",
+      name: "hangToiThieuApDung",
+      label: "Hạng tối thiểu áp dụng",
+      type: "select",
       options: [
         { value: "", label: "-- Áp dụng mọi hạng --" },
-        ...xepHang.map(h => ({ value: h.id, label: h.tenHang })),
+        ...xepHang.map((h) => ({ value: h.id, label: h.tenHang })),
       ],
     },
     { name: "isActive", label: "Trạng thái", type: "checkbox" },
   ];
 
-  const LOAI_KH_LABEL = { B2C: "Cá nhân (B2C)", B2B: "Doanh nghiệp (B2B)", TatCa: "Tất cả" };
+  const LOAI_KH_LABEL = {
+    B2C: "Cá nhân (B2C)",
+    B2B: "Doanh nghiệp (B2B)",
+    TatCa: "Tất cả",
+  };
 
   return (
     <div className="bg-surface rounded-card border border-ink-100 overflow-hidden">
       {modal && (
         <SimpleModal
-          title={modal.mode === "create" ? "Thêm ngày lễ" : `Sửa: ${modal.item?.tenNgayLe}`}
-          defaultValues={modal.item
-            ? { ...modal.item, hangToiThieuApDung: modal.item.hangToiThieuApDung ?? "" }
-            : { soNgayGuiTruoc: 5, isActive: true, apDungChoLoaiKH: "TatCa", hangToiThieuApDung: "" }}
+          title={
+            modal.mode === "create"
+              ? "Thêm ngày lễ"
+              : `Sửa: ${modal.item?.tenNgayLe}`
+          }
+          defaultValues={
+            modal.item
+              ? {
+                  ...modal.item,
+                  hangToiThieuApDung: modal.item.hangToiThieuApDung ?? "",
+                }
+              : {
+                  soNgayGuiTruoc: 5,
+                  isActive: true,
+                  apDungChoLoaiKH: "TatCa",
+                  hangToiThieuApDung: "",
+                }
+          }
           fields={fields}
           onClose={() => setModal(null)}
           onSubmit={async (data) => {
@@ -284,7 +488,10 @@ function NgayLeSection() {
               ngay: Number(data.ngay),
               soNgayGuiTruoc: Number(data.soNgayGuiTruoc),
               apDungChoLoaiKH: data.apDungChoLoaiKH,
-              hangToiThieuApDung: data.hangToiThieuApDung === "" ? null : Number(data.hangToiThieuApDung),
+              hangToiThieuApDung:
+                data.hangToiThieuApDung === ""
+                  ? null
+                  : Number(data.hangToiThieuApDung),
             };
             if (modal.mode === "create") await danhMucApi.createNgayLe(payload);
             else await danhMucApi.updateNgayLe(modal.item.id, payload);
@@ -294,42 +501,95 @@ function NgayLeSection() {
       )}
       <div className="px-5 py-3.5 border-b border-ink-100 flex items-center justify-between">
         <h3 className="font-semibold text-ink-900">Ngày lễ / Sự kiện ưu đãi</h3>
-        <Button size="sm" icon={Plus} onClick={() => setModal({ mode: "create" })}>Thêm</Button>
+        <Button
+          size="sm"
+          icon={Plus}
+          onClick={() => setModal({ mode: "create" })}
+        >
+          Thêm
+        </Button>
       </div>
-      {loading ? <div className="py-8 text-center text-ink-400 text-sm">Đang tải...</div> : (
+      {loading ? (
+        <div className="py-8 text-center text-ink-400 text-sm">Đang tải...</div>
+      ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-surface-alt">
-              {["Tên ngày lễ", "Ngày", "Gửi trước", "Áp dụng cho", "Hạng áp dụng", "Trạng thái", ""].map(h => (
-                <th key={h} className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">{h}</th>
+              {[
+                "Tên ngày lễ",
+                "Ngày",
+                "Gửi trước",
+                "Áp dụng cho",
+                "Hạng áp dụng",
+                "Trạng thái",
+                "",
+              ].map((h) => (
+                <th
+                  key={h}
+                  className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide"
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
-            {items.map(item => (
-              <tr key={item.id} className="hover:bg-surface-alt transition-colors">
-                <td className="px-5 py-3 font-medium text-ink-900">{item.tenNgayLe}</td>
-                <td className="px-5 py-3 text-ink-700">{String(item.ngay).padStart(2, "0")}/{String(item.thang).padStart(2, "0")}</td>
-                <td className="px-5 py-3 text-ink-700">{item.soNgayGuiTruoc} ngày</td>
-                <td className="px-5 py-3 text-ink-600">{LOAI_KH_LABEL[item.apDungChoLoaiKH] ?? item.apDungChoLoaiKH}</td>
+            {items.map((item) => (
+              <tr
+                key={item.id}
+                className="hover:bg-surface-alt transition-colors"
+              >
+                <td className="px-5 py-3 font-medium text-ink-900">
+                  {item.tenNgayLe}
+                </td>
+                <td className="px-5 py-3 text-ink-700">
+                  {String(item.ngay).padStart(2, "0")}/
+                  {String(item.thang).padStart(2, "0")}
+                </td>
+                <td className="px-5 py-3 text-ink-700">
+                  {item.soNgayGuiTruoc} ngày
+                </td>
                 <td className="px-5 py-3 text-ink-600">
-                  {item.hangToiThieuApDung
-                    ? (xepHang.find(h => h.id === item.hangToiThieuApDung)?.tenHang ?? `Hạng #${item.hangToiThieuApDung}`)
-                    : <span className="text-ink-400">Mọi hạng</span>}
+                  {LOAI_KH_LABEL[item.apDungChoLoaiKH] ?? item.apDungChoLoaiKH}
+                </td>
+                <td className="px-5 py-3 text-ink-600">
+                  {item.hangToiThieuApDung ? (
+                    (xepHang.find((h) => h.id === item.hangToiThieuApDung)
+                      ?.tenHang ?? `Hạng #${item.hangToiThieuApDung}`)
+                  ) : (
+                    <span className="text-ink-400">Mọi hạng</span>
+                  )}
                 </td>
                 <td className="px-5 py-3">
-                  {item.isActive
-                    ? <span className="text-success-600 text-xs flex items-center gap-1"><Check size={13} />Hoạt động</span>
-                    : <span className="text-ink-400 text-xs flex items-center gap-1"><X size={13} />Tắt</span>}
+                  {item.isActive ? (
+                    <span className="text-success-600 text-xs flex items-center gap-1">
+                      <Check size={13} />
+                      Hoạt động
+                    </span>
+                  ) : (
+                    <span className="text-ink-400 text-xs flex items-center gap-1">
+                      <X size={13} />
+                      Tắt
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => setModal({ mode: "edit", item })}
-                      className="p-1.5 rounded-lg text-ink-400 hover:text-accent-600 hover:bg-accent-50 transition-colors">
+                    <button
+                      onClick={() => setModal({ mode: "edit", item })}
+                      className="p-1.5 rounded-lg text-ink-400 hover:text-accent-600 hover:bg-accent-50 transition-colors"
+                    >
                       <Pencil size={14} />
                     </button>
-                    <button onClick={async () => { if (confirm("Xóa ngày lễ này?")) { await danhMucApi.deleteNgayLe(item.id); load(); } }}
-                      className="p-1.5 rounded-lg text-ink-400 hover:text-danger-600 hover:bg-danger-50 transition-colors">
+                    <button
+                      onClick={async () => {
+                        if (confirm("Xóa ngày lễ này?")) {
+                          await danhMucApi.deleteNgayLe(item.id);
+                          load();
+                        }
+                      }}
+                      className="p-1.5 rounded-lg text-ink-400 hover:text-danger-600 hover:bg-danger-50 transition-colors"
+                    >
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -344,7 +604,16 @@ function NgayLeSection() {
 }
 
 // ── SimpleDanhMucSection (dùng cho LoaiKhachHang, TinhTrang, LoaiTicket, LoaiSanPham) ───
-function SimpleDanhMucSection({ title, fetchFn, createFn, updateFn, deleteFn, columns, fields, checkActive = true }) {
+function SimpleDanhMucSection({
+  title,
+  fetchFn,
+  createFn,
+  updateFn,
+  deleteFn,
+  columns,
+  fields,
+  checkActive = true,
+}) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
@@ -353,16 +622,24 @@ function SimpleDanhMucSection({ title, fetchFn, createFn, updateFn, deleteFn, co
     try {
       const res = await fetchFn();
       setItems(res.data ?? []);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   return (
     <div className="bg-surface rounded-card border border-ink-100 overflow-hidden">
       {modal && (
         <SimpleModal
-          title={modal.mode === "create" ? `Thêm ${title}` : `Sửa: ${modal.item?.tenLoai || modal.item?.tenTinhTrang}`}
+          title={
+            modal.mode === "create"
+              ? `Thêm ${title}`
+              : `Sửa: ${modal.item?.tenLoai || modal.item?.tenTinhTrang}`
+          }
           defaultValues={modal.item ?? { isActive: true }}
           fields={fields}
           onClose={() => setModal(null)}
@@ -375,41 +652,69 @@ function SimpleDanhMucSection({ title, fetchFn, createFn, updateFn, deleteFn, co
       )}
       <div className="px-5 py-3.5 border-b border-ink-100 flex items-center justify-between">
         <h3 className="font-semibold text-ink-900">{title}</h3>
-        <Button size="sm" icon={Plus} onClick={() => setModal({ mode: "create" })}>Thêm</Button>
+        <Button
+          size="sm"
+          icon={Plus}
+          onClick={() => setModal({ mode: "create" })}
+        >
+          Thêm
+        </Button>
       </div>
-      {loading ? <div className="py-8 text-center text-ink-400 text-sm">Đang tải...</div> : items.length === 0 ? (
-        <div className="py-8 text-center text-ink-400 text-sm">Chưa có dữ liệu</div>
+      {loading ? (
+        <div className="py-8 text-center text-ink-400 text-sm">Đang tải...</div>
+      ) : items.length === 0 ? (
+        <div className="py-8 text-center text-ink-400 text-sm">
+          Chưa có dữ liệu
+        </div>
       ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-surface-alt">
-              {columns.map(c => (
-                <th key={c.key} className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">{c.label}</th>
+              {columns.map((c) => (
+                <th
+                  key={c.key}
+                  className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide"
+                >
+                  {c.label}
+                </th>
               ))}
               <th className="w-20"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
-            {items.map(item => (
-              <tr key={item.id} className="hover:bg-surface-alt transition-colors">
-                {columns.map(c => (
+            {items.map((item) => (
+              <tr
+                key={item.id}
+                className="hover:bg-surface-alt transition-colors"
+              >
+                {columns.map((c) => (
                   <td key={c.key} className="px-5 py-3 text-ink-700">
                     {c.render ? c.render(item) : (item[c.key] ?? "—")}
                   </td>
                 ))}
                 <td className="px-3 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => setModal({ mode: "edit", item })}
-                      className="p-1.5 rounded-lg text-ink-400 hover:text-accent-600 hover:bg-accent-50 transition-colors">
+                    <button
+                      onClick={() => setModal({ mode: "edit", item })}
+                      className="p-1.5 rounded-lg text-ink-400 hover:text-accent-600 hover:bg-accent-50 transition-colors"
+                    >
                       <Pencil size={14} />
                     </button>
-                    <button onClick={async () => {
-                      if (confirm(`Xóa "${item.tenLoai || item.tenTinhTrang}"?`)) {
-                        try { await deleteFn(item.id); load(); }
-                        catch (err) { alert(err?.message || "Không thể xóa"); }
-                      }
-                    }}
-                      className="p-1.5 rounded-lg text-ink-400 hover:text-danger-600 hover:bg-danger-50 transition-colors">
+                    <button
+                      onClick={async () => {
+                        if (
+                          confirm(`Xóa "${item.tenLoai || item.tenTinhTrang}"?`)
+                        ) {
+                          try {
+                            await deleteFn(item.id);
+                            load();
+                          } catch (err) {
+                            alert(err?.message || "Không thể xóa");
+                          }
+                        }
+                      }}
+                      className="p-1.5 rounded-lg text-ink-400 hover:text-danger-600 hover:bg-danger-50 transition-colors"
+                    >
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -444,7 +749,10 @@ export default function SettingsPage() {
     setJobError("");
     try {
       const res = await loyaltyApi.runDailyJob();
-      setJobMessage(res.message || "Đã chạy job gửi mail (sinh nhật/ngày lễ/thăng-xuống hạng) thành công.");
+      setJobMessage(
+        res.message ||
+          "Đã chạy job gửi mail (sinh nhật/ngày lễ/thăng-xuống hạng) thành công.",
+      );
     } catch (err) {
       setJobError(err?.message || "Chạy job thất bại.");
     } finally {
@@ -455,15 +763,24 @@ export default function SettingsPage() {
   const activeClass = "bg-accent-500/15 text-accent-700 font-medium";
   const inactiveClass = "text-ink-500 hover:bg-ink-100 hover:text-ink-900";
 
-  const commonActiveField = { name: "isActive", label: "Trạng thái", type: "checkbox" };
+  const commonActiveField = {
+    name: "isActive",
+    label: "Trạng thái",
+    type: "checkbox",
+  };
 
   return (
     <div className="space-y-5">
-      <PageHeader breadcrumb="CRM / Admin" title="Cài đặt hệ thống" icon={Settings} />
+      <PageHeader
+        breadcrumb="CRM / Admin"
+        title="Cài đặt hệ thống"
+        icon={Settings}
+      />
 
       <div className="bg-info-50 border border-info-100 rounded-lg p-3 text-sm text-info-700 flex items-center justify-between gap-4 flex-wrap">
         <span>
-          Chỉ Admin mới có thể chỉnh sửa danh mục. Các thay đổi sẽ ảnh hưởng trực tiếp đến toàn bộ dữ liệu hệ thống.
+          Chỉ Admin mới có thể chỉnh sửa danh mục. Các thay đổi sẽ ảnh hưởng
+          trực tiếp đến toàn bộ dữ liệu hệ thống.
         </span>
         <Button
           size="sm"
@@ -488,9 +805,12 @@ export default function SettingsPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 bg-surface border border-ink-100 rounded-xl p-1.5">
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setActiveTab(t.key)}
-            className={`flex-1 px-4 py-2 text-sm rounded-lg transition-colors ${activeTab === t.key ? activeClass : inactiveClass}`}>
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            className={`flex-1 px-4 py-2 text-sm rounded-lg transition-colors ${activeTab === t.key ? activeClass : inactiveClass}`}
+          >
             {t.label}
           </button>
         ))}
@@ -507,10 +827,24 @@ export default function SettingsPage() {
             columns={[
               { key: "tenLoai", label: "Tên loại" },
               { key: "moTa", label: "Mô tả" },
-              { key: "isActive", label: "Trạng thái", render: i => i.isActive ? <span className="text-success-600 text-xs">Hoạt động</span> : <span className="text-ink-400 text-xs">Tắt</span> },
+              {
+                key: "isActive",
+                label: "Trạng thái",
+                render: (i) =>
+                  i.isActive ? (
+                    <span className="text-success-600 text-xs">Hoạt động</span>
+                  ) : (
+                    <span className="text-ink-400 text-xs">Tắt</span>
+                  ),
+              },
             ]}
             fields={[
-              { name: "tenLoai", label: "Tên loại", required: true, rules: { required: "Bắt buộc" } },
+              {
+                name: "tenLoai",
+                label: "Tên loại",
+                required: true,
+                rules: { required: "Bắt buộc" },
+              },
               { name: "moTa", label: "Mô tả", type: "textarea" },
               commonActiveField,
             ]}
@@ -523,10 +857,24 @@ export default function SettingsPage() {
             deleteFn={danhMucApi.deleteTinhTrang}
             columns={[
               { key: "tenTinhTrang", label: "Tên tình trạng" },
-              { key: "isActive", label: "Trạng thái", render: i => i.isActive ? <span className="text-success-600 text-xs">Hoạt động</span> : <span className="text-ink-400 text-xs">Tắt</span> },
+              {
+                key: "isActive",
+                label: "Trạng thái",
+                render: (i) =>
+                  i.isActive ? (
+                    <span className="text-success-600 text-xs">Hoạt động</span>
+                  ) : (
+                    <span className="text-ink-400 text-xs">Tắt</span>
+                  ),
+              },
             ]}
             fields={[
-              { name: "tenTinhTrang", label: "Tên tình trạng", required: true, rules: { required: "Bắt buộc" } },
+              {
+                name: "tenTinhTrang",
+                label: "Tên tình trạng",
+                required: true,
+                rules: { required: "Bắt buộc" },
+              },
               commonActiveField,
             ]}
           />
@@ -543,10 +891,24 @@ export default function SettingsPage() {
           columns={[
             { key: "tenLoai", label: "Tên loại" },
             { key: "moTa", label: "Mô tả" },
-            { key: "isActive", label: "Trạng thái", render: i => i.isActive ? <span className="text-success-600 text-xs">Hoạt động</span> : <span className="text-ink-400 text-xs">Tắt</span> },
+            {
+              key: "isActive",
+              label: "Trạng thái",
+              render: (i) =>
+                i.isActive ? (
+                  <span className="text-success-600 text-xs">Hoạt động</span>
+                ) : (
+                  <span className="text-ink-400 text-xs">Tắt</span>
+                ),
+            },
           ]}
           fields={[
-            { name: "tenLoai", label: "Tên loại ticket", required: true, rules: { required: "Bắt buộc" } },
+            {
+              name: "tenLoai",
+              label: "Tên loại ticket",
+              required: true,
+              rules: { required: "Bắt buộc" },
+            },
             { name: "moTa", label: "Mô tả", type: "textarea" },
             commonActiveField,
           ]}
@@ -565,7 +927,12 @@ export default function SettingsPage() {
             { key: "moTa", label: "Mô tả" },
           ]}
           fields={[
-            { name: "tenLoai", label: "Tên loại sản phẩm", required: true, rules: { required: "Bắt buộc" } },
+            {
+              name: "tenLoai",
+              label: "Tên loại sản phẩm",
+              required: true,
+              rules: { required: "Bắt buộc" },
+            },
             { name: "moTa", label: "Mô tả", type: "textarea" },
           ]}
         />
