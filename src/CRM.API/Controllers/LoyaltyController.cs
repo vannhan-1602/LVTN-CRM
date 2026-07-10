@@ -20,6 +20,7 @@ public class LoyaltyController : ControllerBase
     /// <summary>
     /// Chạy thủ công job hàng ngày: email sinh nhật/ngày thành lập, email ngày lễ,
     /// cảnh báo xuống hạng, và (nếu hôm nay là ngày 1) tính lại hạng toàn bộ KH.
+    /// Quét TOÀN BỘ khách hàng đủ điều kiện trong hệ thống — không phải gửi cho 1 người.
     /// Dùng để test nhanh thay vì chờ hosted service tự chạy theo lịch.
     /// </summary>
     [HttpPost("run-daily-job")]

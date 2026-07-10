@@ -231,8 +231,10 @@ public class LoyaltyService
 
     private const int SoNgayGuiTruocSinhNhat = 3;
 
-    public async Task ChayJobHangNgayAsync(CancellationToken ct = default)
+    public async Task<string> ChayJobHangNgayAsync(CancellationToken ct = default)
     {
+        var start = DateTime.UtcNow;
+
         await XuLySinhNhatVaNgayThanhLapAsync(ct);
         await XuLyNgayLeAsync(ct);
         await XuLyCanhBaoXuongHangAsync(ct);
@@ -241,8 +243,31 @@ public class LoyaltyService
         // trong ngày 1 hàng tháng — hosted service chạy 1 lần/ngày nên không bị lặp).
         if (DateTime.UtcNow.Day == 1)
             await TinhLaiHangChoTatCaAsync(ct);
-    }
 
+        // Đọc lại chính những email vừa ghi log trong lần chạy này để báo cáo rõ ràng —
+        // EmailService nuốt lỗi SMTP âm thầm (ghi log rồi không throw ra ngoài), nên nếu chỉ
+        // trả về "Đã chạy xong" thì không ai biết mail có thật sự gửi được hay không.
+        var logs = await _repo.ThongKeEmailLogTuAsync(start, ct);
+
+        if (logs.Count == 0)
+            return "Đã chạy xong job, nhưng KHÔNG có khách hàng nào đủ điều kiện nhận email hôm nay " +
+                   "(không ai sinh nhật/ngày thành lập trong 3 ngày tới, không có ngày lễ nào khớp hôm nay, " +
+                   "không ai sắp xuống hạng). Không phải lỗi — chỉ là chưa có dữ liệu khớp điều kiện.";
+
+        var thanhCong = logs.Count(x => x.ThanhCong);
+        var thatBai = logs.Count(x => !x.ThanhCong);
+
+        var summary = $"Đã xử lý {logs.Count} email: {thanhCong} gửi thành công, {thatBai} thất bại.";
+
+        if (thatBai > 0)
+        {
+            var viDu = logs.First(x => !x.ThanhCong);
+            summary += $" Ví dụ lỗi ({viDu.LoaiEmail} → {viDu.EmailDen}): {viDu.LoiChiTiet}. " +
+                       "Kiểm tra lại cấu hình SMTP trong appsettings.Local.json (SmtpUser/SmtpPassword).";
+        }
+
+        return summary;
+    }
     private async Task XuLySinhNhatVaNgayThanhLapAsync(CancellationToken ct)
     {
         List<KhachHangNgayDacBiet> danhSach;

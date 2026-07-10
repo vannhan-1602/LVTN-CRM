@@ -354,6 +354,18 @@ public class LoyaltyRepository : ILoyaltyRepository
         await _context.SaveChangesAsync(ct);
     }
 
+    public async Task<List<(string LoaiEmail, bool ThanhCong, string EmailDen, string? LoiChiTiet)>> ThongKeEmailLogTuAsync(
+        DateTime tuThoiDiem, CancellationToken ct = default)
+    {
+        var rows = await _context.KhEmailLogs
+            .AsNoTracking()
+            .Where(x => x.CreatedAt >= tuThoiDiem)
+            .Select(x => new { x.LoaiEmail, x.TrangThaiGui, x.EmailDen, x.LoiChiTiet })
+            .ToListAsync(ct);
+
+        return rows.Select(x => (x.LoaiEmail, x.TrangThaiGui == "ThanhCong", x.EmailDen, x.LoiChiTiet)).ToList();
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // BACKGROUND JOB
     // ══════════════════════════════════════════════════════════════════════════

@@ -69,6 +69,10 @@ public interface ILoyaltyRepository
         string tieuDe, bool thanhCong, ulong? voucherId = null, string? loiChiTiet = null,
         CancellationToken ct = default);
 
+    /// <summary>Thống kê số email đã ghi log kể từ 1 thời điểm — dùng để báo cáo kết quả job vừa chạy.</summary>
+    Task<List<(string LoaiEmail, bool ThanhCong, string EmailDen, string? LoiChiTiet)>> ThongKeEmailLogTuAsync(
+        DateTime tuThoiDiem, CancellationToken ct = default);
+
     // ── Dùng cho Background Job ───────────────────────────────────────────────
 
     /// <summary>
