@@ -52,6 +52,9 @@ public interface ILoyaltyRepository
 
     Task<bool> GanTicketVaoVoucherAsync(ulong voucherId, ulong ticketId, CancellationToken ct = default);
 
+    /// <summary>Khách bấm link redeem trong email — đánh dấu đã yêu cầu dùng (chưa gắn ticket hỗ trợ).</summary>
+    Task<bool> DanhDauDaYeuCauAsync(ulong voucherId, CancellationToken ct = default);
+
     Task<List<Voucher>> GetVouchersByKhachHangAsync(ulong khachHangId, CancellationToken ct = default);
 
     /// <summary>Áp dụng voucher vào báo giá — đánh dấu IsUsed = true.</summary>

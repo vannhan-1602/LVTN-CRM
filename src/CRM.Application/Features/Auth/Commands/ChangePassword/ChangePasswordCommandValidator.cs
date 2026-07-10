@@ -11,9 +11,7 @@ public class ChangePasswordCommandValidator : AbstractValidator<ChangePasswordCo
 
         RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("Vui lòng nhập mật khẩu mới.")
-            .MinimumLength(8).WithMessage("Mật khẩu mới phải có tối thiểu 8 ký tự.")
-            .Matches(@"[0-9]").WithMessage("Mật khẩu mới phải chứa ít nhất 1 chữ số.")
-            .Matches(@"[^a-zA-Z0-9]").WithMessage("Mật khẩu mới phải chứa ít nhất 1 ký tự đặc biệt.");
+            .MinimumLength(6).WithMessage("Mật khẩu mới phải có tối thiểu 6 ký tự.");
 
         RuleFor(x => x.ConfirmNewPassword)
             .Equal(x => x.NewPassword).WithMessage("Mật khẩu xác nhận không khớp với mật khẩu mới.");

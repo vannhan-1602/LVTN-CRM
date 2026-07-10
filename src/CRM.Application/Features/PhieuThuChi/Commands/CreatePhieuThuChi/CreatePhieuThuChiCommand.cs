@@ -154,7 +154,12 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
         }
 
         // ── 5. Xử lý Loyalty (tích điểm + tính hạng + voucher + email) ──────
-        // Fire-and-forget theo pattern: chạy sau giao dịch chính, lỗi không rollback.
+        // QUAN TRỌNG: await trực tiếp trong cùng request scope (KHÔNG dùng Task.Run) —
+        // _loyaltyService phụ thuộc CrmDbContext (Scoped theo request); nếu chạy nền bằng
+        // Task.Run, request có thể trả response và Scope (kèm DbContext) bị dispose trước khi
+        // task nền chạy xong, gây ObjectDisposedException âm thầm khiến điểm/voucher/email
+        // không được xử lý mà không ai biết. Bọc try/catch để lỗi Loyalty không rollback
+        // giao dịch thu tiền chính (đã ghi nhận ở bước 3-4).
         if (request.LoaiPhieu == PaymentVoucherType.Thu && request.HoaDonId.HasValue)
         {
             var hoaDonForLoyalty = await _invoiceRepo.GetByIdAsync(request.HoaDonId.Value, ct);
@@ -164,24 +169,21 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
 
             if (hoaDonForLoyalty is not null)
             {
-                _ = Task.Run(async () =>
+                try
                 {
-                    try
-                    {
-                        await _loyaltyService.XuLySauPhieuThuAsync(
-                            khachHangId:    hoaDonForLoyalty.KhachHangId,
-                            tenKhachHang:   customerForEmail?.TenKhachHang ?? "Quý khách",
-                            khachHangEmail: customerForEmail?.Email,
-                            maHoaDon:       hoaDonForLoyalty.MaHoaDon,
-                            soTienThu:      request.SoTien,
-                            hoaDonId:       hoaDonForLoyalty.Id,
-                            phieuThuChiId:  created.Id);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "[Loyalty] Background task lỗi KH {Id}", hoaDonForLoyalty.KhachHangId);
-                    }
-                }, CancellationToken.None); // Dùng None vì request CT đã completed
+                    await _loyaltyService.XuLySauPhieuThuAsync(
+                        khachHangId:    hoaDonForLoyalty.KhachHangId,
+                        tenKhachHang:   customerForEmail?.TenKhachHang ?? "Quý khách",
+                        khachHangEmail: customerForEmail?.Email,
+                        maHoaDon:       hoaDonForLoyalty.MaHoaDon,
+                        soTienThu:      request.SoTien,
+                        hoaDonId:       hoaDonForLoyalty.Id,
+                        phieuThuChiId:  created.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[Loyalty] Lỗi xử lý sau phiếu thu KH {Id}", hoaDonForLoyalty.KhachHangId);
+                }
             }
         }
 

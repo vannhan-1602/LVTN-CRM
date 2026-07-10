@@ -17,13 +17,15 @@ namespace CRM.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = Policies.SalesTeam)]   // Sale + Manager 
+[Authorize] // policy cụ thể khai báo riêng từng action bên dưới (đọc rộng hơn ghi)
 public class QuoteController : ControllerBase
 {
     private readonly IMediator _mediator;
     public QuoteController(IMediator mediator) => _mediator = mediator;
 
+    // Đọc: Sale + Manager + Accountant (Accountant cần đối chiếu báo giá gốc khi xuất hóa đơn)
     [HttpGet]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
@@ -37,13 +39,16 @@ public class QuoteController : ControllerBase
     }
 
     [HttpGet("{id:long}")]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
     public async Task<IActionResult> GetById(ulong id, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetQuoteByIdQuery(id), ct);
         return Ok(ApiResponse<QuoteDetailDto>.Ok(result));
     }
 
+    // Ghi: chỉ Sale + Manager (nghiệp vụ lập/gửi/xử lý báo giá thuộc về đội kinh doanh)
     [HttpPost]
+    [Authorize(Policy = Policies.SalesTeam)]
     public async Task<IActionResult> Create([FromBody] CreateQuoteRequestDto request, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateQuoteCommand(request.KhachHangId, request.ChiTiet), ct);
@@ -52,6 +57,7 @@ public class QuoteController : ControllerBase
     }
 
     [HttpPut("{id:long}")]
+    [Authorize(Policy = Policies.SalesTeam)]
     public async Task<IActionResult> Update(ulong id, [FromBody] UpdateQuoteRequestDto request, CancellationToken ct)
     {
         var result = await _mediator.Send(new UpdateQuoteCommand(id, request.ChiTiet), ct);
@@ -59,6 +65,7 @@ public class QuoteController : ControllerBase
     }
 
     [HttpDelete("{id:long}")]
+    [Authorize(Policy = Policies.SalesTeam)]
     public async Task<IActionResult> Delete(ulong id, CancellationToken ct)
     {
         await _mediator.Send(new DeleteQuoteCommand(id), ct);
@@ -66,6 +73,7 @@ public class QuoteController : ControllerBase
     }
 
     [HttpPost("{id:long}/send")]
+    [Authorize(Policy = Policies.SalesTeam)]
     public async Task<IActionResult> Send(ulong id, CancellationToken ct)
     {
         var result = await _mediator.Send(new SendQuoteCommand(id), ct);
@@ -73,6 +81,7 @@ public class QuoteController : ControllerBase
     }
 
     [HttpPost("{id:long}/accept")]
+    [Authorize(Policy = Policies.SalesTeam)]
     public async Task<IActionResult> Accept(ulong id, CancellationToken ct)
     {
         var result = await _mediator.Send(new AcceptQuoteCommand(id), ct);
@@ -80,6 +89,7 @@ public class QuoteController : ControllerBase
     }
 
     [HttpPost("{id:long}/reject")]
+    [Authorize(Policy = Policies.SalesTeam)]
     public async Task<IActionResult> Reject(ulong id, [FromBody] RejectQuoteRequestDto request, CancellationToken ct)
     {
         var result = await _mediator.Send(new RejectQuoteCommand(id, request.LyDo), ct);

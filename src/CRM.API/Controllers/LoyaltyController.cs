@@ -11,7 +11,7 @@ namespace CRM.API.Controllers;
 // endpoint dưới đây chỉ để kích hoạt ngay lập tức khi cần kiểm thử, không cần chờ tới giờ chạy.
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = Policies.ManagerOnly)]
+[Authorize(Policy = Policies.AdminOrManager)]
 public class LoyaltyController : ControllerBase
 {
     private readonly LoyaltyService _loyaltyService;

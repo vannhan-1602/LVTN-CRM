@@ -30,35 +30,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
 
         if (account is null || !_passwordHasher.Verify(request.Password, account.Password))
         {
-            // Ghi nhận lần sai chỉ khi tài khoản có tồn tại (tránh lộ thông tin username có
-            // tồn tại hay không qua timing, và tránh tạo "khóa" cho username không tồn tại).
-            if (account is not null)
-            {
-                // 4b trước: nếu đã bị khóa tạm từ trước, không tính thêm lần sai mới, chỉ báo lại.
-                if (account.KhoaDenThoiDiem.HasValue && account.KhoaDenThoiDiem.Value > DateTime.UtcNow)
-                {
-                    var conPhut = Math.Ceiling((account.KhoaDenThoiDiem.Value - DateTime.UtcNow).TotalMinutes);
-                    throw new UnauthorizedException(
-                        $"Tài khoản đang bị tạm khóa do nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau {conPhut} phút.");
-                }
-
-                var soLanSai = await _userRepository.GhiNhanDangNhapSaiAsync(account.Id, cancellationToken);
-                if (soLanSai >= 5)
-                {
-                    throw new UnauthorizedException(
-                        "Tài khoản đã bị tạm khóa 15 phút do nhập sai mật khẩu quá 5 lần liên tiếp.");
-                }
-            }
-
             throw new UnauthorizedException("Tên đăng nhập hoặc mật khẩu không đúng.");
-        }
-
-        // 4b. Tài khoản đang tạm khóa (dù mật khẩu lần này gõ đúng) — vẫn từ chối cho tới khi hết hạn khóa.
-        if (account.KhoaDenThoiDiem.HasValue && account.KhoaDenThoiDiem.Value > DateTime.UtcNow)
-        {
-            var conPhut = Math.Ceiling((account.KhoaDenThoiDiem.Value - DateTime.UtcNow).TotalMinutes);
-            throw new UnauthorizedException(
-                $"Tài khoản đang bị tạm khóa do nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau {conPhut} phút.");
         }
 
         if (!string.Equals(account.TrangThai, ActiveStatus, StringComparison.OrdinalIgnoreCase))
@@ -69,12 +41,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
         if (string.IsNullOrWhiteSpace(account.RoleName))
         {
             throw new ForbiddenException("Tài khoản chưa được gán vai trò truy cập.");
-        }
-
-        // Đăng nhập thành công: reset bộ đếm lần sai (nếu có) để không cộng dồn qua các lần sau.
-        if (account.SoLanDangNhapSai > 0 || account.KhoaDenThoiDiem.HasValue)
-        {
-            await _userRepository.ResetDangNhapSaiAsync(account.Id, cancellationToken);
         }
 
         var authUser = new AuthUser
