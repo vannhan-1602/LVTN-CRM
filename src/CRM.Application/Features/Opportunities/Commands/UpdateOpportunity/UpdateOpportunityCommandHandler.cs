@@ -48,6 +48,9 @@ public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunity
         existing.DoanhThuKyVong = req.DoanhThuKyVong;
         existing.GhiChu = req.GhiChu?.Trim();
         existing.NgayDuKien = req.NgayDuKien;
+        // Sale không được đổi người phụ trách (chỉ Manager mới có quyền này)
+        if (_currentUser.Role != Roles.Sale)
+            existing.NhanVienPhuTrachId = (int?)req.NhanVienPhuTrachId;
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _repo.UpdateAsync(existing, ct);

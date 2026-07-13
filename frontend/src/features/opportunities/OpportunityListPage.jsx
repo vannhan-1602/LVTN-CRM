@@ -12,6 +12,7 @@ import {
 import opportunityApi from "../../api/opportunityApi";
 import customerApi from "../../api/customerApi";
 import leadApi from "../../api/leadApi";
+import authApi from "../../api/authApi";
 import useAuthStore from "../auth/authStore";
 import Pagination from "../../components/common/Pagination";
 import PageHeader from "../../components/common/PageHeader";
@@ -275,6 +276,7 @@ export default function OpportunityListPage() {
   const [summary, setSummary] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [nhanVienList, setNhanVienList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -325,6 +327,10 @@ export default function OpportunityListPage() {
       .getAll({ pageNumber: 1, pageSize: 200 })
       .then((r) => setLeads(r.data?.items ?? []))
       .catch(() => {});
+    authApi
+      .getStaffList()
+      .then((r) => setNhanVienList(r.data ?? []))
+      .catch(() => {});
   }, []);
 
   const handleDelete = async (item) => {
@@ -351,6 +357,8 @@ export default function OpportunityListPage() {
         <OpportunityFormModal
           customers={customers}
           leads={leads}
+          nhanVienList={nhanVienList}
+          canAssign={user?.role === ROLES.Manager}
           onClose={() => setCreateModal(false)}
           onSaved={onSaved}
         />
@@ -360,6 +368,8 @@ export default function OpportunityListPage() {
           item={editItem}
           customers={customers}
           leads={leads}
+          nhanVienList={nhanVienList}
+          canAssign={user?.role === ROLES.Manager}
           onClose={() => setEditItem(null)}
           onSaved={onSaved}
         />

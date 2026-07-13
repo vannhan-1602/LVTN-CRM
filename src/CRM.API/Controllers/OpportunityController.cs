@@ -56,7 +56,8 @@ public class OpportunityController : ControllerBase
     {
         var result = await _mediator.Send(new CreateOpportunityCommand(
             req.TenThuongVu, req.KhachHangId, req.LeadId,
-            req.TyLeThanhCong, req.DoanhThuKyVong, req.GhiChu, req.NgayDuKien), ct);
+            req.TyLeThanhCong, req.DoanhThuKyVong, req.GhiChu, req.NgayDuKien,
+            req.NhanVienPhuTrachId), ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id },
             ApiResponse<OpportunityDto>.Ok(result, "Tạo cơ hội bán hàng thành công."));
     }
@@ -66,7 +67,8 @@ public class OpportunityController : ControllerBase
     {
         var result = await _mediator.Send(new UpdateOpportunityCommand(
             id, req.TenThuongVu, req.KhachHangId, req.LeadId,
-            req.TyLeThanhCong, req.DoanhThuKyVong, req.GhiChu, req.NgayDuKien), ct);
+            req.TyLeThanhCong, req.DoanhThuKyVong, req.GhiChu, req.NgayDuKien,
+            req.NhanVienPhuTrachId), ct);
         return Ok(ApiResponse<OpportunityDto>.Ok(result, "Cập nhật thành công."));
     }
 

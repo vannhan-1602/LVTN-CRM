@@ -137,6 +137,9 @@ export default function MainLayout() {
               <SidebarLink to="/invoices" icon={Wallet}>
                 Hóa đơn & Công nợ
               </SidebarLink>
+              <SidebarLink to="/phieu-thu-chi" icon={Receipt}>
+                Phiếu thu / Phiếu chi
+              </SidebarLink>
               {/* Accountant chỉ xem Customer + Contract + Quote (read-only) */}
               {user?.role === ROLES.Accountant && (
                 <>

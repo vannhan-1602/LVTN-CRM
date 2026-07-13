@@ -22,6 +22,7 @@ import OpportunityListPage from "../features/opportunities/OpportunityListPage";
 import OpportunityDetailPage from "../features/opportunities/OpportunityDetailPage";
 import InvoiceListPage from "../features/invoices/InvoiceListPage";
 import InvoiceDetailPage from "../features/invoices/InvoiceDetailPage";
+import PhieuThuChiListPage from "../features/phieuthuchi/PhieuThuChiListPage";
 import SettingsPage from "../features/settings/SettingsPage";
 import AuditLogPage from "../features/audit/AuditLogPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
@@ -94,6 +95,7 @@ export default function AppRoutes() {
         >
           <Route path="/invoices" element={<InvoiceListPage />} />
           <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+          <Route path="/phieu-thu-chi" element={<PhieuThuChiListPage />} />
         </Route>
 
         {/* Admin ONLY */}
