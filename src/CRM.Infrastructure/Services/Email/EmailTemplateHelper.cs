@@ -148,7 +148,7 @@ internal static class EmailTemplateHelper
         WrapLayout(tenKhachHang, $"🎉 Ưu đãi {tenNgayLe} dành riêng cho bạn", $"""
             <p style="color:#334155;line-height:1.6;">
               Nhân dịp <strong>{tenNgayLe}</strong>, chúng tôi gửi tặng bạn ưu đãi đặc biệt
-              tri ân sự đồng hành trong thời gian qua.
+              tri ân sự đồng hành trong thời gian qua đã đồng hành cùng.
             </p>
             {VoucherBlock(maVoucher, phanTramGiam, voucherLink, $"🎁 Ưu đãi {tenNgayLe}")}
             """);
