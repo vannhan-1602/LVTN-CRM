@@ -37,8 +37,11 @@ public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunity
             DoanhThuKyVong = req.DoanhThuKyVong,
             GhiChu = req.GhiChu?.Trim(),
             NgayDuKien = req.NgayDuKien,
-            // Sale tự động gán cho chính mình; Manager có thể để null (quản lý toàn bộ)
-            NhanVienPhuTrachId = _currentUser.Role == Roles.Sale ? (int?)_currentUser.UserId : null,
+            // Sale tự động gán cho chính mình (không được chọn người khác);
+            // Manager được quyền chỉ định người phụ trách bất kỳ (hoặc để trống).
+            NhanVienPhuTrachId = _currentUser.Role == Roles.Sale
+                ? (int?)_currentUser.UserId
+                : (int?)req.NhanVienPhuTrachId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

@@ -28,6 +28,7 @@ public class CreateOpportunityRequestDto
     public decimal? DoanhThuKyVong { get; set; }
     public string? GhiChu { get; set; }
     public DateOnly? NgayDuKien { get; set; }
+    public uint? NhanVienPhuTrachId { get; set; }
 }
 
 public class UpdateOpportunityRequestDto
@@ -39,6 +40,7 @@ public class UpdateOpportunityRequestDto
     public decimal? DoanhThuKyVong { get; set; }
     public string? GhiChu { get; set; }
     public DateOnly? NgayDuKien { get; set; }
+    public uint? NhanVienPhuTrachId { get; set; }
 }
 
 public class ChangeStageRequestDto

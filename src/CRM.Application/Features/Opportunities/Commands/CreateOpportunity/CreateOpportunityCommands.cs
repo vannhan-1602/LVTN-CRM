@@ -6,5 +6,6 @@ namespace CRM.Application.Features.Opportunities.Commands.CreateOpportunity;
 public record CreateOpportunityCommand(
     string TenThuongVu, ulong? KhachHangId, ulong? LeadId,
     int TyLeThanhCong, decimal? DoanhThuKyVong,
-    string? GhiChu, DateOnly? NgayDuKien
+    string? GhiChu, DateOnly? NgayDuKien,
+    uint? NhanVienPhuTrachId = null
 ) : IRequest<OpportunityDto>;
