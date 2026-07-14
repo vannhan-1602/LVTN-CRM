@@ -2,6 +2,7 @@ import { useState } from "react";
 import leadApi from "../../api/leadApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import EmployeeSelect from "../../components/common/EmployeeSelect";
 import { LEAD_TINH_TRANG_OPTIONS } from "../../utils/constants";
 
 const emptyForm = {
@@ -97,11 +98,11 @@ export default function LeadFormModal({ lead, nhanVienList = [], onClose, onSave
         <div>
           <label className="block text-sm font-medium text-ink-700 mb-1.5">Nhân viên phụ trách</label>
           {nhanVienList.length > 0 ? (
-            <select name="nhanVienPhuTrachId" value={form.nhanVienPhuTrachId} onChange={handleChange}
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400">
-              <option value="">-- Chọn nhân viên --</option>
-              {nhanVienList.map((nv) => <option key={nv.id} value={nv.id}>{nv.hoTen ?? `NV #${nv.id}`}{nv.role ? ` (${nv.role})` : ""}</option>)}
-            </select>
+            <EmployeeSelect
+              value={form.nhanVienPhuTrachId}
+              onChange={(v) => setForm((f) => ({ ...f, nhanVienPhuTrachId: v }))}
+              options={nhanVienList}
+            />
           ) : (
             <input name="nhanVienPhuTrachId" type="number" min="1" value={form.nhanVienPhuTrachId} onChange={handleChange}
               placeholder="ID nhân viên"

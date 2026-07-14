@@ -2,6 +2,7 @@ import { useState } from "react";
 import ticketApi from "../../api/ticketApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import EmployeeSelect from "../../components/common/EmployeeSelect";
 import {
   TICKET_PRIORITY_OPTIONS,
   TICKET_SOURCE_OPTIONS,
@@ -154,18 +155,12 @@ export default function CreateTicketModal({
           <label className="block text-sm font-medium text-ink-700 mb-1.5">
             Nhân viên xử lý
           </label>
-          <select
+          <EmployeeSelect
             value={form.nhanVienXuLyId}
-            onChange={(e) => set("nhanVienXuLyId", e.target.value)}
-            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
-          >
-            <option value="">-- Chưa gán --</option>
-            {nhanVienList.map((nv) => (
-              <option key={nv.id} value={nv.id}>
-                {nv.hoTen ?? `NV #${nv.id}`}{nv.role ? ` (${nv.role})` : ""}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => set("nhanVienXuLyId", v)}
+            options={nhanVienList}
+            emptyLabel="-- Chưa gán --"
+          />
         </div>
 
         <div>

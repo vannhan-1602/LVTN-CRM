@@ -8,6 +8,7 @@ import PageHeader from "../../components/common/PageHeader";
 import Card, { Field } from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
+import EmployeeSelect from "../../components/common/EmployeeSelect";
 import EmptyState from "../../components/common/EmptyState";
 import {
   ROLES,
@@ -258,11 +259,7 @@ export default function TicketDetailPage() {
           {!isClosed && (
             <Card title="Nhân viên xử lý">
               <form onSubmit={handleAssign} className="space-y-3">
-                <select value={assignNV} onChange={(e) => setAssignNV(e.target.value)}
-                  className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400">
-                  <option value="">-- Chưa gán --</option>
-                  {nhanVienList.map((nv) => <option key={nv.id} value={nv.id}>{nv.hoTen ?? `NV #${nv.id}`}{nv.role ? ` (${nv.role})` : ""}</option>)}
-                </select>
+                <EmployeeSelect value={assignNV} onChange={setAssignNV} options={nhanVienList} emptyLabel="-- Chưa gán --" />
                 <Button type="submit" size="sm" variant="secondary" icon={UserCog} className="w-full" disabled={savingAssign}>
                   {savingAssign ? "Đang lưu..." : "Cập nhật gán việc"}
                 </Button>

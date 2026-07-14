@@ -3,6 +3,7 @@ import customerApi from "../../api/customerApi";
 import authApi from "../../api/authApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import EmployeeSelect from "../../components/common/EmployeeSelect";
 import useDanhMucStore from "../../stores/danhMucStore";
 
 const emptyForm = {
@@ -301,19 +302,11 @@ export default function CustomerFormModal({ customer, onClose, onSaved }) {
               className="w-full border border-ink-100 bg-surface-alt rounded-lg px-3 py-2 text-sm text-ink-500 cursor-not-allowed"
             />
           ) : nhanVienList.length > 0 ? (
-            <select
-              name="nhanVienPhuTrachId"
+            <EmployeeSelect
               value={form.nhanVienPhuTrachId}
-              onChange={handleChange}
-              className={cls}
-            >
-              <option value="">-- Chọn nhân viên --</option>
-              {nhanVienList.map((nv) => (
-                <option key={nv.id} value={nv.id}>
-                  {nv.hoTen ?? `NV #${nv.id}`}{nv.role ? ` (${nv.role})` : ""}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setForm((prev) => ({ ...prev, nhanVienPhuTrachId: v }))}
+              options={nhanVienList}
+            />
           ) : (
             <input
               name="nhanVienPhuTrachId"
