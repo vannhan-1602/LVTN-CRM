@@ -1,4 +1,4 @@
-﻿namespace CRM.Application.Interfaces.Quotes;
+namespace CRM.Application.Interfaces.Quotes;
 
 /// <summary>
 /// Sinh & xác thực token công khai cho báo giá — dùng để khách hàng bấm link
@@ -12,6 +12,6 @@ public interface IQuotePublicTokenService
 {
     string GenerateToken(ulong quoteId);
 
-    //Trả về QuoteId nếu token hợp lệ, ngược lại null.
+    /// <summary>Trả về QuoteId nếu token hợp lệ, ngược lại null.</summary>
     ulong? ValidateToken(string token);
 }

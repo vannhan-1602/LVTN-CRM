@@ -1,4 +1,4 @@
-﻿using CRM.Application.Common.Models;
+using CRM.Application.Common.Models;
 using CRM.Application.Features.Quotes.Commands.AcceptQuote;
 using CRM.Application.Features.Quotes.Commands.RejectQuote;
 using CRM.Application.Features.Quotes.DTOs;

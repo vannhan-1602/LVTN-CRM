@@ -18,8 +18,7 @@ publicClient.interceptors.response.use(
 const quotePublicApi = {
   getByToken: (token) => publicClient.get(`/public/quotes/${token}`),
   accept: (token) => publicClient.post(`/public/quotes/${token}/accept`),
-  reject: (token, lyDo) =>
-    publicClient.post(`/public/quotes/${token}/reject`, { lyDo }),
+  reject: (token, lyDo) => publicClient.post(`/public/quotes/${token}/reject`, { lyDo }),
 };
 
 export default quotePublicApi;

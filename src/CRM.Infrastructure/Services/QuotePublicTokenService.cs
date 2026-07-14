@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using CRM.Application.Interfaces.Quotes;
 using Microsoft.Extensions.Configuration;

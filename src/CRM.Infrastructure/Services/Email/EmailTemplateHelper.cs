@@ -1,12 +1,15 @@
 namespace CRM.Infrastructure.Services.Email;
 
-
+/// <summary>
+/// Tạo HTML template cho các loại email.
+/// Style đơn giản, tương thích Gmail/Outlook, không phụ thuộc framework CSS.
+/// </summary>
 internal static class EmailTemplateHelper
 {
     private const string BASE_COLOR = "#2563EB";   // accent blue
     private const string SUCCESS_COLOR = "#16A34A";
     private const string WARNING_COLOR = "#D97706";
-    private const string DANGER_COLOR = "#DC2626";
+    private const string DANGER_COLOR  = "#DC2626";
 
     private static string WrapLayout(string tenKhachHang, string heading, string body, string footer = "") => $"""
         <!DOCTYPE html>

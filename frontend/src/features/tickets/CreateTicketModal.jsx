@@ -162,8 +162,7 @@ export default function CreateTicketModal({
             <option value="">-- Chưa gán --</option>
             {nhanVienList.map((nv) => (
               <option key={nv.id} value={nv.id}>
-                {nv.hoTen ?? `NV #${nv.id}`}
-                {nv.role ? ` (${nv.role})` : ""}
+                {nv.hoTen ?? `NV #${nv.id}`}{nv.role ? ` (${nv.role})` : ""}
               </option>
             ))}
           </select>
