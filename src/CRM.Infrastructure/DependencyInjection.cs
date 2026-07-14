@@ -91,6 +91,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogPublisher, AuditLogPublisher>();
         services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IQuotePublicTokenService, QuotePublicTokenService>();
         services.AddScoped<IOpenAiService, OpenAiService>();
         services.AddHostedService<AuditLogConsumerHostedService>();
         services.AddHostedService<LoyaltyDailyJobHostedService>();

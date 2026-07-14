@@ -65,4 +65,13 @@ public interface IEmailService
         ulong khachHangId, string tenKhachHang, string email,
         string tenHangHienTai, int diemHienTai, int diemCanGiu,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Gửi email báo giá kèm link công khai để khách xem & chấp nhận/từ chối
+    /// (không cần đăng nhập vào hệ thống CRM).
+    /// </summary>
+    Task GuiEmailBaoGiaAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maBaoGia, decimal tongTien, string quoteLink,
+        CancellationToken ct = default);
 }

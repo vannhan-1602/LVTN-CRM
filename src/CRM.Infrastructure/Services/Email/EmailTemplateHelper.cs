@@ -1,15 +1,12 @@
 namespace CRM.Infrastructure.Services.Email;
 
-/// <summary>
-/// Tạo HTML template cho các loại email.
-/// Style đơn giản, tương thích Gmail/Outlook, không phụ thuộc framework CSS.
-/// </summary>
+
 internal static class EmailTemplateHelper
 {
     private const string BASE_COLOR = "#2563EB";   // accent blue
     private const string SUCCESS_COLOR = "#16A34A";
     private const string WARNING_COLOR = "#D97706";
-    private const string DANGER_COLOR  = "#DC2626";
+    private const string DANGER_COLOR = "#DC2626";
 
     private static string WrapLayout(string tenKhachHang, string heading, string body, string footer = "") => $"""
         <!DOCTYPE html>
@@ -148,7 +145,7 @@ internal static class EmailTemplateHelper
         WrapLayout(tenKhachHang, $"🎉 Ưu đãi {tenNgayLe} dành riêng cho bạn", $"""
             <p style="color:#334155;line-height:1.6;">
               Nhân dịp <strong>{tenNgayLe}</strong>, chúng tôi gửi tặng bạn ưu đãi đặc biệt
-              tri ân sự đồng hành trong thời gian qua đã đồng hành cùng.
+              tri ân sự đồng hành trong thời gian qua.
             </p>
             {VoucherBlock(maVoucher, phanTramGiam, voucherLink, $"🎁 Ưu đãi {tenNgayLe}")}
             """);
@@ -172,6 +169,25 @@ internal static class EmailTemplateHelper
             </table>
             <p style="color:#64748B;font-size:13px;">
               Hãy thực hiện thêm giao dịch trong thời gian tới để duy trì hạng và quyền lợi hiện tại.
+            </p>
+            """);
+
+    // ── Báo giá gửi khách hàng (kèm link xem/chấp nhận/từ chối) ────────────
+    public static string BaoGia(
+        string tenKhachHang, string maBaoGia, decimal tongTien, string quoteLink) =>
+        WrapLayout(tenKhachHang, $"📄 Báo giá {maBaoGia} từ chúng tôi", $"""
+            <p style="color:#334155;line-height:1.6;">
+              Chúng tôi xin gửi đến quý khách báo giá <strong>{maBaoGia}</strong> với tổng giá trị
+              <strong style="color:{BASE_COLOR};">{tongTien:N0} VNĐ</strong>. Vui lòng xem chi tiết
+              và phản hồi (chấp nhận/từ chối) qua liên kết bên dưới.
+            </p>
+            <div style="text-align:center;margin:24px 0;">
+              <a href="{quoteLink}" style="display:inline-block;background:{BASE_COLOR};color:#FFFFFF;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;">
+                Xem báo giá & Phản hồi
+              </a>
+            </div>
+            <p style="color:#94A3B8;font-size:12px;">
+              Nếu nút trên không hoạt động, vui lòng liên hệ trực tiếp nhân viên phụ trách của quý khách.
             </p>
             """);
 
