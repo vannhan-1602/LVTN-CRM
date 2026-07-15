@@ -57,6 +57,9 @@ public interface ILoyaltyRepository
 
     Task<List<Voucher>> GetVouchersByKhachHangAsync(ulong khachHangId, CancellationToken ct = default);
 
+    /// <summary>Tra voucher theo mã (dùng khi nhân viên nhập mã voucher lúc lập báo giá).</summary>
+    Task<Voucher?> GetVoucherByMaVoucherAsync(string maVoucher, CancellationToken ct = default);
+
     /// <summary>Áp dụng voucher vào báo giá — đánh dấu IsUsed = true.</summary>
     Task ApDungVoucherAsync(ulong voucherId, ulong baoGiaId, uint nguoiApDungId, CancellationToken ct = default);
 

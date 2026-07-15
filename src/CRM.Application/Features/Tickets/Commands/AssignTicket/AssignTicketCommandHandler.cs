@@ -58,7 +58,7 @@ public class AssignTicketCommandHandler : IRequestHandler<AssignTicketCommand, T
             if (!isOwnedByMeOrUnassigned)
                 throw new ForbiddenException("Bạn không có quyền thao tác trên ticket của nhân viên khác.");
 
-            if (request.NhanVienXuLyId != _currentUser.UserId)
+            if (request.NhanVienXuLyId.HasValue && request.NhanVienXuLyId != _currentUser.UserId)
                 throw new ForbiddenException("Bạn chỉ có thể tự nhận xử lý ticket, không thể gán cho người khác.");
         }
 
@@ -84,7 +84,9 @@ public class AssignTicketCommandHandler : IRequestHandler<AssignTicketCommand, T
             TicketId = ticket.Id,
             NguoiPhanHoiId = request.NhanVienXuLyId,
             LoaiPhanHoi = TicketPhanHoiLoai.NoiBoXuLy,
-            NoiDung = $"Ticket được gán cho nhân viên xử lý (Id: {request.NhanVienXuLyId}).",
+            NoiDung = request.NhanVienXuLyId.HasValue
+                ? $"Ticket được gán cho nhân viên xử lý (Id: {request.NhanVienXuLyId})."
+                : "Ticket được bỏ gán nhân viên xử lý.",
             TrangThaiTruoc = trangThaiTruoc,
             TrangThaiSau = ticket.TrangThai,
             CreatedAt = DateTime.UtcNow

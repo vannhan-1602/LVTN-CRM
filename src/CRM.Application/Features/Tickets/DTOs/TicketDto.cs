@@ -71,7 +71,7 @@ namespace CRM.Application.Features.Tickets.DTOs
 
     public class AssignTicketRequestDto
     {
-        public uint NhanVienXuLyId { get; set; }
+        public uint? NhanVienXuLyId { get; set; }
         public DateTime? NgayHenXuLy { get; set; }
     }
 

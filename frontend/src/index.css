@@ -29,10 +29,12 @@
 
   /* ── Trạng thái ngữ nghĩa ── */
   --color-success-50: #eaf3de;
+  --color-success-500: #5a9c1f;
   --color-success-600: #3b6d11;
   --color-success-700: #27500a;
 
   --color-warning-50: #faeeda;
+  --color-warning-500: #b6720f;
   --color-warning-600: #854f0b;
   --color-warning-700: #633806;
 

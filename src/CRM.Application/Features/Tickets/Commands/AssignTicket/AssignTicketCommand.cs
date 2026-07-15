@@ -5,6 +5,6 @@ namespace CRM.Application.Features.Tickets.Commands.AssignTicket
 {
     public record AssignTicketCommand(
         ulong Id,
-        uint NhanVienXuLyId,
+        uint? NhanVienXuLyId,
         DateTime? NgayHenXuLy) : IRequest<TicketDto>;
 }
