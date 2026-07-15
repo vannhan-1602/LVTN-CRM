@@ -20,6 +20,9 @@ const LY_DO_VOUCHER_LABEL = {
   ThangHang: "Thăng hạng",
   SinhNhat: "Sinh nhật",
   NgayThanhLap: "Ngày thành lập",
+  NgayLe: "Ngày lễ",
+  CuoiNam: "Cuối năm",
+  ThuCong: "Thủ công",
 };
 
 const VOUCHER_STATUS = {
