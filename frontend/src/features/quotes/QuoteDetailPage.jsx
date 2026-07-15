@@ -36,57 +36,98 @@ export default function QuoteDetailPage() {
   const [sendNotice, setSendNotice] = useState(null); // { ok: bool, message: string } | null
 
   const load = async () => {
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
     try {
       const res = await quoteApi.getById(id);
       setQuote(res.data ?? null);
-    } catch (err) { setError(err?.message || "Không thể tải báo giá"); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err?.message || "Không thể tải báo giá");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, [id]);
   useEffect(() => {
-    Promise.all([customerApi.getAll({ pageSize: 100 }), productApi.getAll({ pageSize: 200, dangKinhDoanh: true })])
-      .then(([cRes, pRes]) => { setCustomers(cRes.data?.items ?? []); setProducts(pRes.data?.items ?? []); })
+    load();
+  }, [id]);
+  useEffect(() => {
+    Promise.all([
+      customerApi.getAll({ pageSize: 100 }),
+      productApi.getAll({ pageSize: 200, dangKinhDoanh: true }),
+    ])
+      .then(([cRes, pRes]) => {
+        setCustomers(cRes.data?.items ?? []);
+        setProducts(pRes.data?.items ?? []);
+      })
       .catch(() => {});
   }, []);
 
   const handleSend = async () => {
-    setBusy(true); setError(""); setSendNotice(null);
+    setBusy(true);
+    setError("");
+    setSendNotice(null);
     try {
       const res = await quoteApi.send(quote.id);
-      setSendNotice({ ok: res.data?.emailDaGui !== false, message: res.message });
+      setSendNotice({
+        ok: res.data?.emailDaGui !== false,
+        message: res.message,
+      });
       await load();
-    } catch (err) { setError(err?.message || "Thao tác thất bại"); }
-    finally { setBusy(false); }
+    } catch (err) {
+      setError(err?.message || "Thao tác thất bại");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const doAction = async (fn) => {
-    setBusy(true); setError("");
-    try { await fn(); await load(); }
-    catch (err) { setError(err?.message || "Thao tác thất bại"); }
-    finally { setBusy(false); }
+    setBusy(true);
+    setError("");
+    try {
+      await fn();
+      await load();
+    } catch (err) {
+      setError(err?.message || "Thao tác thất bại");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleDelete = async () => {
     if (!window.confirm("Xóa báo giá nháp này?")) return;
-    try { await quoteApi.delete(id); navigate("/quotes"); }
-    catch (err) { setError(err?.message || "Không thể xóa"); }
+    try {
+      await quoteApi.delete(id);
+      navigate("/quotes");
+    } catch (err) {
+      setError(err?.message || "Không thể xóa");
+    }
   };
 
   const handleConfirmReject = async () => {
-    await doAction(() => quoteApi.reject(quote.id, rejectReason.trim() || null));
+    await doAction(() =>
+      quoteApi.reject(quote.id, rejectReason.trim() || null),
+    );
     setShowRejectForm(false);
     setRejectReason("");
   };
 
-  if (loading) return <div className="text-sm text-ink-400 py-10 text-center">Đang tải...</div>;
+  if (loading)
+    return (
+      <div className="text-sm text-ink-400 py-10 text-center">Đang tải...</div>
+    );
 
   if (error && !quote) {
     return (
       <div className="space-y-4">
-        <PageHeader breadcrumb="CRM / Kinh doanh" title="Báo giá" onBack={() => navigate("/quotes")} />
-        <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-4">{error}</div>
+        <PageHeader
+          breadcrumb="CRM / Kinh doanh"
+          title="Báo giá"
+          onBack={() => navigate("/quotes")}
+        />
+        <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-4">
+          {error}
+        </div>
       </div>
     );
   }
@@ -97,24 +138,53 @@ export default function QuoteDetailPage() {
   return (
     <div className="space-y-5">
       {showEditModal && (
-        <QuoteFormModal quote={quote} customers={customers} products={products}
-          onClose={() => setShowEditModal(false)} onSaved={() => { setShowEditModal(false); load(); }} />
+        <QuoteFormModal
+          quote={quote}
+          customers={customers}
+          products={products}
+          onClose={() => setShowEditModal(false)}
+          onSaved={() => {
+            setShowEditModal(false);
+            load();
+          }}
+        />
       )}
 
       <PageHeader
         breadcrumb="Báo giá"
         title={quote.maBaoGia}
         onBack={() => navigate("/quotes")}
-        badge={<Badge label={QUOTE_STATUS[quote.trangThai] ?? quote.trangThai} colorClass={QUOTE_STATUS_COLOR[quote.trangThai]} />}
+        badge={
+          <Badge
+            label={QUOTE_STATUS[quote.trangThai] ?? quote.trangThai}
+            colorClass={QUOTE_STATUS_COLOR[quote.trangThai]}
+          />
+        }
         actions={
           <>
-            {canEdit && isDraft && <Button variant="secondary" icon={Pencil} onClick={() => setShowEditModal(true)}>Sửa</Button>}
-            {canDelete && isDraft && <Button variant="danger" icon={Trash2} onClick={handleDelete}>Xóa</Button>}
+            {canEdit && isDraft && (
+              <Button
+                variant="secondary"
+                icon={Pencil}
+                onClick={() => setShowEditModal(true)}
+              >
+                Sửa
+              </Button>
+            )}
+            {canDelete && isDraft && (
+              <Button variant="danger" icon={Trash2} onClick={handleDelete}>
+                Xóa
+              </Button>
+            )}
           </>
         }
       />
 
-      {error && <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-3">{error}</div>}
+      {error && (
+        <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-3">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
@@ -131,24 +201,48 @@ export default function QuoteDetailPage() {
               <tbody className="divide-y divide-ink-100">
                 {quote.chiTiet?.map((c) => (
                   <tr key={c.id}>
-                    <td className="py-2.5 text-ink-900">{c.tenSP} <span className="text-ink-400 text-xs">({c.maSP})</span></td>
-                    <td className="py-2.5 text-right text-ink-700">{c.soLuong}</td>
-                    <td className="py-2.5 text-right text-ink-700">{formatMoney(c.donGia)}</td>
-                    <td className="py-2.5 text-right font-medium text-ink-900">{formatMoney(c.thanhTien)}</td>
+                    <td className="py-2.5 text-ink-900">
+                      {c.tenSP}{" "}
+                      <span className="text-ink-400 text-xs">({c.maSP})</span>
+                    </td>
+                    <td className="py-2.5 text-right text-ink-700">
+                      {c.soLuong}
+                    </td>
+                    <td className="py-2.5 text-right text-ink-700">
+                      {formatMoney(c.donGia)}
+                    </td>
+                    <td className="py-2.5 text-right font-medium text-ink-900">
+                      {formatMoney(c.thanhTien)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <div className="text-right font-semibold text-lg border-t border-ink-100 pt-3 mt-1 text-ink-900">
-              Tổng: <span className="text-accent-600">{formatMoney(quote.tongTien)}</span>
+              Tổng:{" "}
+              <span className="text-accent-600">
+                {formatMoney(quote.tongTien)}
+              </span>
             </div>
+            {quote.maVoucherApDung && (
+              <div className="text-right text-xs text-success-600 mt-1">
+                Đã áp voucher{" "}
+                <span className="font-mono font-medium">
+                  {quote.maVoucherApDung}
+                </span>{" "}
+                (-{formatMoney(quote.soTienGiamVoucher)})
+              </div>
+            )}
           </Card>
 
           <Card title="Thông tin báo giá">
             <div className="grid grid-cols-2 gap-5">
               <Field label="Khách hàng" value={quote.tenKhachHang} />
               <Field label="Ngày tạo" value={formatDateTime(quote.createdAt)} />
-              <Field label="Cập nhật gần nhất" value={formatDateTime(quote.updatedAt)} />
+              <Field
+                label="Cập nhật gần nhất"
+                value={formatDateTime(quote.updatedAt)}
+              />
             </div>
           </Card>
         </div>
@@ -157,25 +251,43 @@ export default function QuoteDetailPage() {
           <Card title="Hành động">
             <div className="space-y-2">
               {sendNotice && (
-                <p className={`text-xs rounded-lg p-2.5 ${sendNotice.ok ? "text-success-700 bg-success-50" : "text-warning-700 bg-warning-50"}`}>
+                <p
+                  className={`text-xs rounded-lg p-2.5 ${sendNotice.ok ? "text-success-700 bg-success-50" : "text-warning-700 bg-warning-50"}`}
+                >
                   {sendNotice.message}
                 </p>
               )}
               {quote.trangThai === "Nhap" && canEdit && (
-                <Button size="sm" icon={Send} className="w-full" disabled={busy}
-                  onClick={handleSend}>
+                <Button
+                  size="sm"
+                  icon={Send}
+                  className="w-full"
+                  disabled={busy}
+                  onClick={handleSend}
+                >
                   Gửi báo giá
                 </Button>
               )}
               {quote.trangThai === "DaGui" && canEdit && (
                 <>
-                  <Button size="sm" icon={CheckCircle2} className="w-full" disabled={busy}
-                    onClick={() => doAction(() => quoteApi.accept(quote.id))}>
+                  <Button
+                    size="sm"
+                    icon={CheckCircle2}
+                    className="w-full"
+                    disabled={busy}
+                    onClick={() => doAction(() => quoteApi.accept(quote.id))}
+                  >
                     Khách chấp nhận
                   </Button>
                   {!showRejectForm ? (
-                    <Button size="sm" variant="danger" icon={XCircle} className="w-full" disabled={busy}
-                      onClick={() => setShowRejectForm(true)}>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      icon={XCircle}
+                      className="w-full"
+                      disabled={busy}
+                      onClick={() => setShowRejectForm(true)}
+                    >
                       Khách từ chối
                     </Button>
                   ) : (
@@ -192,12 +304,24 @@ export default function QuoteDetailPage() {
                         className="w-full border border-ink-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
                       />
                       <div className="flex gap-2">
-                        <Button size="sm" variant="danger" className="flex-1" disabled={busy}
-                          onClick={handleConfirmReject}>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          className="flex-1"
+                          disabled={busy}
+                          onClick={handleConfirmReject}
+                        >
                           Xác nhận từ chối
                         </Button>
-                        <Button size="sm" variant="secondary" disabled={busy}
-                          onClick={() => { setShowRejectForm(false); setRejectReason(""); }}>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={busy}
+                          onClick={() => {
+                            setShowRejectForm(false);
+                            setRejectReason("");
+                          }}
+                        >
                           Hủy
                         </Button>
                       </div>
@@ -212,9 +336,14 @@ export default function QuoteDetailPage() {
               )}
               {quote.trangThai === "TuChoi" && (
                 <div className="text-xs text-ink-500 bg-ink-50 rounded-lg p-2.5 space-y-1">
-                  <p className="text-ink-700 font-medium">Khách hàng đã từ chối báo giá này.</p>
+                  <p className="text-ink-700 font-medium">
+                    Khách hàng đã từ chối báo giá này.
+                  </p>
                   {quote.lyDoTuChoi && (
-                    <p><span className="text-ink-400">Lý do: </span>{quote.lyDoTuChoi}</p>
+                    <p>
+                      <span className="text-ink-400">Lý do: </span>
+                      {quote.lyDoTuChoi}
+                    </p>
                   )}
                 </div>
               )}
