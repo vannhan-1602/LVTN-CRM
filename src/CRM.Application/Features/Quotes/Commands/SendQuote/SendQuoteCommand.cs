@@ -81,7 +81,8 @@ public class SendQuoteCommandHandler : IRequestHandler<SendQuoteCommand, QuoteDt
         catch (Exception ex) { _logger.LogWarning(ex, "Audit log failed for quote {Id}", request.Id); }
 
         // Gửi email thật kèm link công khai — lỗi gửi mail không được làm rollback
-        // việc chuyển trạng thái báo giá (giống pattern của LoyaltyService).
+        // việc chuyển trạng thái báo giá (giống pattern của LoyaltyService), nhưng
+        // PHẢI phản ánh lại cho Controller/Frontend biết để không báo "Đã gửi" sai sự thật.
         try
         {
             var customer = await _customerRepository.GetByIdAsync(dto.KhachHangId, ct);
@@ -94,9 +95,13 @@ public class SendQuoteCommandHandler : IRequestHandler<SendQuoteCommand, QuoteDt
                 await _emailService.GuiEmailBaoGiaAsync(
                     dto.KhachHangId, dto.TenKhachHang ?? customer.TenKhachHang, customer.Email,
                     dto.MaBaoGia, dto.TongTien, quoteLink, ct);
+
+                dto.EmailDaGui = true;
             }
             else
             {
+                dto.EmailDaGui = false;
+                dto.EmailLyDoKhongGui = "Khách hàng chưa có địa chỉ email — vui lòng bổ sung email cho khách hàng rồi gửi lại.";
                 _logger.LogWarning(
                     "Báo giá {Id}: khách hàng {KhId} chưa có email, bỏ qua gửi mail.",
                     request.Id, dto.KhachHangId);
@@ -104,6 +109,8 @@ public class SendQuoteCommandHandler : IRequestHandler<SendQuoteCommand, QuoteDt
         }
         catch (Exception ex)
         {
+            dto.EmailDaGui = false;
+            dto.EmailLyDoKhongGui = "Có lỗi khi gửi email (kiểm tra cấu hình SMTP hoặc thử gửi lại sau).";
             _logger.LogError(ex, "Gửi email báo giá {Id} thất bại", request.Id);
         }
 

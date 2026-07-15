@@ -77,7 +77,13 @@ public class QuoteController : ControllerBase
     public async Task<IActionResult> Send(ulong id, CancellationToken ct)
     {
         var result = await _mediator.Send(new SendQuoteCommand(id), ct);
-        return Ok(ApiResponse<QuoteDto>.Ok(result, "Đã gửi báo giá cho khách hàng."));
+        var message = result.EmailDaGui switch
+        {
+            true => "Đã gửi báo giá và email cho khách hàng.",
+            false => $"Đã chuyển trạng thái báo giá sang Đã gửi, nhưng KHÔNG gửi được email: {result.EmailLyDoKhongGui}",
+            null => "Đã gửi báo giá cho khách hàng.",
+        };
+        return Ok(ApiResponse<QuoteDto>.Ok(result, message));
     }
 
     [HttpPost("{id:long}/accept")]

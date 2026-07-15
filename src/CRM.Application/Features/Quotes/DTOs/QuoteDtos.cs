@@ -13,6 +13,12 @@ public class QuoteDto
     public string? LyDoTuChoi { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+
+    // Không lưu DB — chỉ set tạm sau khi gọi SendQuoteCommand, để Controller/Frontend
+    // biết email THẬT SỰ có gửi được hay không (tránh báo "Đã gửi" chung chung dù
+    // email bị bỏ qua do khách chưa có địa chỉ email hoặc SMTP lỗi).
+    public bool? EmailDaGui { get; set; }
+    public string? EmailLyDoKhongGui { get; set; }
 }
 
 public class QuoteDetailItemDto

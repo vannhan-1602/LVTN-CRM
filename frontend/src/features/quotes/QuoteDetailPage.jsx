@@ -33,6 +33,7 @@ export default function QuoteDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [sendNotice, setSendNotice] = useState(null); // { ok: bool, message: string } | null
 
   const load = async () => {
     setLoading(true); setError("");
@@ -49,6 +50,16 @@ export default function QuoteDetailPage() {
       .then(([cRes, pRes]) => { setCustomers(cRes.data?.items ?? []); setProducts(pRes.data?.items ?? []); })
       .catch(() => {});
   }, []);
+
+  const handleSend = async () => {
+    setBusy(true); setError(""); setSendNotice(null);
+    try {
+      const res = await quoteApi.send(quote.id);
+      setSendNotice({ ok: res.data?.emailDaGui !== false, message: res.message });
+      await load();
+    } catch (err) { setError(err?.message || "Thao tác thất bại"); }
+    finally { setBusy(false); }
+  };
 
   const doAction = async (fn) => {
     setBusy(true); setError("");
@@ -145,9 +156,14 @@ export default function QuoteDetailPage() {
         <div className="space-y-4">
           <Card title="Hành động">
             <div className="space-y-2">
+              {sendNotice && (
+                <p className={`text-xs rounded-lg p-2.5 ${sendNotice.ok ? "text-success-700 bg-success-50" : "text-warning-700 bg-warning-50"}`}>
+                  {sendNotice.message}
+                </p>
+              )}
               {quote.trangThai === "Nhap" && canEdit && (
                 <Button size="sm" icon={Send} className="w-full" disabled={busy}
-                  onClick={() => doAction(() => quoteApi.send(quote.id))}>
+                  onClick={handleSend}>
                   Gửi báo giá
                 </Button>
               )}

@@ -8,47 +8,46 @@ using MimeKit;
 
 namespace CRM.Infrastructure.Services.Email;
 
-/// <summary>
-/// Gửi email thật qua Gmail SMTP + MailKit.
-/// Sau mỗi lần gửi (thành công hay thất bại) đều ghi log vào KH_EmailLog.
-/// </summary>
+// Gửi email thật qua Gmail SMTP + MailKit.
+// Sau mỗi lần gửi (thành công hay thất bại) đều ghi log vào KH_EmailLog.
+
 public class EmailService : IEmailService
 {
     private readonly IConfiguration _config;
     private readonly ILoyaltyRepository _loyaltyRepo;
     private readonly ILogger<EmailService> _logger;
 
-    private string SmtpHost     => _config["Email:SmtpHost"]     ?? "smtp.gmail.com";
-    private int    SmtpPort     => int.Parse(_config["Email:SmtpPort"] ?? "587");
-    private string SmtpUser     => _config["Email:SmtpUser"]     ?? "";
+    private string SmtpHost => _config["Email:SmtpHost"] ?? "smtp.gmail.com";
+    private int SmtpPort => int.Parse(_config["Email:SmtpPort"] ?? "587");
+    private string SmtpUser => _config["Email:SmtpUser"] ?? "";
     private string SmtpPassword => _config["Email:SmtpPassword"] ?? "";
-    private string FromName     => _config["Email:FromName"]     ?? "CRM System";
-    private string BaseUrl      => _config["Email:BaseUrl"]      ?? "https://localhost:7001";
+    private string FromName => _config["Email:FromName"] ?? "CRM System";
+    private string BaseUrl => _config["Email:BaseUrl"] ?? "https://localhost:7001";
 
     public EmailService(
         IConfiguration config,
         ILoyaltyRepository loyaltyRepo,
         ILogger<EmailService> logger)
     {
-        _config      = config;
+        _config = config;
         _loyaltyRepo = loyaltyRepo;
-        _logger      = logger;
+        _logger = logger;
     }
 
-    // ── XÁC NHẬN THANH TOÁN + ĐIỂM ─────────────────────────────────────────
+    // XÁC NHẬN THANH TOÁN + ĐIỂM
     public async Task GuiEmailXacNhanThanhToanAsync(
         ulong khachHangId, string tenKhachHang, string email,
         string maHoaDon, decimal soTienThu, int diemVuaCong, int tongDiem12Thang,
         CancellationToken ct = default)
     {
         var tieuDe = $"[CRM] Xác nhận thanh toán hóa đơn {maHoaDon}";
-        var html   = EmailTemplateHelper.XacNhanThanhToan(
+        var html = EmailTemplateHelper.XacNhanThanhToan(
             tenKhachHang, maHoaDon, soTienThu, diemVuaCong, tongDiem12Thang);
 
         await GuiAsync(khachHangId, email, tieuDe, html, "XacNhanThanhToan", null, ct);
     }
 
-    // ── THĂNG HẠNG + VOUCHER ────────────────────────────────────────────────
+    // THĂNG HẠNG + VOUCHER
     public async Task GuiEmailThangHangAsync(
         ulong khachHangId, string tenKhachHang, string email,
         string tenHangCu, string tenHangMoi, string moTaQuyenLoi,
@@ -56,14 +55,14 @@ public class EmailService : IEmailService
         string? voucherLink, CancellationToken ct = default)
     {
         var tieuDe = $"[CRM] 🎉 Chúc mừng! Bạn đã lên hạng {tenHangMoi}";
-        var html   = EmailTemplateHelper.ThangHang(
+        var html = EmailTemplateHelper.ThangHang(
             tenKhachHang, tenHangCu, tenHangMoi, moTaQuyenLoi,
             maVoucher, phanTramGiam, voucherLink);
 
         await GuiAsync(khachHangId, email, tieuDe, html, "ThangHang", voucherId, ct);
     }
 
-    // ── XUỐNG HẠNG ──────────────────────────────────────────────────────────
+    // XUỐNG HẠNG
     public async Task GuiEmailXuongHangAsync(
         ulong khachHangId, string tenKhachHang, string email,
         string tenHangCu, string tenHangMoi,
@@ -71,13 +70,13 @@ public class EmailService : IEmailService
         CancellationToken ct = default)
     {
         var tieuDe = $"[CRM] Thông báo thay đổi hạng khách hàng";
-        var html   = EmailTemplateHelper.XuongHang(
+        var html = EmailTemplateHelper.XuongHang(
             tenKhachHang, tenHangCu, tenHangMoi, diemHienTai, diemCanDat);
 
         await GuiAsync(khachHangId, email, tieuDe, html, "XuongHang", null, ct);
     }
 
-    // ── SINH NHẬT ───────────────────────────────────────────────────────────
+    //  SINH NHẬT 
     public async Task GuiEmailSinhNhatAsync(
         ulong khachHangId, string tenKhachHang, string email,
         ulong? voucherId, string? maVoucher, decimal? phanTramGiam,
@@ -91,12 +90,12 @@ public class EmailService : IEmailService
         }
 
         var tieuDe = "[CRM] 🎂 Chúc mừng sinh nhật!";
-        var html   = EmailTemplateHelper.SinhNhat(tenKhachHang, maVoucher, phanTramGiam, voucherLink);
+        var html = EmailTemplateHelper.SinhNhat(tenKhachHang, maVoucher, phanTramGiam, voucherLink);
 
         await GuiAsync(khachHangId, email, tieuDe, html, "SinhNhat", voucherId, ct);
     }
 
-    // ── NGÀY THÀNH LẬP ──────────────────────────────────────────────────────
+    // NGÀY THÀNH LẬP
     public async Task GuiEmailNgayThanhLapAsync(
         ulong khachHangId, string tenKhachHang, string email,
         ulong? voucherId, string? maVoucher, decimal? phanTramGiam,
@@ -109,12 +108,12 @@ public class EmailService : IEmailService
         }
 
         var tieuDe = "[CRM] 🏢 Chúc mừng kỷ niệm ngày thành lập!";
-        var html   = EmailTemplateHelper.NgayThanhLap(tenKhachHang, maVoucher, phanTramGiam, voucherLink);
+        var html = EmailTemplateHelper.NgayThanhLap(tenKhachHang, maVoucher, phanTramGiam, voucherLink);
 
         await GuiAsync(khachHangId, email, tieuDe, html, "NgayThanhLap", voucherId, ct);
     }
 
-    // ── NGÀY LỄ ─────────────────────────────────────────────────────────────
+    // NGÀY LỄ 
     public async Task GuiEmailNgayLeAsync(
         ulong khachHangId, string tenKhachHang, string email,
         string tenNgayLe,
@@ -129,40 +128,38 @@ public class EmailService : IEmailService
         }
 
         var tieuDe = $"[CRM] 🎉 Ưu đãi {tenNgayLe} dành riêng cho bạn";
-        var html   = EmailTemplateHelper.NgayLe(tenKhachHang, tenNgayLe, maVoucher, phanTramGiam, voucherLink);
+        var html = EmailTemplateHelper.NgayLe(tenKhachHang, tenNgayLe, maVoucher, phanTramGiam, voucherLink);
 
         await GuiAsync(khachHangId, email, tieuDe, html, loaiEmail, voucherId, ct);
     }
 
-    // ── CẢNH BÁO SẮP XUỐNG HẠNG ────────────────────────────────────────────
+    // CẢNH BÁO SẮP XUỐNG HẠNG 
     public async Task GuiEmailCanhBaoXuongHangAsync(
         ulong khachHangId, string tenKhachHang, string email,
         string tenHangHienTai, int diemHienTai, int diemCanGiu,
         CancellationToken ct = default)
     {
         var tieuDe = $"[CRM] ⚠️ Hạng {tenHangHienTai} của bạn cần được duy trì";
-        var html   = EmailTemplateHelper.CanhBaoXuongHang(
+        var html = EmailTemplateHelper.CanhBaoXuongHang(
             tenKhachHang, tenHangHienTai, diemHienTai, diemCanGiu);
 
         await GuiAsync(khachHangId, email, tieuDe, html, "CanhBaoXuongHang", null, ct);
     }
 
-    // ── BÁO GIÁ (kèm link công khai xem/chấp nhận/từ chối) ──────────────────
-    public async Task GuiEmailBaoGiaAsync(
+    // BÁO GIÁ (kèm link công khai xem/chấp nhận/từ chối) 
+    public async Task<(bool ThanhCong, string? LoiChiTiet)> GuiEmailBaoGiaAsync(
         ulong khachHangId, string tenKhachHang, string email,
         string maBaoGia, decimal tongTien, string quoteLink,
         CancellationToken ct = default)
     {
         var tieuDe = $"[CRM] 📄 Báo giá {maBaoGia} từ chúng tôi";
-        var html   = EmailTemplateHelper.BaoGia(tenKhachHang, maBaoGia, tongTien, quoteLink);
+        var html = EmailTemplateHelper.BaoGia(tenKhachHang, maBaoGia, tongTien, quoteLink);
 
-        await GuiAsync(khachHangId, email, tieuDe, html, "BaoGia", null, ct);
+        return await GuiAsync(khachHangId, email, tieuDe, html, "BaoGia", null, ct);
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
     // CORE — Gửi email thật qua MailKit + ghi log
-    // ══════════════════════════════════════════════════════════════════════════
-    private async Task GuiAsync(
+    private async Task<(bool ThanhCong, string? LoiChiTiet)> GuiAsync(
         ulong khachHangId, string emailDen, string tieuDe, string htmlBody,
         string loaiEmail, ulong? voucherId,
         CancellationToken ct)
@@ -171,16 +168,18 @@ public class EmailService : IEmailService
         message.From.Add(new MailboxAddress(FromName, SmtpUser));
         message.To.Add(MailboxAddress.Parse(emailDen));
         message.Subject = tieuDe;
-        message.Body    = new TextPart("html") { Text = htmlBody };
+        message.Body = new TextPart("html") { Text = htmlBody };
 
-        bool thanhCong  = false;
+        bool thanhCong = false;
         string? loiChiTiet = null;
 
         try
         {
             using var client = new SmtpClient();
+            var smtpPasswordClean = SmtpPassword.Replace(" ", "");
+
             await client.ConnectAsync(SmtpHost, SmtpPort, SecureSocketOptions.StartTls, ct);
-            await client.AuthenticateAsync(SmtpUser, SmtpPassword, ct);
+            await client.AuthenticateAsync(SmtpUser, smtpPasswordClean, ct);
             await client.SendAsync(message, ct);
             await client.DisconnectAsync(true, ct);
 
@@ -206,5 +205,7 @@ public class EmailService : IEmailService
                 _logger.LogError(logEx, "Ghi EmailLog thất bại");
             }
         }
+
+        return (thanhCong, loiChiTiet);
     }
 }
