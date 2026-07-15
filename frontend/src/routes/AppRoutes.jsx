@@ -26,6 +26,7 @@ import PhieuThuChiListPage from "../features/phieuthuchi/PhieuThuChiListPage";
 import SettingsPage from "../features/settings/SettingsPage";
 import AuditLogPage from "../features/audit/AuditLogPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
+import PublicQuotePage from "../features/quotes/PublicQuotePage";
 
 function UnauthorizedPage() {
   return (
@@ -46,6 +47,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <Route path="/public/quotes/:token" element={<PublicQuotePage />} />
 
       <Route element={<MainLayout />}>
         <Route element={<ProtectedRoute />}>
