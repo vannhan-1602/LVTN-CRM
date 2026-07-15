@@ -301,6 +301,16 @@ public class LoyaltyRepository : ILoyaltyRepository
         return rows.Select(MapVoucherToDomain).ToList();
     }
 
+    public async Task<Voucher?> GetVoucherByMaVoucherAsync(
+        string maVoucher, CancellationToken ct = default)
+    {
+        var entity = await _context.KhVouchers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.MaVoucher == maVoucher, ct);
+
+        return entity is null ? null : MapVoucherToDomain(entity);
+    }
+
     public async Task ApDungVoucherAsync(
         ulong voucherId, ulong baoGiaId, uint nguoiApDungId,
         CancellationToken ct = default)

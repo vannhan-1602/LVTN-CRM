@@ -36,6 +36,11 @@ public class QuoteDetailItemDto
 public class QuoteDetailDto : QuoteDto
 {
     public List<QuoteDetailItemDto> ChiTiet { get; set; } = [];
+
+    // Thông tin voucher đã áp dụng vào báo giá này (nếu có) — chỉ để hiển thị,
+    // không phải input. TongTien ở trên đã là số tiền SAU khi trừ voucher.
+    public string? MaVoucherApDung { get; set; }
+    public decimal? SoTienGiamVoucher { get; set; }
 }
 
 public class QuoteItemRequestDto
@@ -49,6 +54,7 @@ public class CreateQuoteRequestDto
 {
     public ulong KhachHangId { get; set; }
     public List<QuoteItemRequestDto> ChiTiet { get; set; } = [];
+    public string? MaVoucher { get; set; }
 }
 
 public class UpdateQuoteRequestDto

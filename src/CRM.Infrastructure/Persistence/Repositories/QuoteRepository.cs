@@ -35,13 +35,29 @@ public class QuoteRepository : IQuoteRepository
 
         var chiTiet = await GetChiTietAsync(id, ct);
 
+        var voucher = await _context.KhVouchers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.AppliedTo_BaoGia_Id == id, ct);
+
         var dto = MapToDto(result.BaoGia, result.TenKhachHang, result.TenNhanVien);
+        var tongTienGoc = chiTiet.Sum(x => x.SoLuong * x.DonGia);
+
         return new QuoteDetailDto
         {
-            Id = dto.Id, MaBaoGia = dto.MaBaoGia, KhachHangId = dto.KhachHangId,
-            TenKhachHang = dto.TenKhachHang, TongTien = dto.TongTien, TrangThai = dto.TrangThai,
-            NhanVienId = dto.NhanVienId, TenNhanVien = dto.TenNhanVien, LyDoTuChoi = dto.LyDoTuChoi,
-            CreatedAt = dto.CreatedAt, UpdatedAt = dto.UpdatedAt, ChiTiet = chiTiet
+            Id = dto.Id,
+            MaBaoGia = dto.MaBaoGia,
+            KhachHangId = dto.KhachHangId,
+            TenKhachHang = dto.TenKhachHang,
+            TongTien = dto.TongTien,
+            TrangThai = dto.TrangThai,
+            NhanVienId = dto.NhanVienId,
+            TenNhanVien = dto.TenNhanVien,
+            LyDoTuChoi = dto.LyDoTuChoi,
+            CreatedAt = dto.CreatedAt,
+            UpdatedAt = dto.UpdatedAt,
+            ChiTiet = chiTiet,
+            MaVoucherApDung = voucher?.MaVoucher,
+            SoTienGiamVoucher = voucher is null ? null : tongTienGoc - dto.TongTien
         };
     }
 
@@ -182,24 +198,41 @@ public class QuoteRepository : IQuoteRepository
 
     private static BaoGia MapToDomain(HdBaoGiaEntity e) => new()
     {
-        Id = e.Id, MaBaoGia = e.MaBaoGia, KhachHangId = e.KhachHang_Id,
-        TongTien = e.TongTien, TrangThai = e.TrangThai, NhanVienId = e.NhanVien_Id,
+        Id = e.Id,
+        MaBaoGia = e.MaBaoGia,
+        KhachHangId = e.KhachHang_Id,
+        TongTien = e.TongTien,
+        TrangThai = e.TrangThai,
+        NhanVienId = e.NhanVien_Id,
         LyDoTuChoi = e.LyDoTuChoi,
-        CreatedAt = e.CreatedAt, UpdatedAt = e.UpdatedAt
+        CreatedAt = e.CreatedAt,
+        UpdatedAt = e.UpdatedAt
     };
 
     private static HdBaoGiaEntity MapToEntity(BaoGia d) => new()
     {
-        MaBaoGia = d.MaBaoGia, KhachHang_Id = d.KhachHangId, TongTien = d.TongTien,
-        TrangThai = d.TrangThai, NhanVien_Id = d.NhanVienId, LyDoTuChoi = d.LyDoTuChoi,
-        CreatedAt = d.CreatedAt, UpdatedAt = d.UpdatedAt
+        MaBaoGia = d.MaBaoGia,
+        KhachHang_Id = d.KhachHangId,
+        TongTien = d.TongTien,
+        TrangThai = d.TrangThai,
+        NhanVien_Id = d.NhanVienId,
+        LyDoTuChoi = d.LyDoTuChoi,
+        CreatedAt = d.CreatedAt,
+        UpdatedAt = d.UpdatedAt
     };
 
     private static QuoteDto MapToDto(HdBaoGiaEntity e, string? tenKhachHang, string? tenNhanVien) => new()
     {
-        Id = e.Id, MaBaoGia = e.MaBaoGia, KhachHangId = e.KhachHang_Id, TenKhachHang = tenKhachHang,
-        TongTien = e.TongTien, TrangThai = e.TrangThai, NhanVienId = e.NhanVien_Id, TenNhanVien = tenNhanVien,
+        Id = e.Id,
+        MaBaoGia = e.MaBaoGia,
+        KhachHangId = e.KhachHang_Id,
+        TenKhachHang = tenKhachHang,
+        TongTien = e.TongTien,
+        TrangThai = e.TrangThai,
+        NhanVienId = e.NhanVien_Id,
+        TenNhanVien = tenNhanVien,
         LyDoTuChoi = e.LyDoTuChoi,
-        CreatedAt = e.CreatedAt, UpdatedAt = e.UpdatedAt
+        CreatedAt = e.CreatedAt,
+        UpdatedAt = e.UpdatedAt
     };
 }

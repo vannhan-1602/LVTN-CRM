@@ -5,6 +5,7 @@ using CRM.Application.Features.Quotes.Mappings;
 using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Customers;
+using CRM.Application.Interfaces.Loyalty;
 using CRM.Application.Interfaces.Products;
 using CRM.Application.Interfaces.Quotes;
 using CRM.Domain.Entities.Sales;
@@ -18,7 +19,8 @@ namespace CRM.Application.Features.Quotes.Commands.CreateQuote;
 
 public record CreateQuoteCommand(
     ulong KhachHangId,
-    List<QuoteItemRequestDto> ChiTiet
+    List<QuoteItemRequestDto> ChiTiet,
+    string? MaVoucher = null
 ) : IRequest<QuoteDetailDto>;
 
 public class CreateQuoteCommandValidator : AbstractValidator<CreateQuoteCommand>
@@ -38,6 +40,10 @@ public class CreateQuoteCommandValidator : AbstractValidator<CreateQuoteCommand>
                 .When(i => i.DonGia.HasValue)
                 .WithMessage("Đơn giá không được âm.");
         });
+
+        RuleFor(x => x.MaVoucher).MaximumLength(30)
+            .When(x => x.MaVoucher is not null)
+            .WithMessage("Mã voucher không hợp lệ.");
     }
 }
 
@@ -47,6 +53,7 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
     private readonly IQuoteRepository _quoteRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IProductRepository _productRepository;
+    private readonly ILoyaltyRepository _loyaltyRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLogPublisher;
     private readonly ICurrentUserService _currentUser;
@@ -54,13 +61,14 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
 
     public CreateQuoteCommandHandler(
         IQuoteRepository quoteRepository, ICustomerRepository customerRepository,
-        IProductRepository productRepository, IUnitOfWork unitOfWork,
-        IAuditLogPublisher auditLogPublisher, ICurrentUserService currentUser,
-        ILogger<CreateQuoteCommandHandler> logger)
+        IProductRepository productRepository, ILoyaltyRepository loyaltyRepository,
+        IUnitOfWork unitOfWork, IAuditLogPublisher auditLogPublisher,
+        ICurrentUserService currentUser, ILogger<CreateQuoteCommandHandler> logger)
     {
         _quoteRepository = quoteRepository;
         _customerRepository = customerRepository;
         _productRepository = productRepository;
+        _loyaltyRepository = loyaltyRepository;
         _unitOfWork = unitOfWork;
         _auditLogPublisher = auditLogPublisher;
         _currentUser = currentUser;
@@ -92,13 +100,45 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
             tongTien += item.SoLuong * donGia;
         }
 
+        // ── Áp dụng voucher (nếu có) ─────────────────────────────────────
+        // Kiểm tra ngay trước khi tạo báo giá để không tạo ra báo giá "treo"
+        // nếu mã voucher không hợp lệ — nhưng chỉ đánh dấu IsUsed trong DB
+        // SAU KHI báo giá đã tạo thành công (cần BaoGiaId để ghi AppliedTo_BaoGia_Id).
+        CRM.Domain.Entities.Loyalty.Voucher? voucher = null;
+        decimal soTienGiam = 0m;
+
+        if (!string.IsNullOrWhiteSpace(request.MaVoucher))
+        {
+            voucher = await _loyaltyRepository.GetVoucherByMaVoucherAsync(request.MaVoucher.Trim(), ct)
+                ?? throw new BusinessRuleException("Không tìm thấy voucher với mã đã nhập.");
+
+            if (voucher.KhachHangId != request.KhachHangId)
+                throw new BusinessRuleException("Voucher này không thuộc về khách hàng đang lập báo giá.");
+
+            if (voucher.IsUsed)
+                throw new BusinessRuleException($"Voucher {voucher.MaVoucher} đã được sử dụng trước đó.");
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            if (today < voucher.NgayBatDau || today > voucher.NgayHetHan)
+                throw new BusinessRuleException($"Voucher {voucher.MaVoucher} không còn hiệu lực.");
+
+            var giamTho = voucher.LoaiGiamGia == "PhanTram"
+                ? tongTien * voucher.GiaTriGiam / 100m
+                : voucher.GiaTriGiam;
+
+            if (voucher.LoaiGiamGia == "PhanTram" && voucher.GiaTriGiamToiDa.HasValue)
+                giamTho = Math.Min(giamTho, voucher.GiaTriGiamToiDa.Value);
+
+            soTienGiam = Math.Min(giamTho, tongTien);
+        }
+
         var maBaoGia = await _quoteRepository.GenerateMaBaoGiaAsync(ct);
 
         var quote = new BaoGia
         {
             MaBaoGia = maBaoGia,
             KhachHangId = request.KhachHangId,
-            TongTien = tongTien,
+            TongTien = tongTien - soTienGiam,
             TrangThai = QuoteStatus.Nhap,
             NhanVienId = _currentUser.UserId,
             CreatedAt = DateTime.UtcNow,
@@ -107,6 +147,22 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
 
         var created = await _quoteRepository.AddAsync(quote, chiTietInputs, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        if (voucher is not null)
+        {
+            try
+            {
+                await _loyaltyRepository.ApDungVoucherAsync(
+                    voucher.Id, created.Id, _currentUser.UserId ?? 0, ct);
+            }
+            catch (Exception ex)
+            {
+                // Không rollback báo giá vì lỗi đánh dấu voucher — chỉ log để xử lý thủ công,
+                // giống nguyên tắc "lỗi phụ không kéo sập giao dịch chính" đã dùng ở Loyalty.
+                _logger.LogError(ex, "[Voucher] Lỗi đánh dấu áp dụng voucher {Ma} cho báo giá {Id}",
+                    voucher.MaVoucher, created.Id);
+            }
+        }
 
         var dto = await _quoteRepository.GetByIdEnrichedAsync(created.Id, ct)
             ?? throw new BusinessRuleException("Tạo báo giá thất bại.");

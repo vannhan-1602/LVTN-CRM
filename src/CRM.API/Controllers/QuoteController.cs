@@ -51,7 +51,7 @@ public class QuoteController : ControllerBase
     [Authorize(Policy = Policies.SalesTeam)]
     public async Task<IActionResult> Create([FromBody] CreateQuoteRequestDto request, CancellationToken ct)
     {
-        var result = await _mediator.Send(new CreateQuoteCommand(request.KhachHangId, request.ChiTiet), ct);
+        var result = await _mediator.Send(new CreateQuoteCommand(request.KhachHangId, request.ChiTiet, request.MaVoucher), ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id },
             ApiResponse<QuoteDetailDto>.Ok(result, "Tạo báo giá thành công."));
     }
