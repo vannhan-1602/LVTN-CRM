@@ -17,7 +17,8 @@ public interface IInvoiceRepository
 
     /// Cộng dồn SoTienDaThu và tự cập nhật TrangThaiThanhToan tương ứng,
     /// dùng khi có phiếu thu mới được tạo cho hóa đơn này.
-    Task UpdateSoTienDaThuAsync(ulong hoaDonId, decimal soTienCong, CancellationToken ct = default);
+    Task<(decimal SoTienDaThu, decimal TongTien)> UpdateSoTienDaThuAsync(
+        ulong hoaDonId, decimal soTienCong, CancellationToken ct = default);
 
     Task<string> GenerateMaHoaDonAsync(CancellationToken ct = default);
 

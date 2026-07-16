@@ -50,15 +50,27 @@ public class LoyaltyRepository : ILoyaltyRepository
     public async Task<(int TongDiem, int SoLanThu)> GetTichLuy12ThangAsync(
         ulong khachHangId, CancellationToken ct = default)
     {
-        var from = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-12));
-        var rows = await _context.KhDiemThuongs
+        var fromDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-12));
+        var fromDateTime = DateTime.UtcNow.AddMonths(-12);
+
+        // TongDiem: vẫn tính từ bảng điểm thưởng (đúng bản chất — điểm chỉ sinh khi phiếu thu ≥ 100.000đ).
+        var tongDiem = await _context.KhDiemThuongs
             .AsNoTracking()
             .Where(x => x.KhachHang_Id == khachHangId
                      && x.LoaiGiaoDich == "MuaHang"
-                     && x.NgayPhatSinh >= from)
-            .ToListAsync(ct);
+                     && x.NgayPhatSinh >= fromDate)
+            .SumAsync(x => (int?)x.SoDiem, ct) ?? 0;
 
-        return (rows.Sum(x => x.SoDiem), rows.Count);
+        // SoLanThu: đếm ĐÚNG số phiếu thu thật sự trong bảng KT_PhieuThuChi, không dựa vào
+        // bảng điểm thưởng (vốn bỏ sót phiếu thu < 100.000đ vì phiếu đó không sinh điểm).
+        var soLanThu = await _context.KtPhieuThuChis
+            .AsNoTracking()
+            .Where(x => x.KhachHang_Id == khachHangId
+                     && x.LoaiPhieu == "Thu"
+                     && x.NgayTao != null && x.NgayTao >= fromDateTime)
+            .CountAsync(ct);
+
+        return (tongDiem, soLanThu);
     }
 
     public async Task<List<DiemThuong>> GetLichSuDiemAsync(
@@ -311,18 +323,20 @@ public class LoyaltyRepository : ILoyaltyRepository
         return entity is null ? null : MapVoucherToDomain(entity);
     }
 
-    public async Task ApDungVoucherAsync(
+    public async Task<bool> ApDungVoucherAsync(
         ulong voucherId, ulong baoGiaId, uint nguoiApDungId,
         CancellationToken ct = default)
     {
-        await _context.KhVouchers
-            .Where(x => x.Id == voucherId)
+        var rowsAffected = await _context.KhVouchers
+            .Where(x => x.Id == voucherId && !x.IsUsed)   // điều kiện atomic — chặn double-apply
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.IsUsed, true)
                 .SetProperty(x => x.AppliedTo_BaoGia_Id, baoGiaId)
                 .SetProperty(x => x.NgaySuDung, DateTime.UtcNow)
                 .SetProperty(x => x.NguoiApDung_Id, nguoiApDungId)
                 .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+
+        return rowsAffected > 0;
     }
 
     // ══════════════════════════════════════════════════════════════════════════

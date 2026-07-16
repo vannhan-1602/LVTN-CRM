@@ -61,7 +61,12 @@ public interface ILoyaltyRepository
     Task<Voucher?> GetVoucherByMaVoucherAsync(string maVoucher, CancellationToken ct = default);
 
     /// <summary>Áp dụng voucher vào báo giá — đánh dấu IsUsed = true.</summary>
-    Task ApDungVoucherAsync(ulong voucherId, ulong baoGiaId, uint nguoiApDungId, CancellationToken ct = default);
+    /// <summary>
+    /// Áp dụng voucher vào báo giá — đánh dấu IsUsed = true.
+    /// Atomic: điều kiện IsUsed = false nằm ngay trong câu UPDATE, nên nếu 2 request áp
+    /// cùng 1 voucher đồng thời thì chỉ 1 cái thắng — trả về false cho request thua.
+    /// </summary>
+    Task<bool> ApDungVoucherAsync(ulong voucherId, ulong baoGiaId, uint nguoiApDungId, CancellationToken ct = default);
 
     // ── Email Log ─────────────────────────────────────────────────────────────
 

@@ -148,20 +148,18 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
         var created = await _quoteRepository.AddAsync(quote, chiTietInputs, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
+        // Toàn bộ Handle() này chạy trong 1 transaction DB (TransactionBehavior tự bọc mọi
+        // Command) — nên nếu ApDungVoucherAsync trả về false (voucher vừa bị người khác dùng
+        // mất trong lúc chờ), ném lỗi ở đây sẽ rollback LUÔN cả báo giá vừa insert, tránh tình
+        // trạng báo giá đã giảm giá nhưng voucher lại không được đánh dấu đã dùng (double-spend).
         if (voucher is not null)
         {
-            try
-            {
-                await _loyaltyRepository.ApDungVoucherAsync(
-                    voucher.Id, created.Id, _currentUser.UserId ?? 0, ct);
-            }
-            catch (Exception ex)
-            {
-                // Không rollback báo giá vì lỗi đánh dấu voucher — chỉ log để xử lý thủ công,
-                // giống nguyên tắc "lỗi phụ không kéo sập giao dịch chính" đã dùng ở Loyalty.
-                _logger.LogError(ex, "[Voucher] Lỗi đánh dấu áp dụng voucher {Ma} cho báo giá {Id}",
-                    voucher.MaVoucher, created.Id);
-            }
+            var apDungThanhCong = await _loyaltyRepository.ApDungVoucherAsync(
+                voucher.Id, created.Id, _currentUser.UserId ?? 0, ct);
+
+            if (!apDungThanhCong)
+                throw new BusinessRuleException(
+                    $"Voucher {voucher.MaVoucher} vừa được sử dụng ở nơi khác, vui lòng chọn voucher khác.");
         }
 
         var dto = await _quoteRepository.GetByIdEnrichedAsync(created.Id, ct)

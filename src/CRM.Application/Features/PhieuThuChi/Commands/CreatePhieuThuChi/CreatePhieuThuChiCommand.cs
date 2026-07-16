@@ -150,7 +150,12 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
         // được tạo đồng thời cho cùng một hóa đơn.
         if (request.LoaiPhieu == PaymentVoucherType.Thu && request.HoaDonId.HasValue)
         {
-            await _invoiceRepo.UpdateSoTienDaThuAsync(request.HoaDonId.Value, request.SoTien, ct);
+            var (soTienDaThuSauKhiCong, tongTienHoaDon) =
+                await _invoiceRepo.UpdateSoTienDaThuAsync(request.HoaDonId.Value, request.SoTien, ct);
+
+            if (soTienDaThuSauKhiCong > tongTienHoaDon)
+                throw new BusinessRuleException(
+                    "Có phiếu thu khác vừa được tạo cho hóa đơn này cùng lúc, khiến tổng tiền thu vượt quá hóa đơn. Vui lòng thử lại.");
         }
 
         // ── 5. Xử lý Loyalty (tích điểm + tính hạng + voucher + email) ──────

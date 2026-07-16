@@ -76,39 +76,35 @@ public class InvoiceRepository : IInvoiceRepository
     }
 
     /// <summary>
-    /// Cộng dồn SoTienDaThu bằng SQL UPDATE trực tiếp để tránh race condition
-    /// khi nhiều phiếu thu của cùng 1 hóa đơn được tạo đồng thời.
-    /// TrangThaiThanhToan được tính lại ngay trong cùng câu SQL.
+    /// Cộng dồn SoTienDaThu và tự cập nhật TrangThaiThanhToan tương ứng — TRONG CÙNG 1 câu
+    /// UPDATE (biểu thức SQL tham chiếu chính giá trị SoTienDaThu/TongTien của DB tại thời
+    /// điểm ghi, không đọc lại bằng round-trip riêng). Trả về (SoTienDaThu, TongTien) SAU khi
+    /// cộng để caller tự kiểm tra có bị vượt tổng tiền hay không (do 2 phiếu thu tạo đồng thời
+    /// cùng qua được bước validate "còn lại" trước khi ghi).
     /// </summary>
-    public async Task UpdateSoTienDaThuAsync(ulong hoaDonId, decimal soTienCong, CancellationToken ct = default)
+    public async Task<(decimal SoTienDaThu, decimal TongTien)> UpdateSoTienDaThuAsync(
+        ulong hoaDonId, decimal soTienCong, CancellationToken ct = default)
     {
-        // Dùng ExecuteUpdateAsync để cộng dồn atomic, không cần đọc trước
         await _context.KtHoaDons
             .Where(x => x.Id == hoaDonId)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.SoTienDaThu, x => (x.SoTienDaThu ?? 0m) + soTienCong)
+                .SetProperty(x => x.TrangThaiThanhToan, x =>
+                    (x.SoTienDaThu ?? 0m) + soTienCong >= x.TongTien
+                        ? InvoiceStatus.HoanTat
+                        : (x.SoTienDaThu ?? 0m) + soTienCong > 0
+                            ? InvoiceStatus.ThanhToan1Phan
+                            : InvoiceStatus.ChuaThanhToan)
                 .SetProperty(x => x.UpdatedAt, DateTime.UtcNow),
             ct);
 
-        // Tính lại TrangThaiThanhToan sau khi đã cập nhật SoTienDaThu
-        // (ExecuteUpdateAsync không hỗ trợ computed property trong cùng 1 lần gọi)
-        var entity = await _context.KtHoaDons
+        var after = await _context.KtHoaDons
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == hoaDonId, ct);
-
-        if (entity is null) return;
-
-        var trangThai = (entity.SoTienDaThu ?? 0m) >= entity.TongTien
-            ? InvoiceStatus.HoanTat
-            : (entity.SoTienDaThu ?? 0m) > 0
-                ? InvoiceStatus.ThanhToan1Phan
-                : InvoiceStatus.ChuaThanhToan;
-
-        await _context.KtHoaDons
             .Where(x => x.Id == hoaDonId)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(x => x.TrangThaiThanhToan, trangThai),
-            ct);
+            .Select(x => new { x.SoTienDaThu, x.TongTien })
+            .FirstAsync(ct);
+
+        return (after.SoTienDaThu ?? 0m, after.TongTien);
     }
 
     public async Task<string> GenerateMaHoaDonAsync(CancellationToken ct = default)

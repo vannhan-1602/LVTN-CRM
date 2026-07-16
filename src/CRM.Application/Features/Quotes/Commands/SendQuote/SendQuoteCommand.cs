@@ -92,11 +92,13 @@ public class SendQuoteCommandHandler : IRequestHandler<SendQuoteCommand, QuoteDt
                 var frontendBaseUrl = _config["Frontend:BaseUrl"] ?? "http://localhost:5173";
                 var quoteLink = $"{frontendBaseUrl}/public/quotes/{token}";
 
-                await _emailService.GuiEmailBaoGiaAsync(
+                var (thanhCong, loiChiTiet) = await _emailService.GuiEmailBaoGiaAsync(
                     dto.KhachHangId, dto.TenKhachHang ?? customer.TenKhachHang, customer.Email,
                     dto.MaBaoGia, dto.TongTien, quoteLink, ct);
 
-                dto.EmailDaGui = true;
+                dto.EmailDaGui = thanhCong;
+                if (!thanhCong)
+                    dto.EmailLyDoKhongGui = $"Gửi email thất bại: {loiChiTiet}";
             }
             else
             {
