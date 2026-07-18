@@ -2,10 +2,8 @@ using CRM.Domain.Entities.Loyalty;
 
 namespace CRM.Application.Interfaces.Loyalty;
 
-/// <summary>
-/// Repository cho toàn bộ nghiệp vụ Loyalty (Tích điểm, Xếp hạng, Voucher).
-/// Tất cả logic nằm trong C# — không dùng trigger DB.
-/// </summary>
+
+//Repository cho toàn bộ nghiệp vụ Loyalty (Tích điểm, Xếp hạng, Voucher).
 public interface ILoyaltyRepository
 {
     // ── Điểm ─────────────────────────────────────────────────────────────────
