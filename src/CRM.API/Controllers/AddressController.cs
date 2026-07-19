@@ -26,7 +26,7 @@ public class AddressController : ControllerBase
         return Ok(ApiResponse<List<AddressDto>>.Ok(result));
     }
 
-    /// <summary>POST /api/address/customer/{khachHangId} — KhachHangId từ route, tránh trùng lặp trong body</summary>
+
     [HttpPost("customer/{khachHangId:long}")]
     [Authorize(Policy = Policies.SalesTeam)]
     public async Task<IActionResult> Create(ulong khachHangId, [FromBody] CreateAddressRequestDto req, CancellationToken ct)

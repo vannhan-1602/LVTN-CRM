@@ -36,7 +36,7 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<LoginResponseDto>.Ok(result, "Đăng nhập thành công."));
     }
 
-    // UC-AUTH-03 — Người dùng tự đổi mật khẩu của chính mình.
+    //Người dùng tự đổi mật khẩu của chính mình.
     [HttpPost("change-password")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]

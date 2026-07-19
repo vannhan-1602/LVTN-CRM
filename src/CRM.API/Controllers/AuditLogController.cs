@@ -9,8 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CRM.API.Controllers;
 
-// UC-QTV — Admin xem nhật ký hệ thống (SYS_AuditLog): ai đã INSERT/UPDATE/DELETE bản ghi nào,
-// lúc nào, dữ liệu trước/sau ra sao. Chỉ Admin được xem (dữ liệu nhạy cảm toàn hệ thống).
+//Admin xem nhật ký hệ thống (SYS_AuditLog)
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Policy = Policies.AdminOnly)]

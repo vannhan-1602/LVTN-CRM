@@ -9,14 +9,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CRM.API.Controllers;
 
-/// <summary>
-/// Quản lý các bảng danh mục — admin có thể tùy chỉnh theo từng công ty.
-///
-/// PHÂN QUYỀN:
-///   GET  (xem danh mục): tất cả roles đã đăng nhập.
-///   POST/PUT/DELETE (chỉnh sửa danh mục): chỉ Admin.
-///   Riêng XepHang: chỉ Update (không cho tạo/xóa tự do vì gắn với logic tích điểm).
-/// </summary>
+
+//Quản lý các bảng danh mục — admin có thể tùy chỉnh theo từng công ty.
+// PHÂN QUYỀN:
+// GET  (xem danh mục): tất cả roles đã đăng nhập.
+//  POST/PUT/DELETE (chỉnh sửa danh mục): chỉ Admin.
+//  Riêng XepHang: chỉ Update (không cho tạo/xóa tự do vì gắn với logic tích điểm).
+
 [ApiController]
 [Route("api/danh-muc")]
 [Authorize]

@@ -9,11 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CRM.API.Controllers;
 
-/// <summary>
-/// Tính năng "AI phân tích dữ liệu bán hàng" — theo sơ đồ Use Case, chỉ Manager được cấp quyền
-/// AI Analysis. Endpoint tổng hợp số liệu doanh thu/cơ hội/kho/ticket/công nợ rồi gửi cho
-/// OpenAI để sinh nhận định + đề xuất hành động.
-/// </summary>
+// Tính năng AI phân tích dữ liệu bán hàng chỉ Manager được cấp quyền
+//Endpoint tổng hợp số liệu doanh thu/cơ hội/kho/ticket/công nợ rồi gửi cho
+// OpenAI để sinh nhận định + đề xuất hành động.
+
 [ApiController]
 [Route("api/analytics")]
 [Authorize(Policy = Policies.ManagerOnly)]
@@ -22,7 +21,7 @@ public class AnalyticsController : ControllerBase
     private readonly IMediator _mediator;
     public AnalyticsController(IMediator mediator) => _mediator = mediator;
 
-    /// <summary>Phân tích bán hàng bằng AI trong N tháng gần nhất (mặc định 6, tối đa 24).</summary>
+    ///Phân tích bán hàng bằng AI trong N tháng gần nhất (mặc định 6, tối đa 24).
     [HttpGet("ai-sales-analysis")]
     public async Task<IActionResult> GetAiSalesAnalysis([FromQuery] int soThang = 6, CancellationToken ct = default)
     {
@@ -30,7 +29,7 @@ public class AnalyticsController : ControllerBase
         return Ok(ApiResponse<AiSalesAnalysisResultDto>.Ok(result));
     }
 
-    /// <summary>Số bản ghi mới tạo tháng này so với tháng trước — cho mũi tên xu hướng trên Dashboard.</summary>
+    ///Số bản ghi mới tạo tháng này so với tháng trước — cho mũi tên xu hướng trên Dashboard.
     [HttpGet("dashboard-trends")]
     public async Task<IActionResult> GetDashboardTrends(CancellationToken ct)
     {

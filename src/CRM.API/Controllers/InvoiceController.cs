@@ -18,10 +18,9 @@ public class InvoiceController : ControllerBase
     private readonly IMediator _mediator;
     public InvoiceController(IMediator mediator) => _mediator = mediator;
 
-    /// <summary>
-    /// Lấy danh sách hóa đơn.
-    /// Lọc theo: tìm kiếm mã/tên khách, trạng thái thanh toán, khách hàng.
-    /// </summary>
+   
+    // Lấy danh sách hóa đơn.
+    // Lọc theo: tìm kiếm mã/tên khách, trạng thái thanh toán, khách hàng.
     [HttpGet]
     public async Task<IActionResult> GetAll(
         [FromQuery] int pageNumber = 1,

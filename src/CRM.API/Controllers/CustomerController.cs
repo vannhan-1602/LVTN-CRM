@@ -59,7 +59,7 @@ public class CustomerController : ControllerBase
         return Ok(ApiResponse<CustomerDto>.Ok(result));
     }
 
-    // Tab "Khách hàng thân thiết" ở trang chi tiết KH — điểm/hạng/voucher/lịch sử.
+    // Tab Khách hàng thân thiết ở trang chi tiết KH — điểm/hạng/voucher/lịch sử.
     [HttpGet("{id:long}/loyalty")]
     [Authorize(Policy = Policies.CustomerReadAccess)]
     [ProducesResponseType(typeof(ApiResponse<CustomerLoyaltyInfoDto>), StatusCodes.Status200OK)]

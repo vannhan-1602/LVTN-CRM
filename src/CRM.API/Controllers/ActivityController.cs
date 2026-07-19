@@ -12,10 +12,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CRM.API.Controllers;
 
-/// <summary>
-/// Nhật ký hoạt động chăm sóc khách hàng / lead (KH_HoatDong).
-/// Sale + Manager: ghi nhận cuộc gọi, cuộc họp, email, zalo với KH hoặc Lead.
-/// </summary>
+// Nhật ký hoạt động chăm sóc khách hàng / lead (KH_HoatDong).
+//Sale + Manager: ghi nhận cuộc gọi, cuộc họp, email, zalo với KH hoặc Lead.
+
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Policy = Policies.SalesTeam)]
