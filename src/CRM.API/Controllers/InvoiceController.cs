@@ -42,16 +42,7 @@ public class InvoiceController : ControllerBase
         return Ok(ApiResponse<InvoiceDto>.Ok(result));
     }
 
-    /// <summary>
-    /// Tạo hóa đơn mới. Chỉ Kế toán và Manager được thực hiện.
-    ///
-    /// Cách 1 — Có hợp đồng (phổ biến):
-    ///   Truyền HopDongId, bỏ qua KhachHangId (hệ thống tự lấy từ hợp đồng).
-    ///   Hợp đồng phải đang ở trạng thái "DangThucHien".
-    ///
-    /// Cách 2 — Không có hợp đồng (bán lẻ):
-    ///   Không truyền HopDongId, bắt buộc truyền KhachHangId.
-    /// </summary>
+    // Tạo hóa đơn mới. Chỉ Kế toán và Manager được thực hiện.
     [HttpPost]
     [Authorize(Policy = Policies.FinanceTeam)]
     public async Task<IActionResult> Create(
