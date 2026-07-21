@@ -6,6 +6,7 @@ using CRM.Application.Features.Contracts.Commands.UpdateContractStatus;
 using CRM.Application.Features.Contracts.DTOs;
 using CRM.Application.Features.Contracts.Queries.GetAllContracts;
 using CRM.Application.Features.Contracts.Queries.GetContractById;
+using CRM.Application.Features.Contracts.Queries.GetLichThanhToanByHopDong;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,10 +50,20 @@ public class ContractController : ControllerBase
     public async Task<IActionResult> CreateFromQuote([FromBody] CreateContractFromQuoteRequestDto request, CancellationToken ct)
     {
         var result = await _mediator.Send(
-            new CreateContractFromQuoteCommand(request.BaoGiaId, request.NgayKy, request.ThoiHan), ct);
+            new CreateContractFromQuoteCommand(
+                request.BaoGiaId, request.NgayKy, request.ThoiHan,
+                request.HinhThucThanhToan, request.LichThanhToans), ct);
 
         return CreatedAtAction(nameof(GetById), new { id = result.Id },
             ApiResponse<ContractDto>.Ok(result, "Tạo hợp đồng thành công."));
+    }
+
+    [HttpGet("{id:long}/lich-thanh-toan")]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
+    public async Task<IActionResult> GetLichThanhToan(ulong id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetLichThanhToanByHopDongQuery(id), ct);
+        return Ok(ApiResponse<List<Application.Features.Contracts.DTOs.LichThanhToanDto>>.Ok(result));
     }
 
     [HttpPut("{id:long}/status")]

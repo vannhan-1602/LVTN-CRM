@@ -222,6 +222,38 @@ public class ContractRepository : IContractRepository
         _context.HdHopDongs.AnyAsync(
             x => x.KhachHangId == khachHangId && x.TrangThai == "DangThucHien", ct);
 
+    public async Task AddLichThanhToanRangeAsync(
+        ulong hopDongId,
+        IEnumerable<(int SoDot, decimal SoTien, DateOnly HanThanhToan)> items,
+        CancellationToken ct = default)
+    {
+        var entities = items.Select(i => new HdLichThanhToanEntity
+        {
+            HopDong_Id = hopDongId,
+            SoDot = i.SoDot,
+            SoTien = i.SoTien,
+            HanThanhToan = i.HanThanhToan,
+            TrangThai = "ChuaDenHan"
+        });
+        await _context.HdLichThanhToans.AddRangeAsync(entities, ct);
+    }
+
+    public async Task<List<LichThanhToanDto>> GetLichThanhToanByHopDongAsync(ulong hopDongId, CancellationToken ct = default) =>
+        await _context.HdLichThanhToans
+            .AsNoTracking()
+            .Where(x => x.HopDong_Id == hopDongId)
+            .OrderBy(x => x.SoDot)
+            .Select(x => new LichThanhToanDto
+            {
+                Id = x.Id,
+                HopDongId = x.HopDong_Id,
+                SoDot = x.SoDot,
+                SoTien = x.SoTien,
+                HanThanhToan = x.HanThanhToan,
+                TrangThai = x.TrangThai
+            })
+            .ToListAsync(ct);
+
     private static HopDong MapToDomain(HdHopDongEntity e) => new()
     {
         Id = e.Id,

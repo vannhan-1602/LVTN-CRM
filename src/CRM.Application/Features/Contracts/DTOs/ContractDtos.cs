@@ -37,6 +37,16 @@ public class LichThanhToanInputDto
     public DateOnly HanThanhToan { get; set; }
 }
 
+public class LichThanhToanDto
+{
+    public ulong Id { get; set; }
+    public ulong HopDongId { get; set; }
+    public int SoDot { get; set; }
+    public decimal SoTien { get; set; }
+    public DateOnly HanThanhToan { get; set; }
+    public string TrangThai { get; set; } = "ChuaDenHan";
+}
+
 public class UpdateContractStatusRequestDto
 {
     public string TrangThai { get; set; } = string.Empty;

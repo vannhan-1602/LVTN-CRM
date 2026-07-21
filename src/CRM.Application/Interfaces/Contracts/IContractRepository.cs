@@ -25,4 +25,13 @@ public interface IContractRepository
 
     /// <summary>Khách hàng còn hợp đồng đang hiệu lực (DangThucHien) hay không — dùng để chặn xóa KH.</summary>
     Task<bool> HasActiveContractAsync(ulong khachHangId, CancellationToken ct = default);
+
+    /// <summary>Tạo các dòng lịch trả góp (HD_LichThanhToan) cho 1 hợp đồng trả góp.</summary>
+    Task AddLichThanhToanRangeAsync(
+        ulong hopDongId,
+        IEnumerable<(int SoDot, decimal SoTien, DateOnly HanThanhToan)> items,
+        CancellationToken ct = default);
+
+    /// <summary>Lấy toàn bộ lịch trả góp của 1 hợp đồng, sắp theo SoDot tăng dần.</summary>
+    Task<List<LichThanhToanDto>> GetLichThanhToanByHopDongAsync(ulong hopDongId, CancellationToken ct = default);
 }

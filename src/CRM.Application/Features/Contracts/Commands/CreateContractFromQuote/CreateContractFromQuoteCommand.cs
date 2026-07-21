@@ -10,6 +10,9 @@ using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
 using FluentValidation;
 using MediatR;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace CRM.Application.Features.Contracts.Commands.CreateContractFromQuote;
@@ -19,7 +22,8 @@ namespace CRM.Application.Features.Contracts.Commands.CreateContractFromQuote;
 //của chuỗi nghiệp vụ Sản phẩm → Báo giá → Hợp đồng 
 
 public record CreateContractFromQuoteCommand(
-    ulong BaoGiaId, DateOnly? NgayKy, int? ThoiHan
+    ulong BaoGiaId, DateOnly? NgayKy, int? ThoiHan,
+    string HinhThucThanhToan, List<LichThanhToanInputDto> LichThanhToans
 ) : IRequest<ContractDto>;
 
 public class CreateContractFromQuoteCommandValidator : AbstractValidator<CreateContractFromQuoteCommand>
@@ -29,6 +33,28 @@ public class CreateContractFromQuoteCommandValidator : AbstractValidator<CreateC
         RuleFor(x => x.BaoGiaId).GreaterThan(0UL).WithMessage("Báo giá không hợp lệ.");
         RuleFor(x => x.ThoiHan).GreaterThan(0).When(x => x.ThoiHan.HasValue)
             .WithMessage("Thời hạn hợp đồng phải lớn hơn 0 tháng.");
+
+        RuleFor(x => x.HinhThucThanhToan)
+            .NotEmpty().WithMessage("Vui lòng chọn hình thức thanh toán.")
+            .Must(x => x == "ThanhToanMotLan" || x == "TraGop")
+            .WithMessage("Hình thức thanh toán phải là ThanhToanMotLan hoặc TraGop.");
+
+        // Nếu trả góp: bắt buộc có ít nhất 1 đợt, số tiền mỗi đợt > 0, hạn thanh toán không ở quá khứ.
+        RuleFor(x => x.LichThanhToans)
+            .Must(list => list != null && list.Count > 0)
+            .WithMessage("Hợp đồng trả góp phải có ít nhất 1 đợt thanh toán.")
+            .When(x => x.HinhThucThanhToan == "TraGop");
+
+        RuleForEach(x => x.LichThanhToans)
+            .ChildRules(item =>
+            {
+                item.RuleFor(l => l.SoTien)
+                    .GreaterThan(0).WithMessage("Số tiền mỗi đợt phải lớn hơn 0.");
+                item.RuleFor(l => l.HanThanhToan)
+                    .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow))
+                    .WithMessage("Hạn thanh toán không được ở quá khứ.");
+            })
+            .When(x => x.HinhThucThanhToan == "TraGop");
     }
 }
 
@@ -70,6 +96,15 @@ public class CreateContractFromQuoteCommandHandler
         if (await _contractRepository.ExistsForBaoGiaAsync(request.BaoGiaId, ct))
             throw new BusinessRuleException("Báo giá này đã được dùng để tạo hợp đồng khác.");
 
+        // Trả góp: tổng các đợt phải khớp giá trị báo giá (sai lệch cho phép 1 đồng do làm tròn)
+        if (request.HinhThucThanhToan == "TraGop")
+        {
+            var tongLichThanhToan = request.LichThanhToans.Sum(l => l.SoTien);
+            if (Math.Abs(tongLichThanhToan - quote.TongTien) > 1m)
+                throw new BusinessRuleException(
+                    $"Tổng các đợt thanh toán ({tongLichThanhToan:N0}) không khớp với giá trị báo giá ({quote.TongTien:N0}).");
+        }
+
         var maHopDong = await _contractRepository.GenerateMaHopDongAsync(ct);
 
         var contract = new HopDong
@@ -79,12 +114,22 @@ public class CreateContractFromQuoteCommandHandler
             BaoGiaGocId = quote.Id,
             NgayKy = request.NgayKy ?? DateOnly.FromDateTime(DateTime.UtcNow),
             ThoiHan = request.ThoiHan,
+            HinhThucThanhToan = request.HinhThucThanhToan,
             TrangThai = ContractStatus.DangThucHien,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         var created = await _contractRepository.AddAsync(contract, ct);
+
+        if (request.HinhThucThanhToan == "TraGop" && request.LichThanhToans.Count > 0)
+        {
+            await _contractRepository.AddLichThanhToanRangeAsync(
+                created.Id,
+                request.LichThanhToans.Select(l => (l.SoDot, l.SoTien, l.HanThanhToan)),
+                ct);
+        }
+
         await _unitOfWork.SaveChangesAsync(ct);
 
         var dto = await _contractRepository.GetByIdEnrichedAsync(created.Id, ct)
