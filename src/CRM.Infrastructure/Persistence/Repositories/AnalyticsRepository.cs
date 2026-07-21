@@ -121,4 +121,41 @@ public class AnalyticsRepository : IAnalyticsRepository
             TicketMoiThangTruoc = DemThangTruoc(ticket)
         };
     }
+
+    public async Task<ChiSummaryDto> GetChiSummaryAsync(CancellationToken ct = default)
+    {
+        var now = DateTime.UtcNow;
+        var dauThangNay = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var chiQuery = _context.KtPhieuThuChis.AsNoTracking()
+            .Where(x => x.LoaiPhieu == PaymentVoucherType.Chi);
+
+        var chiThangNay = await chiQuery
+            .Where(x => x.NgayTao != null && x.NgayTao >= dauThangNay)
+            .ToListAsync(ct);
+
+        // Top khách hàng phát sinh chi phí nhiều nhất (toàn thời gian, chỉ tính phiếu có gắn khách hàng)
+        var topKhachHang = await chiQuery
+            .Where(x => x.KhachHang_Id != null)
+            .GroupBy(x => x.KhachHang_Id!.Value)
+            .Select(g => new { KhachHangId = g.Key, TongChi = g.Sum(x => x.SoTien), SoPhieu = g.Count() })
+            .OrderByDescending(x => x.TongChi)
+            .Take(5)
+            .Join(_context.KhKhachHangs.AsNoTracking(), t => t.KhachHangId, kh => kh.Id,
+                (t, kh) => new ChiTheoKhachHangDto
+                {
+                    KhachHangId = t.KhachHangId,
+                    TenKhachHang = kh.TenKhachHang,
+                    TongChi = t.TongChi,
+                    SoPhieu = t.SoPhieu
+                })
+            .ToListAsync(ct);
+
+        return new ChiSummaryDto
+        {
+            TongChiThangNay = chiThangNay.Sum(x => x.SoTien),
+            SoPhieuChiThangNay = chiThangNay.Count,
+            TopKhachHangPhatSinhChi = topKhachHang
+        };
+    }
 }

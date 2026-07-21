@@ -31,6 +31,23 @@ public class SanPhamBanChayDto
     public int SoLuongBan { get; set; }
 }
 
+/// <summary>Tổng hợp Phiếu Chi (chi phí phát sinh cho khách hàng — ăn uống, đàm phán...),
+/// KHÔNG liên quan tới tiến độ thanh toán hóa đơn/hợp đồng. Dùng cho Dashboard quản lý.</summary>
+public class ChiSummaryDto
+{
+    public decimal TongChiThangNay { get; set; }
+    public int SoPhieuChiThangNay { get; set; }
+    public List<ChiTheoKhachHangDto> TopKhachHangPhatSinhChi { get; set; } = new();
+}
+
+public class ChiTheoKhachHangDto
+{
+    public ulong KhachHangId { get; set; }
+    public string TenKhachHang { get; set; } = string.Empty;
+    public decimal TongChi { get; set; }
+    public int SoPhieu { get; set; }
+}
+
 /// <summary>So sánh số bản ghi mới tạo tháng này với tháng trước — dùng cho mũi tên xu hướng trên Dashboard.</summary>
 public class DashboardTrendsDto
 {

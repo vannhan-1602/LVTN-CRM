@@ -15,4 +15,8 @@ public interface IAnalyticsRepository
     /// <summary>So sánh số khách hàng/hợp đồng/báo giá/ticket mới tạo tháng này với tháng trước —
     /// dùng cho mũi tên xu hướng (tăng/giảm) trên 4 stat card đầu Dashboard.</summary>
     Task<DashboardTrendsDto> GetDashboardTrendsAsync(CancellationToken ct = default);
+
+    /// <summary>Tổng chi phí (Phiếu Chi) tháng này + top khách hàng phát sinh chi phí nhiều nhất
+    /// (toàn thời gian). Không liên quan tới công nợ/tiến độ thanh toán.</summary>
+    Task<ChiSummaryDto> GetChiSummaryAsync(CancellationToken ct = default);
 }

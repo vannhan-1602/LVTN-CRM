@@ -2,6 +2,7 @@ using CRM.Application.Common.Constants;
 using CRM.Application.Common.Models;
 using CRM.Application.Features.Analytics.DTOs;
 using CRM.Application.Features.Analytics.Queries.GenerateAiSalesAnalysis;
+using CRM.Application.Features.Analytics.Queries.GetChiSummary;
 using CRM.Application.Features.Analytics.Queries.GetDashboardTrends;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -35,5 +36,14 @@ public class AnalyticsController : ControllerBase
     {
         var result = await _mediator.Send(new GetDashboardTrendsQuery(), ct);
         return Ok(ApiResponse<DashboardTrendsDto>.Ok(result));
+    }
+
+    /// Tổng chi phí (Phiếu Chi) tháng này + top khách hàng phát sinh chi phí nhiều nhất.
+    /// Không liên quan tới công nợ/tiến độ thanh toán — chỉ Manager xem được trên Dashboard.
+    [HttpGet("chi-summary")]
+    public async Task<IActionResult> GetChiSummary(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetChiSummaryQuery(), ct);
+        return Ok(ApiResponse<ChiSummaryDto>.Ok(result));
     }
 }
