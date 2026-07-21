@@ -12,6 +12,7 @@ import EmptyState from "../../components/common/EmptyState";
 import CustomerFormModal from "./CustomerFormModal";
 import ActivitySection from "../activities/ActivitySection";
 import CustomerLoyaltySection from "./CustomerLoyaltySection";
+import CustomerExpenseSection from "./CustomerExpenseSection";
 import { ROLES } from "../../utils/constants";
 import { formatDateTime, badgeToneForId } from "../../utils/formatters";
 
@@ -327,6 +328,7 @@ export default function CustomerDetailPage() {
   const { user } = useAuthStore();
   const canEdit = [ROLES.Sale, ROLES.Manager].includes(user?.role);
   const canDelete = user?.role === ROLES.Manager;
+  const canViewExpense = [ROLES.Manager, ROLES.Accountant].includes(user?.role);
 
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -485,6 +487,10 @@ export default function CustomerDetailPage() {
 
         <div className="space-y-4">
           <CustomerLoyaltySection khachHangId={customer.id} />
+
+          {canViewExpense && (
+            <CustomerExpenseSection khachHangId={customer.id} />
+          )}
 
           <Card title="Liên kết nhanh">
             <div className="space-y-2">

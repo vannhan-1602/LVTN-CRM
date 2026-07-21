@@ -166,8 +166,13 @@ export default function PhieuThuChiListPage() {
                 items.map((item) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-surface-alt transition-colors"
-                    onClick={() => item.hoaDonId && navigate(`/invoices/${item.hoaDonId}`)}
+                    className={`hover:bg-surface-alt transition-colors ${
+                      item.hoaDonId || item.khachHangId ? "cursor-pointer" : ""
+                    }`}
+                    onClick={() => {
+                      if (item.hoaDonId) navigate(`/invoices/${item.hoaDonId}`);
+                      else if (item.khachHangId) navigate(`/customers/${item.khachHangId}`);
+                    }}
                   >
                     <td className="px-5 py-3.5 font-mono text-info-600 text-xs font-semibold">
                       {item.maPhieu}

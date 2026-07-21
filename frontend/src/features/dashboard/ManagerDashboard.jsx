@@ -10,6 +10,7 @@ import {
   AlertCircle,
   ArrowRight,
   Target,
+  Wallet,
 } from "lucide-react";
 import opportunityApi from "../../api/opportunityApi";
 import contractApi from "../../api/contractApi";
@@ -55,6 +56,7 @@ export default function ManagerDashboard() {
           ticketsOpen,
           ticketsUrgent,
           trends,
+          chiSummary,
         ] = await Promise.all([
           opportunityApi.getSummary(),
           customerApi.getAll({ pageNumber: 1, pageSize: 1 }),
@@ -75,6 +77,7 @@ export default function ManagerDashboard() {
           // Không để lỗi API trends làm hỏng cả dashboard — nếu lỗi thì coi như không có trend,
           // stat card vẫn hiện số liệu chính bình thường, chỉ thiếu mũi tên xu hướng.
           analyticsApi.getDashboardTrends().catch(() => null),
+          analyticsApi.getChiSummary().catch(() => null),
         ]);
 
         if (cancelled) return;
@@ -100,6 +103,8 @@ export default function ManagerDashboard() {
           trendTicket: t
             ? t.ticketMoiThangNay - t.ticketMoiThangTruoc
             : undefined,
+          tongChiThangNay: chiSummary?.data?.tongChiThangNay ?? 0,
+          topKhachHangChi: chiSummary?.data?.topKhachHangPhatSinhChi ?? [],
         });
       } catch (err) {
         if (!cancelled)
@@ -145,7 +150,7 @@ export default function ManagerDashboard() {
       </div>
 
       {/* Hàng số liệu chính */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <StatCard
           label="Tổng khách hàng"
           value={data.tongKhachHang}
@@ -172,6 +177,12 @@ export default function ManagerDashboard() {
           tone={data.ticketKhanCap > 0 ? "warning" : "default"}
           icon={AlertCircle}
           trend={data.trendTicket}
+        />
+        <StatCard
+          label="Tổng chi tháng này"
+          value={formatMoney(data.tongChiThangNay)}
+          tone="warning"
+          icon={Wallet}
         />
       </div>
 
@@ -286,6 +297,44 @@ export default function ManagerDashboard() {
                 )}
             </div>
           </Card>
+
+          {data.topKhachHangChi.length > 0 && (
+            <Card
+              title="Top khách hàng phát sinh chi phí"
+              action={
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  icon={ArrowRight}
+                  onClick={() => navigate("/phieu-thu-chi")}
+                >
+                  Xem tất cả
+                </Button>
+              }
+            >
+              <div className="space-y-2">
+                {data.topKhachHangChi.map((kh) => (
+                  <button
+                    key={kh.khachHangId}
+                    onClick={() => navigate(`/customers/${kh.khachHangId}`)}
+                    className="w-full flex items-center justify-between bg-surface-alt border border-ink-100 rounded-lg px-3 py-2.5 text-left hover:bg-ink-100"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-ink-900">
+                        {kh.tenKhachHang}
+                      </p>
+                      <p className="text-xs text-ink-400">
+                        {kh.soPhieu} phiếu chi
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-danger-600">
+                      {formatMoney(kh.tongChi)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          )}
 
           <Card title="Truy cập nhanh">
             <div className="grid grid-cols-2 gap-2">
