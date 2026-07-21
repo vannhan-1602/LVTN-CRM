@@ -71,14 +71,13 @@ public class LeadRepository : ILeadRepository
         entity.TenCongTy = lead.TenCongTy;
         entity.SoDienThoai = lead.SoDienThoai;
         entity.Email = lead.Email;
+        entity.NguonLead = lead.NguonLead; // Bổ sung cập nhật nguồn lead
         entity.TinhTrang = lead.TinhTrang;
         entity.NhanVienPhuTrach_Id = lead.NhanVienPhuTrachId;
         entity.UpdatedAt = lead.UpdatedAt;
         // Không SaveChanges ở đây — Handler gọi qua IUnitOfWork để giữ 1 transaction/Command.
     }
 
-    // Xóa mềm (IsDeleted = true) — trước đây hàm này Remove() thẳng khỏi DB, không có đường
-    // quay lại. Đổi sang soft-delete để đồng bộ với Customer/Product và cho phép khôi phục.
     public async Task<bool> DeleteAsync(ulong id, CancellationToken ct = default)
     {
         var entity = await _context.Set<KhLeadEntity>()
@@ -106,6 +105,7 @@ public class LeadRepository : ILeadRepository
         TenCongTy = e.TenCongTy,
         SoDienThoai = e.SoDienThoai,
         Email = e.Email,
+        NguonLead = e.NguonLead ?? "Manual",
         TinhTrang = e.TinhTrang ?? LeadTinhTrang.Moi,
         NhanVienPhuTrachId = e.NhanVienPhuTrach_Id,
         IsDeleted = e.IsDeleted,
@@ -119,6 +119,7 @@ public class LeadRepository : ILeadRepository
         TenCongTy = lead.TenCongTy,
         SoDienThoai = lead.SoDienThoai,
         Email = lead.Email,
+        NguonLead = lead.NguonLead ?? "Manual",
         TinhTrang = lead.TinhTrang,
         NhanVienPhuTrach_Id = lead.NhanVienPhuTrachId,
         IsDeleted = lead.IsDeleted,

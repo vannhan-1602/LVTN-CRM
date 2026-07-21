@@ -27,6 +27,7 @@ import SettingsPage from "../features/settings/SettingsPage";
 import AuditLogPage from "../features/audit/AuditLogPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
 import PublicQuotePage from "../features/quotes/PublicQuotePage";
+import LandingPageDemo from "../features/leads/LandingPageDemo";
 
 function UnauthorizedPage() {
   return (
@@ -48,6 +49,9 @@ export default function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/public/quotes/:token" element={<PublicQuotePage />} />
+
+      {/* Route công khai cho Landing Page */}
+      <Route path="/landing" element={<LandingPageDemo />} />
 
       <Route element={<MainLayout />}>
         <Route element={<ProtectedRoute />}>

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CRM.Infrastructure.Persistence.Entities;
 
@@ -10,6 +11,7 @@ public class KhLeadEntity
     public string? TenCongTy { get; set; }
     public string? SoDienThoai { get; set; }
     public string? Email { get; set; }
+    public string? NguonLead { get; set; } = "Manual"; // Thêm trường nguồn lead
     public string? TinhTrang { get; set; }
     public uint? NhanVienPhuTrach_Id { get; set; }
     public bool IsDeleted { get; set; }

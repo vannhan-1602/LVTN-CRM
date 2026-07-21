@@ -305,6 +305,9 @@ export default function LeadListPage() {
                   Công ty
                 </th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">
+                  Nguồn
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">
                   Tình trạng
                 </th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide">
@@ -319,7 +322,7 @@ export default function LeadListPage() {
             <tbody className="divide-y divide-ink-100">
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={8}>
                     <EmptyState
                       icon={Target}
                       title={loading ? "Đang tải..." : "Chưa có lead nào"}
@@ -360,6 +363,11 @@ export default function LeadListPage() {
                     <td className="px-5 py-3.5 text-ink-700">
                       {item.tenCongTy || "—"}
                     </td>
+                    <td className="px-5 py-3.5 text-ink-700">
+                      <span className="text-xs bg-surface-alt border border-ink-200 px-2 py-1 rounded font-medium">
+                        {item.nguonLead || "Manual"}
+                      </span>
+                    </td>
                     <td className="px-5 py-3.5">
                       {item.tinhTrang ? (
                         <Badge
@@ -393,7 +401,6 @@ export default function LeadListPage() {
                             icon: Eye,
                             onClick: () => navigate(`/leads/${item.id}`),
                           },
-                          // Chỉ được sửa khi chưa chuyển đổi và chưa bị khóa
                           ...(canEdit &&
                           item.tinhTrang !== "DaChuyenDoi" &&
                           !item.isDeleted
@@ -405,7 +412,6 @@ export default function LeadListPage() {
                                 },
                               ]
                             : []),
-                          // Mới → Đang chăm sóc
                           ...(canEdit &&
                           item.tinhTrang === "Moi" &&
                           !item.isDeleted
@@ -417,7 +423,6 @@ export default function LeadListPage() {
                                 },
                               ]
                             : []),
-                          // Đang chăm sóc → Ngừng / Chuyển KH
                           ...(canEdit &&
                           item.tinhTrang === "DangChamSoc" &&
                           !item.isDeleted
