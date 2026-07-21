@@ -10,11 +10,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CRM.API.Controllers;
 
-/// <summary>
-/// Endpoint công khai (không đăng nhập) để khách hàng bấm link trong email báo giá
-/// và tự xem/chấp nhận/từ chối. Xác thực bằng token HMAC (xem IQuotePublicTokenService),
-/// không phải bằng tài khoản CRM — vì vậy KHÔNG dùng [Authorize].
-/// </summary>
+
+//không đăng nhập để khách hàng bấm link trong email báo giá và tự xem/chấp nhận/từ chối.
+//Xác thực bằng token HMAC (xem IQuotePublicTokenService),
+// không phải bằng tài khoản CRM — vì vậy KHÔNG dùng [Authorize].
 [ApiController]
 [Route("api/public/quotes")]
 [AllowAnonymous]

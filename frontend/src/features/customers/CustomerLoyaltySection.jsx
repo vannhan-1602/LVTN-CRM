@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Crown, Gift, TrendingUp, History, Ticket } from "lucide-react";
 import customerApi from "../../api/customerApi";
 import Card from "../../components/common/Card";
@@ -38,30 +39,23 @@ const TABS = [
 ];
 
 export default function CustomerLoyaltySection({ khachHangId }) {
-  const [info, setInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("diem");
 
-  useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    customerApi
-      .getLoyaltyInfo(khachHangId)
-      .then((res) => {
-        if (mounted) setInfo(res.data);
-      })
-      .catch((err) => {
-        if (mounted) setError(err?.message || "Không thể tải thông tin khách hàng thân thiết");
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [khachHangId]);
+  const {
+    data: info,
+    isLoading: loading,
+    error: queryError,
+  } = useQuery({
+    queryKey: ["customerLoyalty", khachHangId],
+    queryFn: async () => {
+      const res = await customerApi.getLoyaltyInfo(khachHangId);
+      return res.data;
+    },
+    refetchInterval: 10000, // tự tải lại mỗi 1 giây (voucher vừa đổi ở nơi khác)
+    refetchOnWindowFocus: true,
+  });
 
+  const error = queryError?.message || "";
   if (loading) {
     return (
       <Card title="Khách hàng thân thiết">
@@ -116,7 +110,9 @@ export default function CustomerLoyaltySection({ khachHangId }) {
             <p className="text-lg font-semibold text-ink-900">
               {info.tongDiem12Thang.toLocaleString("vi-VN")}
             </p>
-            <p className="text-xs text-ink-400">điểm / 12 tháng · {info.soLanThu12Thang} lần mua</p>
+            <p className="text-xs text-ink-400">
+              điểm / 12 tháng · {info.soLanThu12Thang} lần mua
+            </p>
           </div>
         </div>
 
@@ -130,7 +126,10 @@ export default function CustomerLoyaltySection({ khachHangId }) {
         {info.tenHangTiepTheo && (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs text-ink-500">
-              <span>Còn {info.soDiemCanThemDeLenHang?.toLocaleString("vi-VN")} điểm nữa để lên hạng {info.tenHangTiepTheo}</span>
+              <span>
+                Còn {info.soDiemCanThemDeLenHang?.toLocaleString("vi-VN")} điểm
+                nữa để lên hạng {info.tenHangTiepTheo}
+              </span>
               {tienDoPhanTram != null && <span>{tienDoPhanTram}%</span>}
             </div>
             <div className="h-1.5 bg-ink-100 rounded-full overflow-hidden">
@@ -165,76 +164,98 @@ export default function CustomerLoyaltySection({ khachHangId }) {
           ))}
         </div>
 
-        {activeTab === "diem" && (
-          info.lichSuDiem.length === 0 ? (
+        {activeTab === "diem" &&
+          (info.lichSuDiem.length === 0 ? (
             <EmptyState icon={TrendingUp} title="Chưa có lịch sử điểm" />
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {info.lichSuDiem.map((d) => (
-                <div key={d.id} className="flex items-center justify-between text-sm border-b border-ink-50 pb-2 last:border-0">
+                <div
+                  key={d.id}
+                  className="flex items-center justify-between text-sm border-b border-ink-50 pb-2 last:border-0"
+                >
                   <div>
                     <p className="text-ink-700">
                       {LOAI_GIAO_DICH_LABEL[d.loaiGiaoDich] ?? d.loaiGiaoDich}
                     </p>
-                    <p className="text-xs text-ink-400">{formatDate(d.ngayPhatSinh)}</p>
+                    <p className="text-xs text-ink-400">
+                      {formatDate(d.ngayPhatSinh)}
+                    </p>
                   </div>
-                  <span className={`font-semibold ${d.soDiem >= 0 ? "text-success-600" : "text-danger-600"}`}>
+                  <span
+                    className={`font-semibold ${d.soDiem >= 0 ? "text-success-600" : "text-danger-600"}`}
+                  >
                     {d.soDiem >= 0 ? "+" : ""}
                     {d.soDiem}
                   </span>
                 </div>
               ))}
             </div>
-          )
-        )}
+          ))}
 
-        {activeTab === "hang" && (
-          info.lichSuHang.length === 0 ? (
+        {activeTab === "hang" &&
+          (info.lichSuHang.length === 0 ? (
             <EmptyState icon={History} title="Chưa có lịch sử thay đổi hạng" />
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {info.lichSuHang.map((h) => (
-                <div key={h.id} className="text-sm border-b border-ink-50 pb-2 last:border-0">
+                <div
+                  key={h.id}
+                  className="text-sm border-b border-ink-50 pb-2 last:border-0"
+                >
                   <p className="text-ink-700">
-                    {h.tenHangCu ? `${h.tenHangCu} → ${h.tenHangMoi}` : `Xếp hạng: ${h.tenHangMoi}`}
+                    {h.tenHangCu
+                      ? `${h.tenHangCu} → ${h.tenHangMoi}`
+                      : `Xếp hạng: ${h.tenHangMoi}`}
                   </p>
                   <p className="text-xs text-ink-400">
-                    {LY_DO_HANG_LABEL[h.lyDo] ?? h.lyDo} · {formatDateTime(h.createdAt)}
+                    {LY_DO_HANG_LABEL[h.lyDo] ?? h.lyDo} ·{" "}
+                    {formatDateTime(h.createdAt)}
                   </p>
                 </div>
               ))}
             </div>
-          )
-        )}
+          ))}
 
-        {activeTab === "voucher" && (
-          info.vouchers.length === 0 ? (
+        {activeTab === "voucher" &&
+          (info.vouchers.length === 0 ? (
             <EmptyState icon={Gift} title="Chưa có voucher nào" />
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {info.vouchers.map((v) => {
-                const status = VOUCHER_STATUS[v.trangThai] ?? { label: v.trangThai, tone: "neutral" };
+                const status = VOUCHER_STATUS[v.trangThai] ?? {
+                  label: v.trangThai,
+                  tone: "neutral",
+                };
                 return (
-                  <div key={v.id} className="text-sm border-b border-ink-50 pb-2 last:border-0">
+                  <div
+                    key={v.id}
+                    className="text-sm border-b border-ink-50 pb-2 last:border-0"
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-semibold text-info-600">{v.maVoucher}</span>
+                      <span className="font-mono text-xs font-semibold text-info-600">
+                        {v.maVoucher}
+                      </span>
                       <Badge label={status.label} tone={status.tone} />
                     </div>
                     <p className="text-xs text-ink-500 mt-0.5">
-                      Giảm {v.giaTriGiam}{v.loaiGiamGia === "PhanTram" ? "%" : "đ"}
-                      {v.giaTriGiamToiDa ? ` (tối đa ${v.giaTriGiamToiDa.toLocaleString("vi-VN")}đ)` : ""}
+                      Giảm {v.giaTriGiam}
+                      {v.loaiGiamGia === "PhanTram" ? "%" : "đ"}
+                      {v.giaTriGiamToiDa
+                        ? ` (tối đa ${v.giaTriGiamToiDa.toLocaleString("vi-VN")}đ)`
+                        : ""}
                       {" · "}
                       {LY_DO_VOUCHER_LABEL[v.lyDoPhatHanh] ?? v.lyDoPhatHanh}
                     </p>
                     <p className="text-xs text-ink-400">
-                      HSD: {formatDate(v.ngayBatDau)} — {formatDate(v.ngayHetHan)}
+                      HSD: {formatDate(v.ngayBatDau)} —{" "}
+                      {formatDate(v.ngayHetHan)}
                     </p>
                   </div>
                 );
               })}
             </div>
-          )
-        )}
+          ))}
       </div>
     </Card>
   );

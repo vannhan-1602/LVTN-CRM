@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { Pencil, Trash2, Send, CheckCircle2, XCircle } from "lucide-react";
 import quoteApi from "../../api/quoteApi";
@@ -24,10 +25,22 @@ export default function QuoteDetailPage() {
   const canEdit = [ROLES.Sale, ROLES.Manager].includes(user?.role);
   const canDelete = user?.role === ROLES.Manager;
 
-  const [quote, setQuote] = useState(null);
+  const {
+    data: quote,
+    isLoading: loading,
+    refetch: load,
+  } = useQuery({
+    queryKey: ["quote", id],
+    queryFn: async () => {
+      const res = await quoteApi.getById(id);
+      return res.data ?? null;
+    },
+    refetchInterval: 1000, // tự tải lại mỗi 1 giây
+    refetchOnWindowFocus: true, // tự tải lại khi quay lại tab
+  });
+
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -35,22 +48,6 @@ export default function QuoteDetailPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [sendNotice, setSendNotice] = useState(null); // { ok: bool, message: string } | null
 
-  const load = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await quoteApi.getById(id);
-      setQuote(res.data ?? null);
-    } catch (err) {
-      setError(err?.message || "Không thể tải báo giá");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, [id]);
   useEffect(() => {
     Promise.all([
       customerApi.getAll({ pageSize: 100 }),

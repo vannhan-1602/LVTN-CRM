@@ -18,12 +18,7 @@ public class PhieuThuChiController : ControllerBase
     private readonly IMediator _mediator;
     public PhieuThuChiController(IMediator mediator) => _mediator = mediator;
 
-    /// <summary>
-    /// Lấy danh sách phiếu thu/chi. Có thể lọc theo:
-    /// - KhachHangId: toàn bộ phiếu của một khách hàng
-    /// - HoaDonId: toàn bộ phiếu gắn với một hóa đơn cụ thể
-    /// - LoaiPhieu: 'Thu' hoặc 'Chi'
-    /// </summary>
+    // Lấy danh sách phiếu thu/chi. Có thể lọc theo:
     [HttpGet]
     [Authorize(Policy = Policies.CustomerReadAccess)]
     public async Task<IActionResult> GetAll(
@@ -47,18 +42,16 @@ public class PhieuThuChiController : ControllerBase
         return Ok(ApiResponse<PhieuThuChiDto>.Ok(result));
     }
 
-    /// <summary>
-    /// Tạo phiếu thu hoặc phiếu chi.
+
+    // Tạo phiếu thu hoặc phiếu chi.
+    // Phiếu Thu (LoaiPhieu = "Thu"):
+    //  - Bắt buộc truyền HoaDonId.
+    //   - Hệ thống tự kiểm tra số tiền không vượt quá số tiền còn lại của hóa đơn.
+    //   - Hệ thống tự cập nhật SoTienDaThu và TrangThaiThanhToan của hóa đơn.
     ///
-    /// Phiếu Thu (LoaiPhieu = "Thu"):
-    ///   - Bắt buộc truyền HoaDonId.
-    ///   - Hệ thống tự kiểm tra số tiền không vượt quá số tiền còn lại của hóa đơn.
-    ///   - Hệ thống tự cập nhật SoTienDaThu và TrangThaiThanhToan của hóa đơn.
-    ///
-    /// Phiếu Chi (LoaiPhieu = "Chi"):
-    ///   - Phải truyền KhachHangId hoặc HoaDonId (hoặc cả 2).
-    ///   - Không ảnh hưởng đến trạng thái thanh toán của hóa đơn.
-    /// </summary>
+    // Phiếu Chi (LoaiPhieu = "Chi"):
+    //   - Phải truyền KhachHangId hoặc HoaDonId (hoặc cả 2).
+    //   - Không ảnh hưởng đến trạng thái thanh toán của hóa đơn.
     [HttpPost]
     [Authorize(Policy = Policies.FinanceTeam)]
     public async Task<IActionResult> Create([FromBody] CreatePhieuThuChiRequestDto request, CancellationToken ct)

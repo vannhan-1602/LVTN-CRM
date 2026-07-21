@@ -20,9 +20,8 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace CRM.API.Controllers;
 
-// Quản lý Sản phẩm/Dịch vụ và Kho. Sản phẩm là danh mục dùng chung cho Báo giá,
-// nên không thuộc phạm vi "dữ liệu riêng của Sale" — mọi thành viên SalesTeam đều xem/lập báo giá được từ danh mục chung; chỉ Manager mới thêm/sửa/khóa sản phẩm
-// điều chỉnh kho (nghiệp vụ quản lý danh mục, không phải nghiệp vụ bán hàng cá nhân).
+// Quản lý Sản phẩm/Dịch vụ và Kho.
+// chỉ Manager mới thêm/sửa/khóa sản phẩm điều chỉnh kho (nghiệp vụ quản lý danh mục, không phải nghiệp vụ bán hàng cá nhân).
 
 [ApiController]
 [Route("api/[controller]")]
@@ -112,7 +111,7 @@ public class ProductController : ControllerBase
         return Ok(ApiResponse<StockTransactionResultDto>.Ok(result, "Cập nhật tồn kho thành công."));
     }
 
-    // ── Quản lý hình ảnh sản phẩm (1 ảnh chính + nhiều ảnh phụ) ──────────────────
+    //Quản lý hình ảnh sản phẩm (1 ảnh chính + nhiều ảnh phụ)
 
     private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
     private const long MaxImageSizeBytes = 5 * 1024 * 1024; // 5MB

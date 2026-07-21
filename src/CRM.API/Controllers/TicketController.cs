@@ -18,7 +18,7 @@ namespace CRM.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //đổi thành SalesTeam (Sale + Manager)
+    // SalesTeam (Sale + Manager)
     
     [Authorize(Policy = Policies.SalesTeam)]
     public class TicketController : ControllerBase

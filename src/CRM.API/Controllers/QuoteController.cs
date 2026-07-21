@@ -17,7 +17,7 @@ namespace CRM.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // policy cụ thể khai báo riêng từng action bên dưới (đọc rộng hơn ghi)
+[Authorize] // policy cụ thể khai báo riêng từng action bên dưới 
 public class QuoteController : ControllerBase
 {
     private readonly IMediator _mediator;

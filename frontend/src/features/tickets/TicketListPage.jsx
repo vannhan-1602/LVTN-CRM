@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Headset,
@@ -48,22 +49,48 @@ export default function TicketListPage() {
     loadDanhMuc();
   }, [loadDanhMuc]);
 
-  const [items, setItems] = useState([]);
   const [nhanVienList, setNhanVienList] = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
   const [pageNumber, setPageNumber] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
+
+  const {
+    data,
+    isLoading: loading,
+    refetch: loadTickets,
+  } = useQuery({
+    queryKey: [
+      "tickets",
+      pageNumber,
+      filterStatus,
+      filterPriority,
+      khachHangIdFilter,
+    ],
+    queryFn: async () => {
+      const res = await ticketApi.getAll({
+        pageNumber,
+        pageSize,
+        search: search.trim() || undefined,
+        trangThai: filterStatus || undefined,
+        mucDoUuTien: filterPriority || undefined,
+        khachHangId: khachHangIdFilter || undefined,
+      });
+      return res.data ?? {};
+    },
+    refetchInterval: 1000, // tự tải lại mỗi 1 giây (bắt ticket mới từ voucher)
+    refetchOnWindowFocus: true,
+  });
+
+  const items = data?.items ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const totalCount = data?.totalCount ?? 0;
 
   const nhanVienMap = useMemo(
     () =>
@@ -84,31 +111,6 @@ export default function TicketListPage() {
     [items, totalCount],
   );
 
-  const loadTickets = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await ticketApi.getAll({
-        pageNumber,
-        pageSize,
-        search: search.trim() || undefined,
-        trangThai: filterStatus || undefined,
-        mucDoUuTien: filterPriority || undefined,
-        khachHangId: khachHangIdFilter || undefined,
-      });
-      setItems(res.data?.items ?? []);
-      setTotalPages(res.data?.totalPages ?? 1);
-      setTotalCount(res.data?.totalCount ?? 0);
-    } catch (err) {
-      setError(err?.message || "Tải danh sách thất bại");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadTickets();
-  }, [pageNumber, filterStatus, filterPriority, khachHangIdFilter]);
   useEffect(() => {
     authApi
       .getStaffList()
