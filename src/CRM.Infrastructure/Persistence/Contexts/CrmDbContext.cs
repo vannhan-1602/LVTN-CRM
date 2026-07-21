@@ -10,14 +10,12 @@ public partial class CrmDbContext : DbContext
     {
     }
 
-    // Identity / HR (HT_)
     public virtual DbSet<HtUserEntity> HtUsers { get; set; }
     public virtual DbSet<HtRoleEntity> HtRoles { get; set; }
     public virtual DbSet<HtThongTinNhanSuEntity> HtThongTinNhanSu { get; set; }
     public virtual DbSet<HtPhongBanEntity> HtPhongBans { get; set; }
     public virtual DbSet<HtChucVuEntity> HtChucVus { get; set; }
 
-    // Khách hàng (KH_)
     public virtual DbSet<KhKhachHangEntity> KhKhachHangs { get; set; }
     public virtual DbSet<KhLoaiKhachHangEntity> KhLoaiKhachHangs { get; set; }
     public virtual DbSet<KhTinhTrangKhachHangEntity> KhTinhTrangKhachHangs { get; set; }
@@ -25,30 +23,25 @@ public partial class CrmDbContext : DbContext
     public virtual DbSet<KhHoatDongEntity> KhHoatDongs { get; set; }
     public virtual DbSet<KhDiaChiEntity> KhDiaChis { get; set; }
 
-    // Bán hàng (BH_)
     public virtual DbSet<BhLoaiSanPhamEntity> BhLoaiSanPhams { get; set; }
     public virtual DbSet<BhSanPhamEntity> BhSanPhams { get; set; }
     public virtual DbSet<BhSanPhamHinhAnhEntity> BhSanPhamHinhAnhs { get; set; }
     public virtual DbSet<BhCoHoiBanHangEntity> BhCoHoiBanHangs { get; set; }
 
-    // Kho (Kho_)
     public virtual DbSet<KhoTheKhoEntity> KhoTheKhos { get; set; }
 
-    // Báo giá + Hợp đồng (HD_)
     public virtual DbSet<HdBaoGiaEntity> HdBaoGias { get; set; }
     public virtual DbSet<HdBaoGiaChiTietEntity> HdBaoGiaChiTiets { get; set; }
     public virtual DbSet<HdHopDongEntity> HdHopDongs { get; set; }
+    public virtual DbSet<HdLichThanhToanEntity> HdLichThanhToans { get; set; }
 
-    // Kế toán (KT_)
     public virtual DbSet<KtHoaDonEntity> KtHoaDons { get; set; }
     public virtual DbSet<KtPhieuThuChiEntity> KtPhieuThuChis { get; set; }
 
-    // Ticket (TK_)
     public virtual DbSet<TkTicketEntity> TkTickets { get; set; }
     public virtual DbSet<TkLoaiTicketEntity> TkLoaiTickets { get; set; }
     public virtual DbSet<TkTicketPhanHoiEntity> TkTicketPhanHois { get; set; }
 
-    // Loyalty (KH_ mới)
     public virtual DbSet<KhXepHangEntity> KhXepHangs { get; set; }
     public virtual DbSet<KhNgayLeEntity> KhNgayLes { get; set; }
     public virtual DbSet<KhDiemThuongEntity> KhDiemThuongs { get; set; }
@@ -57,8 +50,10 @@ public partial class CrmDbContext : DbContext
     public virtual DbSet<KhVoucherTokenEntity> KhVoucherTokens { get; set; }
     public virtual DbSet<KhEmailLogEntity> KhEmailLogs { get; set; }
 
-    // Hệ thống (SYS_)
     public virtual DbSet<SysAuditLogEntity> SysAuditLogs { get; set; }
+
+    public virtual DbSet<DmTinhThanhEntity> DmTinhThanhs { get; set; }
+    public virtual DbSet<DmPhuongXaEntity> DmPhuongXas { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -22,38 +22,47 @@ const STATUS_TONE = {
   DangThucHien: "success",
   TamDung: "warning",
   ThanhLy: "neutral",
+  HetHan: "danger",
 };
 
 function formatMoney(n) {
-  return n == null ? "—" : Number(n).toLocaleString("vi-VN") + " đ";
+  return n == null ? "Không có" : Number(n).toLocaleString("vi-VN") + " đ";
 }
 
 export default function ContractDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+
   const canManage = [ROLES.Sale, ROLES.Manager].includes(user?.role);
   const canDelete = user?.role === ROLES.Manager;
 
   const [contract, setContract] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [showEditModal, setShowEditModal] = useState(false);
 
   const load = async () => {
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
     try {
       const res = await contractApi.getById(id);
       setContract(res.data ?? null);
     } catch (err) {
       setError(err?.message || "Không thể tải thông tin hợp đồng");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    load();
+  }, [id]);
 
   const handleDelete = async () => {
-    if (!window.confirm("Xóa hợp đồng này? Hành động không thể hoàn tác.")) return;
+    if (!window.confirm("Xóa hợp đồng này? Hành động không thể phục hồi."))
+      return;
     try {
       await contractApi.delete(id);
       navigate("/contracts");
@@ -63,13 +72,19 @@ export default function ContractDetailPage() {
   };
 
   if (loading) {
-    return <div className="text-sm text-ink-400 py-10 text-center">Đang tải...</div>;
+    return (
+      <div className="text-sm text-ink-400 py-10 text-center">Đang tải...</div>
+    );
   }
 
   if (error || !contract) {
     return (
       <div className="space-y-4">
-        <PageHeader breadcrumb="CRM / Kinh doanh" title="Hợp đồng" onBack={() => navigate("/contracts")} />
+        <PageHeader
+          breadcrumb="CRM / Kinh doanh"
+          title="Hợp đồng"
+          onBack={() => navigate("/contracts")}
+        />
         <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-4">
           {error || "Không tìm thấy hợp đồng."}
         </div>
@@ -77,7 +92,8 @@ export default function ContractDetailPage() {
     );
   }
 
-  const isFinal = contract.trangThai === "ThanhLy";
+  const isFinal =
+    contract.trangThai === "ThanhLy" || contract.trangThai === "HetHan";
 
   return (
     <div className="space-y-5">
@@ -85,7 +101,10 @@ export default function ContractDetailPage() {
         <EditContractModal
           contract={contract}
           onClose={() => setShowEditModal(false)}
-          onSaved={() => { setShowEditModal(false); load(); }}
+          onSaved={() => {
+            setShowEditModal(false);
+            load();
+          }}
         />
       )}
 
@@ -93,36 +112,79 @@ export default function ContractDetailPage() {
         breadcrumb="Hợp đồng"
         title={contract.maHopDong}
         onBack={() => navigate("/contracts")}
-        badge={<Badge label={CONTRACT_STATUS[contract.trangThai] ?? contract.trangThai} tone={STATUS_TONE[contract.trangThai]} />}
+        badge={
+          <Badge
+            label={CONTRACT_STATUS[contract.trangThai] ?? contract.trangThai}
+            tone={STATUS_TONE[contract.trangThai]}
+          />
+        }
         actions={
           <>
             {canManage && !isFinal && (
-              <Button variant="secondary" icon={Pencil} onClick={() => setShowEditModal(true)}>Sửa</Button>
+              <Button
+                variant="secondary"
+                icon={Pencil}
+                onClick={() => setShowEditModal(true)}
+              >
+                Sửa
+              </Button>
             )}
             {canDelete && (
-              <Button variant="danger" icon={Trash2} onClick={handleDelete}>Xóa</Button>
+              <Button variant="danger" icon={Trash2} onClick={handleDelete}>
+                Xóa
+              </Button>
             )}
           </>
         }
       />
 
-      {error && <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-3">{error}</div>}
+      {error && (
+        <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-3">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
           <Card title="Thông tin hợp đồng">
             <div className="grid grid-cols-2 gap-5">
               <Field label="Khách hàng" value={contract.tenKhachHang} />
-              <Field label="Giá trị hợp đồng" value={formatMoney(contract.giaTri)} />
+              <Field
+                label="Giá trị hợp đồng"
+                value={formatMoney(contract.giaTri)}
+              />
               <Field label="Ngày ký" value={formatDate(contract.ngayKy)} />
-              <Field label="Thời hạn" value={contract.thoiHan ? `${contract.thoiHan} tháng` : "—"} />
-              <Field label="Ngày tạo" value={formatDateTime(contract.createdAt)} />
-              <Field label="Cập nhật gần nhất" value={formatDateTime(contract.updatedAt)} />
+              <Field
+                label="Thời hạn"
+                value={
+                  contract.thoiHan ? `${contract.thoiHan} tháng` : "Không có"
+                }
+              />
+              <Field
+                label="Ngày kết thúc"
+                value={formatDate(contract.ngayKetThuc)}
+              />
+              <Field
+                label="Hình thức thanh toán"
+                value={
+                  contract.hinhThucThanhToan === "TraGop"
+                    ? "Trả góp nhiều đợt"
+                    : "Thanh toán 1 lần"
+                }
+              />
+              <Field
+                label="Ngày tạo"
+                value={formatDateTime(contract.createdAt)}
+              />
+              <Field
+                label="Cập nhật gần nhất"
+                value={formatDateTime(contract.updatedAt)}
+              />
             </div>
           </Card>
 
           {contract.maBaoGia && (
-            <Card title="Báo giá gốc">
+            <Card title="Báo giá đính kèm">
               <button
                 onClick={() => navigate(`/quotes?search=${contract.maBaoGia}`)}
                 className="w-full flex items-center justify-between p-3.5 bg-surface-alt rounded-lg hover:bg-ink-100 transition-colors text-left"
@@ -132,8 +194,12 @@ export default function ContractDetailPage() {
                     <Receipt size={17} />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-ink-900 font-mono">{contract.maBaoGia}</p>
-                    <p className="text-xs text-ink-400">Tổng tiền {formatMoney(contract.giaTri)}</p>
+                    <p className="text-sm font-medium text-ink-900 font-mono">
+                      {contract.maBaoGia}
+                    </p>
+                    <p className="text-xs text-ink-400">
+                      Tổng tiền {formatMoney(contract.giaTri)}
+                    </p>
                   </div>
                 </div>
                 <ExternalLink size={15} className="text-ink-400" />
@@ -146,18 +212,21 @@ export default function ContractDetailPage() {
           {isFinal && (
             <Card>
               <p className="text-xs text-ink-400">
-                Hợp đồng đã thanh lý, không thể thay đổi thêm.
+                Hợp đồng đã{" "}
+                {contract.trangThai === "HetHan" ? "Hết hạn" : "Thanh lý"},
+                không thể thay đổi thông tin.
               </p>
             </Card>
           )}
-
           <Card title="Khách hàng liên quan">
             <div className="flex items-center gap-3 mb-3.5">
               <div className="w-10 h-10 rounded-full bg-info-50 flex items-center justify-center text-sm font-semibold text-info-700 shrink-0">
                 {(contract.tenKhachHang || "?").slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <p className="text-sm font-medium text-ink-900">{contract.tenKhachHang}</p>
+                <p className="text-sm font-medium text-ink-900">
+                  {contract.tenKhachHang}
+                </p>
                 <p className="text-xs text-ink-400">Khách hàng</p>
               </div>
             </div>

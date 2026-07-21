@@ -6,6 +6,11 @@ using CRM.Infrastructure.Persistence.Contexts;
 using CRM.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CRM.Infrastructure.Persistence.Repositories;
 
@@ -13,12 +18,13 @@ public class ContractRepository : IContractRepository
 {
     private readonly CrmDbContext _context;
     public ContractRepository(CrmDbContext context) => _context = context;
+
     private async Task<List<ContractDto>> ExecuteEnrichedQueryAsync(
         string? whereClause, object?[] parameters, int? skip, int? take,
         CancellationToken ct)
     {
         var sql = $"""
-            SELECT
+            SELECT 
                 hd.`Id`,
                 hd.`MaHopDong`,
                 hd.`KhachHang_Id`  AS KhachHangId,
@@ -28,6 +34,8 @@ public class ContractRepository : IContractRepository
                 bg.`TongTien`      AS GiaTri,
                 hd.`NgayKy`,
                 hd.`ThoiHan`,
+                hd.`NgayKetThuc`,
+                hd.`HinhThucThanhToan`,
                 hd.`TrangThai`,
                 hd.`CreatedAt`,
                 hd.`UpdatedAt`
@@ -41,21 +49,22 @@ public class ContractRepository : IContractRepository
 
         var conn = _context.Database.GetDbConnection();
         var openedHere = conn.State != System.Data.ConnectionState.Open;
-        if (openedHere)
-            await conn.OpenAsync(ct);
+        if (openedHere) await conn.OpenAsync(ct);
         try
         {
             using var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
             cmd.Transaction = _context.Database.CurrentTransaction?.GetDbTransaction();
-            foreach (var (p, i) in parameters.Select((p, i) => (p, i)))
+            if (parameters != null)
             {
-                var param = cmd.CreateParameter();
-                param.ParameterName = $"@p{i}";
-                param.Value = p ?? DBNull.Value;
-                cmd.Parameters.Add(param);
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    var param = cmd.CreateParameter();
+                    param.ParameterName = $"@p{i}";
+                    param.Value = parameters[i] ?? DBNull.Value;
+                    cmd.Parameters.Add(param);
+                }
             }
-
             using var reader = await cmd.ExecuteReaderAsync(ct);
             var result = new List<ContractDto>();
             while (await reader.ReadAsync(ct))
@@ -71,6 +80,8 @@ public class ContractRepository : IContractRepository
                     GiaTri = reader.IsDBNull(reader.GetOrdinal("GiaTri")) ? null : reader.GetDecimal(reader.GetOrdinal("GiaTri")),
                     NgayKy = reader.IsDBNull(reader.GetOrdinal("NgayKy")) ? null : DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("NgayKy"))),
                     ThoiHan = reader.IsDBNull(reader.GetOrdinal("ThoiHan")) ? null : reader.GetInt32(reader.GetOrdinal("ThoiHan")),
+                    NgayKetThuc = reader.IsDBNull(reader.GetOrdinal("NgayKetThuc")) ? null : DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("NgayKetThuc"))),
+                    HinhThucThanhToan = reader.IsDBNull(reader.GetOrdinal("HinhThucThanhToan")) ? null : reader.GetString(reader.GetOrdinal("HinhThucThanhToan")),
                     TrangThai = reader.GetString(reader.GetOrdinal("TrangThai")),
                     CreatedAt = reader.IsDBNull(reader.GetOrdinal("CreatedAt")) ? null : reader.GetDateTime(reader.GetOrdinal("CreatedAt")),
                     UpdatedAt = reader.IsDBNull(reader.GetOrdinal("UpdatedAt")) ? null : reader.GetDateTime(reader.GetOrdinal("UpdatedAt")),
@@ -91,22 +102,23 @@ public class ContractRepository : IContractRepository
             SELECT COUNT(*) FROM `HD_HopDong` hd
             {(string.IsNullOrWhiteSpace(whereClause) ? "" : "WHERE " + whereClause)}
             """;
-
         var conn = _context.Database.GetDbConnection();
         var openedHere = conn.State != System.Data.ConnectionState.Open;
-        if (openedHere)
-            await conn.OpenAsync(ct);
+        if (openedHere) await conn.OpenAsync(ct);
         try
         {
             using var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
             cmd.Transaction = _context.Database.CurrentTransaction?.GetDbTransaction();
-            foreach (var (p, i) in parameters.Select((p, i) => (p, i)))
+            if (parameters != null)
             {
-                var param = cmd.CreateParameter();
-                param.ParameterName = $"@p{i}";
-                param.Value = p ?? DBNull.Value;
-                cmd.Parameters.Add(param);
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    var param = cmd.CreateParameter();
+                    param.ParameterName = $"@p{i}";
+                    param.Value = parameters[i] ?? DBNull.Value;
+                    cmd.Parameters.Add(param);
+                }
             }
             var scalar = await cmd.ExecuteScalarAsync(ct);
             return Convert.ToInt32(scalar);
@@ -118,7 +130,6 @@ public class ContractRepository : IContractRepository
         }
     }
 
-    // ── Public interface ──────────────────────────────────────────────────────
     public async Task<HopDong?> GetByIdAsync(ulong id, CancellationToken ct = default)
     {
         var e = await _context.HdHopDongs.FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -127,7 +138,7 @@ public class ContractRepository : IContractRepository
 
     public async Task<ContractDto?> GetByIdEnrichedAsync(ulong id, CancellationToken ct = default)
     {
-        var rows = await ExecuteEnrichedQueryAsync("hd.Id = @p0", [id], null, null, ct);
+        var rows = await ExecuteEnrichedQueryAsync("hd.Id = @p0", new object[] { id }, null, null, ct);
         return rows.FirstOrDefault();
     }
 
@@ -138,7 +149,6 @@ public class ContractRepository : IContractRepository
         var conditions = new List<string>();
         var parameters = new List<object?>();
         int pIdx = 0;
-
         if (!string.IsNullOrWhiteSpace(search))
         {
             conditions.Add($"hd.`MaHopDong` LIKE @p{pIdx}");
@@ -156,24 +166,23 @@ public class ContractRepository : IContractRepository
             conditions.Add($"hd.`KhachHang_Id` = @p{pIdx}");
             parameters.Add(khachHangId.Value);
         }
-
         var where = conditions.Count > 0 ? string.Join(" AND ", conditions) : null;
         var args = parameters.ToArray();
 
         var total = await ExecuteCountAsync(where, args, ct);
         var items = await ExecuteEnrichedQueryAsync(where, args, (pageNumber - 1) * pageSize, pageSize, ct);
 
-        return new PagedResult<ContractDto>
-        {
-            Items = items,
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            TotalCount = total
-        };
+        return new PagedResult<ContractDto> { Items = items, PageNumber = pageNumber, PageSize = pageSize, TotalCount = total };
     }
 
     public async Task<HopDong> AddAsync(HopDong contract, CancellationToken ct = default)
     {
+        // 1. Tính sẵn Ngày kết thúc dựa vào Ngày ký + Thời hạn (tháng)
+        if (contract.NgayKy.HasValue && contract.ThoiHan.HasValue)
+        {
+            contract.NgayKetThuc = contract.NgayKy.Value.AddMonths(contract.ThoiHan.Value);
+        }
+
         var entity = MapToEntity(contract);
         _context.HdHopDongs.Add(entity);
         await _context.SaveChangesAsync(ct);
@@ -183,7 +192,7 @@ public class ContractRepository : IContractRepository
 
     public async Task UpdateStatusAsync(ulong id, string trangThai, CancellationToken ct = default)
     {
-        var entity = await _context.HdHopDongs.FindAsync([id], ct);
+        var entity = await _context.HdHopDongs.FindAsync(new object[] { id }, ct);
         if (entity is null) return;
         entity.TrangThai = trangThai;
         entity.UpdatedAt = DateTime.UtcNow;
@@ -192,9 +201,10 @@ public class ContractRepository : IContractRepository
 
     public async Task<bool> DeleteAsync(ulong id, CancellationToken ct = default)
     {
-        var entity = await _context.HdHopDongs.FindAsync([id], ct);
+        var entity = await _context.HdHopDongs.FindAsync(new object[] { id }, ct);
         if (entity is null) return false;
         _context.HdHopDongs.Remove(entity);
+        await _context.SaveChangesAsync(ct);
         return true;
     }
 
@@ -210,9 +220,8 @@ public class ContractRepository : IContractRepository
 
     public Task<bool> HasActiveContractAsync(ulong khachHangId, CancellationToken ct = default) =>
         _context.HdHopDongs.AnyAsync(
-            x => x.KhachHangId == khachHangId && x.TrangThai == CRM.Domain.Enums.ContractStatus.DangThucHien, ct);
+            x => x.KhachHangId == khachHangId && x.TrangThai == "DangThucHien", ct);
 
-    // ── Mappers ───────────────────────────────────────────────────────────────
     private static HopDong MapToDomain(HdHopDongEntity e) => new()
     {
         Id = e.Id,
@@ -221,6 +230,8 @@ public class ContractRepository : IContractRepository
         BaoGiaGocId = e.BaoGiaId,
         NgayKy = e.NgayKy,
         ThoiHan = e.ThoiHan,
+        NgayKetThuc = e.NgayKetThuc,
+        HinhThucThanhToan = e.HinhThucThanhToan,
         TrangThai = e.TrangThai,
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt
@@ -228,11 +239,14 @@ public class ContractRepository : IContractRepository
 
     private static HdHopDongEntity MapToEntity(HopDong d) => new()
     {
+        Id = d.Id,
         MaHopDong = d.MaHopDong,
         KhachHangId = d.KhachHangId,
         BaoGiaId = d.BaoGiaGocId,
         NgayKy = d.NgayKy,
         ThoiHan = d.ThoiHan,
+        NgayKetThuc = d.NgayKetThuc,
+        HinhThucThanhToan = d.HinhThucThanhToan,
         TrangThai = d.TrangThai,
         CreatedAt = d.CreatedAt,
         UpdatedAt = d.UpdatedAt

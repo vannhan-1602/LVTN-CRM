@@ -17,6 +17,10 @@ public class HdHopDongEntityConfiguration : IEntityTypeConfiguration<HdHopDongEn
         b.Property(x => x.BaoGiaId).HasColumnName("BaoGia_Id").IsRequired(false);
         b.Property(x => x.NgayKy).IsRequired(false);
         b.Property(x => x.ThoiHan).IsRequired(false);
+
+        b.Property(x => x.NgayKetThuc).IsRequired(false);
+        b.Property(x => x.HinhThucThanhToan).HasMaxLength(30).HasDefaultValue("ThanhToanMotLan");
+
         b.Property(x => x.TrangThai).HasMaxLength(30).HasDefaultValue("DangThucHien");
         b.Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         b.Property(x => x.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");

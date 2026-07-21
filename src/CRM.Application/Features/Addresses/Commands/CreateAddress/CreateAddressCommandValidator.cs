@@ -6,10 +6,20 @@ public class CreateAddressCommandValidator : AbstractValidator<CreateAddressComm
 {
     public CreateAddressCommandValidator()
     {
-        RuleFor(x => x.LoaiDiaChi).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.DiaChiChiTiet).MaximumLength(150);
-        RuleFor(x => x.TinhThanh).MaximumLength(50);
-        RuleFor(x => x.QuanHuyen).MaximumLength(50);
-        RuleFor(x => x.PhuongXa).MaximumLength(50);
+        RuleFor(x => x.KhachHangId)
+            .GreaterThan(0u).WithMessage("Khách hàng không hợp lệ.");
+
+        RuleFor(x => x.LoaiDiaChi)
+            .NotEmpty().WithMessage("Loại địa chỉ không được để trống.")
+            .Must(x => x == "Office" || x == "Billing" || x == "Shipping")
+            .WithMessage("Loại địa chỉ phải là Office, Billing hoặc Shipping.");
+
+        RuleFor(x => x.TinhThanhId)
+            .NotNull().WithMessage("Vui lòng chọn Tỉnh/Thành phố.")
+            .GreaterThan(0u).WithMessage("Tỉnh/Thành phố không hợp lệ.");
+
+        RuleFor(x => x.PhuongXaId)
+            .NotNull().WithMessage("Vui lòng chọn Phường/Xã.")
+            .GreaterThan(0u).WithMessage("Phường/Xã không hợp lệ.");
     }
 }

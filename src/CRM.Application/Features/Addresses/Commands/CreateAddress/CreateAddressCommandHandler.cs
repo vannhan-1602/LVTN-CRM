@@ -1,6 +1,8 @@
 ﻿using CRM.Application.Features.Addresses.DTOs;
 using CRM.Application.Interfaces.Addresses;
 using MediatR;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CRM.Application.Features.Addresses.Commands.CreateAddress;
 
@@ -17,9 +19,8 @@ public class CreateAddressCommandHandler : IRequestHandler<CreateAddressCommand,
         _addressRepository.AddAsync(
             request.KhachHangId,
             request.DiaChiChiTiet?.Trim(),
-            request.TinhThanh?.Trim(),
-            request.QuanHuyen?.Trim(),
-            request.PhuongXa?.Trim(),
+            request.TinhThanhId,
+            request.PhuongXaId,
             request.LoaiDiaChi,
             request.IsDefault,
             cancellationToken);

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Pencil, Trash2, MapPin, Plus, Star, X } from "lucide-react";
 import customerApi from "../../api/customerApi";
 import addressApi from "../../api/addressApi";
+import locationApi from "../../api/locationApi";
 import useAuthStore from "../auth/authStore";
 import PageHeader from "../../components/common/PageHeader";
 import Card, { Field } from "../../components/common/Card";
@@ -25,13 +26,11 @@ const LOAI_DIA_CHI_OPTIONS = [
 const emptyAddrForm = {
   loaiDiaChi: "Office",
   diaChiChiTiet: "",
-  tinhThanh: "",
-  quanHuyen: "",
-  phuongXa: "",
+  tinhThanhId: "",
+  phuongXaId: "",
   isDefault: false,
 };
 
-// ── Khối quản lý địa chỉ — gộp ngay trong trang chi tiết khách hàng ─────────
 function AddressSection({ customerId, canEdit }) {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +39,9 @@ function AddressSection({ customerId, canEdit }) {
   const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const [tinhThanhs, setTinhThanhs] = useState([]);
+  const [phuongXas, setPhuongXas] = useState([]);
 
   const load = async () => {
     setLoading(true);
@@ -57,6 +59,24 @@ function AddressSection({ customerId, canEdit }) {
     load();
   }, [customerId]);
 
+  useEffect(() => {
+    locationApi
+      .getTinhThanh()
+      .then((res) => setTinhThanhs(res.data ?? res))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (form.tinhThanhId) {
+      locationApi
+        .getPhuongXa(form.tinhThanhId)
+        .then((res) => setPhuongXas(res.data ?? res))
+        .catch(() => {});
+    } else {
+      setPhuongXas([]);
+    }
+  }, [form.tinhThanhId]);
+
   const resetForm = () => {
     setForm(emptyAddrForm);
     setEditingId(null);
@@ -69,9 +89,8 @@ function AddressSection({ customerId, canEdit }) {
     setForm({
       loaiDiaChi: addr.loaiDiaChi ?? "Office",
       diaChiChiTiet: addr.diaChiChiTiet ?? "",
-      tinhThanh: addr.tinhThanh ?? "",
-      quanHuyen: addr.quanHuyen ?? "",
-      phuongXa: addr.phuongXa ?? "",
+      tinhThanhId: addr.tinhThanhId ?? "",
+      phuongXaId: addr.phuongXaId ?? "",
       isDefault: addr.isDefault ?? false,
     });
     setShowForm(true);
@@ -86,8 +105,15 @@ function AddressSection({ customerId, canEdit }) {
     setSubmitting(true);
     setError("");
     try {
-      if (editingId) await addressApi.update(editingId, form);
-      else await addressApi.create(customerId, form);
+      const payload = {
+        loaiDiaChi: form.loaiDiaChi,
+        diaChiChiTiet: form.diaChiChiTiet,
+        tinhThanhId: form.tinhThanhId ? Number(form.tinhThanhId) : null,
+        phuongXaId: form.phuongXaId ? Number(form.phuongXaId) : null,
+        isDefault: form.isDefault,
+      };
+      if (editingId) await addressApi.update(editingId, payload);
+      else await addressApi.create(customerId, payload);
       await load();
       resetForm();
     } catch (err) {
@@ -131,7 +157,7 @@ function AddressSection({ customerId, canEdit }) {
         >
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-medium text-ink-900">
-              {editingId ? "Sửa địa chỉ" : "Thêm địa chỉ mới"}
+              {editingId ? "Sửa địa chỉ" : "Thêm địa chỉ"}
             </h4>
             <button
               type="button"
@@ -176,6 +202,52 @@ function AddressSection({ customerId, canEdit }) {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-ink-500 mb-1">
+                Tỉnh/Thành
+              </label>
+              <select
+                value={form.tinhThanhId}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    tinhThanhId: e.target.value,
+                    phuongXaId: "",
+                  }))
+                }
+                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="">-- Chọn --</option>
+                {tinhThanhs.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.tenTinhThanh}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-ink-500 mb-1">
+                Phường/Xã
+              </label>
+              <select
+                value={form.phuongXaId}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, phuongXaId: e.target.value }))
+                }
+                disabled={!form.tinhThanhId}
+                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm disabled:bg-ink-100"
+              >
+                <option value="">-- Chọn --</option>
+                {phuongXas.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.tenPhuongXa}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-medium text-ink-500 mb-1">
               Địa chỉ chi tiết <span className="text-danger-500">*</span>
@@ -185,51 +257,9 @@ function AddressSection({ customerId, canEdit }) {
               onChange={(e) =>
                 setForm((f) => ({ ...f, diaChiChiTiet: e.target.value }))
               }
-              placeholder="Số nhà, tên đường, tòa nhà..."
+              placeholder="Số nhà, tên đường..."
               className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
             />
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-ink-500 mb-1">
-                Phường/Xã
-              </label>
-              <input
-                value={form.phuongXa}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, phuongXa: e.target.value }))
-                }
-                placeholder="Phường/Xã"
-                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-ink-500 mb-1">
-                Quận/Huyện
-              </label>
-              <input
-                value={form.quanHuyen}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, quanHuyen: e.target.value }))
-                }
-                placeholder="Quận/Huyện"
-                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-ink-500 mb-1">
-                Tỉnh/Thành phố
-              </label>
-              <input
-                value={form.tinhThanh}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, tinhThanh: e.target.value }))
-                }
-                placeholder="Tỉnh/Thành phố"
-                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
-              />
-            </div>
           </div>
 
           {error && (
@@ -290,11 +320,9 @@ function AddressSection({ customerId, canEdit }) {
                   )}
                 </div>
                 <p className="text-sm text-ink-900">{addr.diaChiChiTiet}</p>
-                {(addr.phuongXa || addr.quanHuyen || addr.tinhThanh) && (
+                {(addr.phuongXa || addr.tinhThanh) && (
                   <p className="text-xs text-ink-400 mt-0.5">
-                    {[addr.phuongXa, addr.quanHuyen, addr.tinhThanh]
-                      .filter(Boolean)
-                      .join(", ")}
+                    {[addr.phuongXa, addr.tinhThanh].filter(Boolean).join(", ")}
                   </p>
                 )}
               </div>
@@ -326,6 +354,7 @@ export default function CustomerDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+
   const canEdit = [ROLES.Sale, ROLES.Manager].includes(user?.role);
   const canDelete = user?.role === ROLES.Manager;
   const canViewExpense = [ROLES.Manager, ROLES.Accountant].includes(user?.role);
@@ -333,6 +362,7 @@ export default function CustomerDetailPage() {
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [showEditModal, setShowEditModal] = useState(false);
 
   const load = async () => {
@@ -353,7 +383,7 @@ export default function CustomerDetailPage() {
   }, [id]);
 
   const handleDelete = async () => {
-    if (!window.confirm("Xóa khách hàng này? Hành động không thể hoàn tác."))
+    if (!window.confirm("Xóa khách hàng này? Hợp đồng không thể khôi phục."))
       return;
     try {
       await customerApi.delete(id);
@@ -458,7 +488,7 @@ export default function CustomerDetailPage() {
                       tone={badgeToneForId(customer.loaiKhachHangId)}
                     />
                   ) : (
-                    "—"
+                    "Không có"
                   )
                 }
               />
@@ -502,7 +532,7 @@ export default function CustomerDetailPage() {
                   navigate(`/opportunities?khachHangId=${customer.id}`)
                 }
               >
-                Cơ hội bán hàng
+                Cơ hội
               </Button>
               <Button
                 variant="secondary"

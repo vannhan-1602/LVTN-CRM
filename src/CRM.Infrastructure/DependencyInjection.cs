@@ -33,6 +33,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Text;
 
 namespace CRM.Infrastructure;
@@ -59,14 +60,14 @@ public static class DependencyInjection
                     ServerVersion.AutoDetect(connectionString),
                     mySqlOptions => mySqlOptions.EnableRetryOnFailure())
                 .LogTo(
-                    sql => { if (sql.Contains("HD_HopDong", StringComparison.OrdinalIgnoreCase)) System.Console.WriteLine("=EF_SQL= " + sql); },
+                    sql => { if (sql.Contains("HD_HopDong", StringComparison.OrdinalIgnoreCase)) Console.WriteLine("=EF_SQL= " + sql); },
                     Microsoft.Extensions.Logging.LogLevel.Information));
 
         services.AddAutoMapper(typeof(PersistenceMappingProfile).Assembly);
-
         services.AddHttpContextAccessor();
         services.AddMemoryCache();
         services.AddSingleton<TokenVersionCache>();
+
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
@@ -88,13 +89,16 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IPhieuThuChiRepository, PhieuThuChiRepository>();
+
         services.AddScoped<IAuditLogPublisher, AuditLogPublisher>();
         services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IQuotePublicTokenService, QuotePublicTokenService>();
         services.AddScoped<IOpenAiService, OpenAiService>();
+
         services.AddHostedService<AuditLogConsumerHostedService>();
         services.AddHostedService<LoyaltyDailyJobHostedService>();
+        services.AddHostedService<ContractExpirationJobHostedService>();
 
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
             ?? throw new InvalidOperationException("JwtSettings configuration is missing.");
@@ -118,7 +122,6 @@ public static class DependencyInjection
                 ClockSkew = TimeSpan.Zero,
                 RoleClaimType = System.Security.Claims.ClaimTypes.Role
             };
-
             options.Events = JwtBearerEventHandlers.Create();
         });
 
