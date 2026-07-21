@@ -43,6 +43,9 @@ export default function ContractDetailPage() {
 
   const [showEditModal, setShowEditModal] = useState(false);
 
+  const [lichThanhToans, setLichThanhToans] = useState([]);
+  const [loadingLich, setLoadingLich] = useState(false);
+
   const load = async () => {
     setLoading(true);
     setError("");
@@ -56,9 +59,27 @@ export default function ContractDetailPage() {
     }
   };
 
+  const loadLichThanhToan = async () => {
+    setLoadingLich(true);
+    try {
+      const res = await contractApi.getLichThanhToan(id);
+      setLichThanhToans(res.data ?? []);
+    } catch {
+      // im lặng bỏ qua — không phải hợp đồng nào cũng có lịch trả góp
+    } finally {
+      setLoadingLich(false);
+    }
+  };
+
   useEffect(() => {
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (contract?.hinhThucThanhToan === "TraGop") {
+      loadLichThanhToan();
+    }
+  }, [contract?.hinhThucThanhToan, id]);
 
   const handleDelete = async () => {
     if (!window.confirm("Xóa hợp đồng này? Hành động không thể phục hồi."))
@@ -182,6 +203,51 @@ export default function ContractDetailPage() {
               />
             </div>
           </Card>
+
+          {contract.hinhThucThanhToan === "TraGop" && (
+            <Card title="Lịch trả góp">
+              {loadingLich ? (
+                <p className="text-sm text-ink-400">Đang tải lịch trả góp...</p>
+              ) : lichThanhToans.length === 0 ? (
+                <p className="text-sm text-ink-400">
+                  Chưa có dữ liệu lịch trả góp.
+                </p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-ink-400 text-xs uppercase">
+                      <th className="pb-2">Đợt</th>
+                      <th className="pb-2">Số tiền</th>
+                      <th className="pb-2">Hạn thanh toán</th>
+                      <th className="pb-2">Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lichThanhToans.map((l) => (
+                      <tr key={l.id} className="border-t border-ink-100">
+                        <td className="py-2">Đợt {l.soDot}</td>
+                        <td className="py-2">{formatMoney(l.soTien)}</td>
+                        <td className="py-2">{formatDate(l.hanThanhToan)}</td>
+                        <td className="py-2">
+                          <Badge
+                            tone={
+                              l.trangThai === "DaThanhToan"
+                                ? "success"
+                                : l.trangThai === "QuaHan"
+                                  ? "danger"
+                                  : "neutral"
+                            }
+                          >
+                            {l.trangThai}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </Card>
+          )}
 
           {contract.maBaoGia && (
             <Card title="Báo giá đính kèm">

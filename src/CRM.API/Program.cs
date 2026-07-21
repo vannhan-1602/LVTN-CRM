@@ -58,6 +58,33 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowCredentials();
     });
+
+    // Policy riêng, lỏng hơn, chỉ áp cho nhóm route api/public/* (landing page — không có cookie/token
+    // nên không cần AllowCredentials). Thêm domain landing page thật vào đây khi build/deploy xong.
+    options.AddPolicy("AllowPublicForms", policy =>
+    {
+        var publicOrigins = builder.Configuration
+            .GetSection("PublicFormsAllowedOrigins")
+            .Get<string[]>() ?? new[] { "http://localhost:5173", "http://localhost:5174" };
+
+        policy
+            .WithOrigins(publicOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+// Chống spam cho các endpoint public (AllowAnonymous) như api/public/leads — giới hạn theo IP.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddFixedWindowLimiter("PublicFormSubmit", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 5;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueLimit = 0;
+    });
 });
 
 var app = builder.Build();
@@ -72,6 +99,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+app.UseRateLimiter();
 
 // Phục vụ file tĩnh trong wwwroot (ảnh sản phẩm upload lên /uploads/products/...)
 var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads", "products");

@@ -89,7 +89,7 @@ public class AddressRepository : IAddressRepository
     public async Task<AddressDto> UpdateAsync(ulong id, string? diaChiChiTiet, uint? tinhThanhId, uint? phuongXaId, string loaiDiaChi, bool isDefault, CancellationToken ct = default)
     {
         var e = await _ctx.KhDiaChis.FindAsync(new object[] { id }, ct)
-            ?? throw new InvalidOperationException($"DiaChi {id} not found.");
+            ?? throw new CRM.Application.Common.Exceptions.NotFoundException("DiaChi", id);
 
         if (isDefault && !e.IsDefault)
             await ClearDefaultAsync(e.KhachHang_Id, loaiDiaChi, ct);
@@ -112,6 +112,9 @@ public class AddressRepository : IAddressRepository
         await _ctx.SaveChangesAsync(ct);
         return true;
     }
+
+    public Task<bool> PhuongXaBelongsToTinhThanhAsync(uint phuongXaId, uint tinhThanhId, CancellationToken ct = default) =>
+        _ctx.DmPhuongXas.AnyAsync(x => x.Id == phuongXaId && x.TinhThanh_Id == tinhThanhId, ct);
 
     private async Task ClearDefaultAsync(ulong khachHangId, string loaiDiaChi, CancellationToken ct)
     {

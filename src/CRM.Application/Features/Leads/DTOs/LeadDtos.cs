@@ -44,4 +44,11 @@ public class CreatePublicLeadRequestDto
     public string? TenCongTy { get; set; }
     public string? SoDienThoai { get; set; }
     public string? Email { get; set; }
+
+    /// <summary>
+    /// Honeypot chống bot: field ẩn bằng CSS trên landing page (không hiển thị, không có label),
+    /// người dùng thật sẽ luôn để trống. Bot tự động điền form thường điền vào mọi field kể cả field ẩn.
+    /// Nếu có giá trị -> coi như spam, âm thầm bỏ qua (không báo lỗi để không lộ cơ chế cho bot).
+    /// </summary>
+    public string? Website { get; set; }
 }
