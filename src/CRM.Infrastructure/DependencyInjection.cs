@@ -58,10 +58,7 @@ public static class DependencyInjection
                 .UseMySql(
                     connectionString,
                     ServerVersion.AutoDetect(connectionString),
-                    mySqlOptions => mySqlOptions.EnableRetryOnFailure())
-                .LogTo(
-                    sql => { if (sql.Contains("HD_HopDong", StringComparison.OrdinalIgnoreCase)) Console.WriteLine("=EF_SQL= " + sql); },
-                    Microsoft.Extensions.Logging.LogLevel.Information));
+                    mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
 
         services.AddAutoMapper(typeof(PersistenceMappingProfile).Assembly);
         services.AddHttpContextAccessor();
@@ -99,6 +96,7 @@ public static class DependencyInjection
         services.AddHostedService<AuditLogConsumerHostedService>();
         services.AddHostedService<LoyaltyDailyJobHostedService>();
         services.AddHostedService<ContractExpirationJobHostedService>();
+        services.AddHostedService<PaymentReminderJobHostedService>();
 
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
             ?? throw new InvalidOperationException("JwtSettings configuration is missing.");

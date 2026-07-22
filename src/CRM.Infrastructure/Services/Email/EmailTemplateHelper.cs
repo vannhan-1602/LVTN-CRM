@@ -9,7 +9,7 @@ internal static class EmailTemplateHelper
     private const string BASE_COLOR = "#2563EB";   // accent blue
     private const string SUCCESS_COLOR = "#16A34A";
     private const string WARNING_COLOR = "#D97706";
-    private const string DANGER_COLOR  = "#DC2626";
+    private const string DANGER_COLOR = "#DC2626";
 
     private static string WrapLayout(string tenKhachHang, string heading, string body, string footer = "") => $"""
         <!DOCTYPE html>
@@ -191,6 +191,48 @@ internal static class EmailTemplateHelper
             </div>
             <p style="color:#94A3B8;font-size:12px;">
               Nếu nút trên không hoạt động, vui lòng liên hệ trực tiếp nhân viên phụ trách của quý khách.
+            </p>
+            """);
+
+    // ── Nhắc thanh toán (sắp đến hạn 1 đợt trả góp) ─────────────────────────
+    public static string NhacThanhToan(
+        string tenKhachHang, string maHopDong, int soDot, decimal soTien, DateOnly hanThanhToan) =>
+        WrapLayout(tenKhachHang, $"⏰ Sắp đến hạn thanh toán đợt {soDot}", $"""
+            <p style="color:#334155;line-height:1.6;">
+              Hợp đồng <strong>{maHopDong}</strong> của quý khách có 1 đợt thanh toán sắp đến hạn.
+              Vui lòng sắp xếp thanh toán đúng hạn để tránh gián đoạn dịch vụ.
+            </p>
+            <table style="width:100%;background:#FFF7ED;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #FED7AA;">
+              <tr><td style="color:#64748B;font-size:13px;">Đợt thanh toán</td>
+                  <td align="right" style="font-weight:700;color:#0F172A;">Đợt {soDot}</td></tr>
+              <tr><td style="color:#64748B;font-size:13px;">Số tiền</td>
+                  <td align="right" style="font-weight:700;color:{WARNING_COLOR};">{soTien:N0} VNĐ</td></tr>
+              <tr><td style="color:#64748B;font-size:13px;">Hạn thanh toán</td>
+                  <td align="right" style="font-weight:700;color:#0F172A;">{hanThanhToan:dd/MM/yyyy}</td></tr>
+            </table>
+            <p style="color:#64748B;font-size:13px;">
+              Nhân viên phụ trách sẽ liên hệ với quý khách trong thời gian tới để hỗ trợ hoàn tất thanh toán.
+            </p>
+            """);
+
+    // ── Quá hạn thanh toán (1 đợt trả góp đã trễ hạn) ───────────────────────
+    public static string QuaHanThanhToan(
+        string tenKhachHang, string maHopDong, int soDot, decimal soTien, DateOnly hanThanhToan) =>
+        WrapLayout(tenKhachHang, $"⚠️ Đợt {soDot} đã quá hạn thanh toán", $"""
+            <p style="color:#334155;line-height:1.6;">
+              Hợp đồng <strong>{maHopDong}</strong> của quý khách có 1 đợt thanh toán đã quá hạn.
+              Kính mong quý khách sớm hoàn tất để tránh ảnh hưởng đến quyền lợi dịch vụ.
+            </p>
+            <table style="width:100%;background:#FEF2F2;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #FECACA;">
+              <tr><td style="color:#64748B;font-size:13px;">Đợt thanh toán</td>
+                  <td align="right" style="font-weight:700;color:#0F172A;">Đợt {soDot}</td></tr>
+              <tr><td style="color:#64748B;font-size:13px;">Số tiền</td>
+                  <td align="right" style="font-weight:700;color:{DANGER_COLOR};">{soTien:N0} VNĐ</td></tr>
+              <tr><td style="color:#64748B;font-size:13px;">Hạn thanh toán (đã qua)</td>
+                  <td align="right" style="font-weight:700;color:{DANGER_COLOR};">{hanThanhToan:dd/MM/yyyy}</td></tr>
+            </table>
+            <p style="color:#64748B;font-size:13px;">
+              Nhân viên phụ trách sẽ liên hệ trực tiếp với quý khách trong thời gian sớm nhất.
             </p>
             """);
 

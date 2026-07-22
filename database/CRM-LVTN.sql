@@ -651,7 +651,7 @@ INSERT INTO `KH_DiemThuong` (`Id`, `KhachHang_Id`, `SoDiem`, `LoaiGiaoDich`, `Ho
 CREATE TABLE IF NOT EXISTS `KH_EmailLog` (
   `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `KhachHang_Id` bigint unsigned NOT NULL,
-  `LoaiEmail` enum('XacNhanThanhToan','ThangHang','XuongHang','CanhBaoXuongHang','SinhNhat','NgayThanhLap','NgayLe','CuoiNam','BaoGia') CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `LoaiEmail` enum('XacNhanThanhToan','ThangHang','XuongHang','CanhBaoXuongHang','SinhNhat','NgayThanhLap','NgayLe','CuoiNam','BaoGia','NhacThanhToan','QuaHanThanhToan') CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `Voucher_Id` bigint unsigned DEFAULT NULL,
   `EmailDen` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `TieuDe` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
@@ -1214,14 +1214,15 @@ CREATE TABLE IF NOT EXISTS `TK_LoaiTicket` (
   `IsActive` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`Id`),
   UNIQUE KEY `uq_loai_ticket_ten` (`TenLoai`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.TK_LoaiTicket: ~4 rows (xấp xỉ)
 INSERT INTO `TK_LoaiTicket` (`Id`, `TenLoai`, `MoTa`, `IsActive`) VALUES
 	(1, 'Bảo hành', 'Yêu cầu bảo hành sản phẩm / dịch vụ', 1),
 	(2, 'Khiếu nại', 'Khiếu nại chất lượng hoặc dịch vụ', 1),
 	(3, 'Hỗ trợ kỹ thuật', 'Hỗ trợ cài đặt, lỗi kỹ thuật, hướng dẫn sử dụng', 1),
-	(4, 'Yêu cầu sử dụng Voucher', 'Khách bấm link xác nhận muốn sử dụng voucher nhận được qua email', 1);
+	(4, 'Yêu cầu sử dụng Voucher', 'Khách bấm link xác nhận muốn sử dụng voucher nhận được qua email', 1),
+	(5, 'Nhắc thanh toán', 'Tự động tạo khi 1 đợt trong lịch trả góp (HD_LichThanhToan) sắp/đã đến hạn, nhắc nhân viên phụ trách liên hệ khách thu tiền', 1);
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.TK_Ticket
 CREATE TABLE IF NOT EXISTS `TK_Ticket` (

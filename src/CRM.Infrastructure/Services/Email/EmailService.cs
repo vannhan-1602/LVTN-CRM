@@ -158,6 +158,32 @@ public class EmailService : IEmailService
         return await GuiAsync(khachHangId, email, tieuDe, html, "BaoGia", null, ct);
     }
 
+    // NHẮC THANH TOÁN (sắp đến hạn 1 đợt trả góp)
+    public async Task GuiEmailNhacThanhToanAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maHopDong, int soDot, decimal soTien, DateOnly hanThanhToan,
+        CancellationToken ct = default)
+    {
+        var tieuDe = $"[CRM] ⏰ Nhắc thanh toán đợt {soDot} hợp đồng {maHopDong}";
+        var html = EmailTemplateHelper.NhacThanhToan(
+            tenKhachHang, maHopDong, soDot, soTien, hanThanhToan);
+
+        await GuiAsync(khachHangId, email, tieuDe, html, "NhacThanhToan", null, ct);
+    }
+
+    // QUÁ HẠN THANH TOÁN (1 đợt trả góp đã trễ hạn)
+    public async Task GuiEmailQuaHanThanhToanAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maHopDong, int soDot, decimal soTien, DateOnly hanThanhToan,
+        CancellationToken ct = default)
+    {
+        var tieuDe = $"[CRM] ⚠️ Đợt {soDot} hợp đồng {maHopDong} đã quá hạn thanh toán";
+        var html = EmailTemplateHelper.QuaHanThanhToan(
+            tenKhachHang, maHopDong, soDot, soTien, hanThanhToan);
+
+        await GuiAsync(khachHangId, email, tieuDe, html, "QuaHanThanhToan", null, ct);
+    }
+
     // CORE — Gửi email thật qua MailKit + ghi log
     private async Task<(bool ThanhCong, string? LoiChiTiet)> GuiAsync(
         ulong khachHangId, string emailDen, string tieuDe, string htmlBody,

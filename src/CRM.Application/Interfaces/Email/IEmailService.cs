@@ -60,4 +60,16 @@ public interface IEmailService
         ulong khachHangId, string tenKhachHang, string email,
         string maBaoGia, decimal tongTien, string quoteLink,
         CancellationToken ct = default);
+
+    // Nhắc thanh toán — gửi khi 1 đợt trong lịch trả góp (HD_LichThanhToan) sắp đến hạn.
+    Task GuiEmailNhacThanhToanAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maHopDong, int soDot, decimal soTien, DateOnly hanThanhToan,
+        CancellationToken ct = default);
+
+    // Quá hạn thanh toán — gửi khi 1 đợt trong lịch trả góp đã trễ hạn mà chưa thu.
+    Task GuiEmailQuaHanThanhToanAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maHopDong, int soDot, decimal soTien, DateOnly hanThanhToan,
+        CancellationToken ct = default);
 }
