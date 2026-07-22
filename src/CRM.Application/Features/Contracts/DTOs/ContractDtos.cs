@@ -19,6 +19,68 @@ public class ContractDto
     public string TrangThai { get; set; } = string.Empty;
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>ChinhThuc | GiaHan | BaoTri</summary>
+    public string LoaiHopDong { get; set; } = "ChinhThuc";
+    public ulong? HopDongGocId { get; set; }
+    public string? MaHopDongGoc { get; set; }
+    public DateOnly? NgayNhacGiaHanCuoi { get; set; }
+
+    /// <summary>Các hợp đồng gia hạn/bảo trì được tạo ra TỪ hợp đồng này (badge liên kết 2 chiều) — chỉ populate khi xem chi tiết.</summary>
+    public List<ContractRenewalLinkDto> HopDongLienKet { get; set; } = new();
+}
+
+public class ContractRenewalLinkDto
+{
+    public ulong Id { get; set; }
+    public string MaHopDong { get; set; } = string.Empty;
+    public string LoaiHopDong { get; set; } = string.Empty;
+    public string TrangThai { get; set; } = string.Empty;
+}
+
+public class CreateRenewalContractRequestDto
+{
+    public DateOnly? NgayKy { get; set; }
+}
+
+// ── Mốc triển khai (Đào tạo / Bàn giao / Nghiệm thu) ─────────────────────────
+
+public class MocTrienKhaiDto
+{
+    public ulong Id { get; set; }
+    public ulong HopDongId { get; set; }
+
+    /// <summary>DaoTao | BanGiao | NghiemThu</summary>
+    public string LoaiMoc { get; set; } = string.Empty;
+    public string? NoiDung { get; set; }
+    public DateTime? NgayThucHien { get; set; }
+    public uint? NhanVienThucHienId { get; set; }
+    public string? TenNhanVienThucHien { get; set; }
+    public string? NguoiXacNhanKhach { get; set; }
+    public string? FileBienBan { get; set; }
+
+    /// <summary>ChuaThucHien | DaThucHien | DaXacNhan</summary>
+    public string TrangThai { get; set; } = "ChuaThucHien";
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class CreateMocTrienKhaiRequestDto
+{
+    public string LoaiMoc { get; set; } = string.Empty;
+    public string? NoiDung { get; set; }
+    public DateTime? NgayThucHien { get; set; }
+    public uint? NhanVienThucHienId { get; set; }
+}
+
+public class UpdateMocTrienKhaiRequestDto
+{
+    public string? NoiDung { get; set; }
+    public DateTime? NgayThucHien { get; set; }
+    public uint? NhanVienThucHienId { get; set; }
+    public string? NguoiXacNhanKhach { get; set; }
+    public string? FileBienBan { get; set; }
+    public string TrangThai { get; set; } = string.Empty;
 }
 
 public class CreateContractFromQuoteRequestDto

@@ -19,6 +19,8 @@ public class Ticket : SoftDeletableEntity<ulong>
     public uint? NhanVienTiepNhanId { get; set; }
     public uint? NhanVienXuLyId { get; set; }
     public DateTime? NgayHenXuLy { get; set; }
+    public DateTime? ThoiHanSLA { get; set; }
+    public uint SoLanEscalate { get; set; }
     public DateTime? NgayDong { get; set; }
     public string? LyDoDong { get; set; }
 }

@@ -236,26 +236,85 @@ internal static class EmailTemplateHelper
             </p>
             """);
 
-    // ── Nhắc gia hạn hợp đồng (sắp hết hạn — mốc 60/30/7 ngày) ──────────────
-    public static string NhacGiaHanHopDong(
-        string tenKhachHang, string maHopDong, DateOnly ngayKetThuc, int soNgayConLai) =>
-        WrapLayout(tenKhachHang, $"⏰ Hợp đồng {maHopDong} sắp hết hạn", $"""
+    // ── Khảo sát hài lòng (CSAT) sau khi đóng ticket ────────────────────────
+    public static string KhaoSatHaiLong(
+        string tenKhachHang, string maTicket, string csatLink) =>
+        WrapLayout(tenKhachHang, "⭐ Quý khách hài lòng với dịch vụ chứ?", $"""
             <p style="color:#334155;line-height:1.6;">
-              Hợp đồng <strong>{maHopDong}</strong> của quý khách sẽ hết hạn trong
-              <strong style="color:{WARNING_COLOR};">{soNgayConLai} ngày nữa</strong>.
-              Kính mong quý khách sắp xếp thời gian trao đổi với nhân viên phụ trách để gia hạn kịp thời.
+              Yêu cầu hỗ trợ <strong>{maTicket}</strong> của quý khách vừa được xử lý xong.
+              Chúng tôi rất mong nhận được đánh giá của quý khách để tiếp tục cải thiện chất lượng dịch vụ.
             </p>
-            <table style="width:100%;background:#FFF7ED;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #FED7AA;">
-              <tr><td style="color:#64748B;font-size:13px;">Mã hợp đồng</td>
-                  <td align="right" style="font-weight:700;color:#0F172A;">{maHopDong}</td></tr>
-              <tr><td style="color:#64748B;font-size:13px;">Ngày hết hạn</td>
-                  <td align="right" style="font-weight:700;color:{WARNING_COLOR};">{ngayKetThuc:dd/MM/yyyy}</td></tr>
-            </table>
-            <p style="color:#64748B;font-size:13px;">
-              Nhân viên phụ trách sẽ liên hệ với quý khách trong thời gian tới để hỗ trợ gia hạn,
-              tránh gián đoạn dịch vụ.
+            <div style="text-align:center;margin:24px 0;">
+              <a href="{csatLink}" style="display:inline-block;background:{BASE_COLOR};color:#FFFFFF;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;">
+                Đánh giá dịch vụ
+              </a>
+            </div>
+            <p style="color:#94A3B8;font-size:12px;">
+              Chỉ mất khoảng 30 giây. Cảm ơn quý khách đã đồng hành cùng chúng tôi.
             </p>
             """);
+
+    // ── Nhắc gia hạn hợp đồng (còn 60/30/7 ngày hết hạn) ────────────────────
+    public static string NhacGiaHanHopDong(
+        string tenKhachHang, string maHopDong, DateOnly ngayKetThuc, int soNgayConLai) =>
+        WrapLayout(tenKhachHang, $"📅 Hợp đồng {maHopDong} sắp hết hạn", $"""
+            <p style="color:#334155;line-height:1.6;">
+              Hợp đồng <strong>{maHopDong}</strong> của quý khách sẽ hết hạn trong
+              <strong style="color:{WARNING_COLOR};">{soNgayConLai} ngày</strong> nữa.
+              Quý khách vui lòng liên hệ để được tư vấn gia hạn, đảm bảo dịch vụ không bị gián đoạn.
+            </p>
+            <table style="width:100%;background:#FFF7ED;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #FED7AA;">
+              <tr><td style="color:#64748B;font-size:13px;">Ngày hết hạn</td>
+                  <td align="right" style="font-weight:700;color:#0F172A;">{ngayKetThuc:dd/MM/yyyy}</td></tr>
+              <tr><td style="color:#64748B;font-size:13px;">Còn lại</td>
+                  <td align="right" style="font-weight:700;color:{WARNING_COLOR};">{soNgayConLai} ngày</td></tr>
+            </table>
+            <p style="color:#64748B;font-size:13px;">
+              Nhân viên phụ trách sẽ sớm liên hệ với quý khách để trao đổi về việc gia hạn.
+            </p>
+            """);
+
+    // ── Cảnh báo SLA (nội bộ, gửi nhân viên xử lý — không có khối "Kính gửi" khách hàng) ──
+    public static string CanhBaoSla(
+        string tenNhanVien, string maTicket, string tieuDeTicket, DateTime thoiHanSLA, uint soLanEscalate) => $"""
+        <!DOCTYPE html>
+        <html lang="vi">
+        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+        <body style="margin:0;padding:0;background:#F1F5F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#F1F5F9;padding:32px 16px;">
+            <tr><td align="center">
+              <table width="560" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                <tr><td style="background:{DANGER_COLOR};padding:24px 32px;">
+                  <p style="margin:0;color:#FFFFFF;font-size:20px;font-weight:700;letter-spacing:.5px;">CRM System</p>
+                </td></tr>
+                <tr><td style="padding:32px;">
+                  <p style="margin:0 0 8px;font-size:14px;color:#64748B;">Gửi,</p>
+                  <p style="margin:0 0 20px;font-size:16px;font-weight:600;color:#0F172A;">{tenNhanVien}</p>
+                  <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0F172A;">
+                    ⚠️ Ticket {maTicket} đã quá hạn SLA
+                  </h2>
+                  <p style="color:#334155;line-height:1.6;">
+                    Ticket <strong>{maTicket}</strong> — "{tieuDeTicket}" đã vượt quá thời hạn xử lý SLA.
+                    Vui lòng xử lý gấp.
+                  </p>
+                  <table style="width:100%;background:#FEF2F2;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #FECACA;">
+                    <tr><td style="color:#64748B;font-size:13px;">Hạn xử lý (SLA)</td>
+                        <td align="right" style="font-weight:700;color:{DANGER_COLOR};">{thoiHanSLA:dd/MM/yyyy HH:mm}</td></tr>
+                    <tr><td style="color:#64748B;font-size:13px;">Số lần đã cảnh báo</td>
+                        <td align="right" style="font-weight:700;color:#0F172A;">{soLanEscalate}</td></tr>
+                  </table>
+                </td></tr>
+                <tr><td style="padding:16px 32px 24px;border-top:1px solid #E2E8F0;">
+                  <p style="margin:0;font-size:12px;color:#94A3B8;">
+                    Email này được gửi tự động từ CRM System. Vui lòng không trả lời email này.
+                  </p>
+                </td></tr>
+              </table>
+            </td></tr>
+          </table>
+        </body>
+        </html>
+        """;
 
     // ── Helper block voucher dùng chung ─────────────────────────────────────
     private static string VoucherBlock(

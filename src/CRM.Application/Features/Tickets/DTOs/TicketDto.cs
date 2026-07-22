@@ -20,6 +20,8 @@ namespace CRM.Application.Features.Tickets.DTOs
         public uint? NhanVienTiepNhanId { get; set; }
         public uint? NhanVienXuLyId { get; set; }
         public DateTime? NgayHenXuLy { get; set; }
+        public DateTime? ThoiHanSLA { get; set; }
+        public uint SoLanEscalate { get; set; }
         public DateTime? NgayDong { get; set; }
         public string? LyDoDong { get; set; }
         public DateTime? CreatedAt { get; set; }
@@ -37,6 +39,25 @@ namespace CRM.Application.Features.Tickets.DTOs
         public string? TrangThaiTruoc { get; set; }
         public string? TrangThaiSau { get; set; }
         public DateTime? CreatedAt { get; set; }
+    }
+
+    // ── Khảo sát hài lòng (CSAT) sau khi đóng ticket ─────────────────────────
+
+    public class CsatDto
+    {
+        public ulong TicketId { get; set; }
+        public string MaTicket { get; set; } = string.Empty;
+        public string TieuDeTicket { get; set; } = string.Empty;
+        public byte? DiemDanhGia { get; set; }
+        public string? NhanXet { get; set; }
+        public DateTime? NgayDanhGia { get; set; }
+        public bool DaDanhGia => DiemDanhGia.HasValue;
+    }
+
+    public class SubmitCsatRequestDto
+    {
+        public byte DiemDanhGia { get; set; }
+        public string? NhanXet { get; set; }
     }
 
     public class CreateTicketRequestDto

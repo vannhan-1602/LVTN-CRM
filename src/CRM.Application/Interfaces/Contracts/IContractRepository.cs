@@ -34,4 +34,10 @@ public interface IContractRepository
 
     /// <summary>Lấy toàn bộ lịch trả góp của 1 hợp đồng, sắp theo SoDot tăng dần.</summary>
     Task<List<LichThanhToanDto>> GetLichThanhToanByHopDongAsync(ulong hopDongId, CancellationToken ct = default);
+
+    /// <summary>Đánh dấu hợp đồng vừa được nhắc gia hạn (chống job tạo Ticket nhắc trùng).</summary>
+    Task MarkDaNhacGiaHanAsync(ulong id, DateOnly ngayNhac, CancellationToken ct = default);
+
+    /// <summary>Các hợp đồng gia hạn/bảo trì được tạo ra TỪ hợp đồng gốc — dùng hiển thị badge liên kết 2 chiều.</summary>
+    Task<List<ContractRenewalLinkDto>> GetRenewalLinksAsync(ulong hopDongGocId, CancellationToken ct = default);
 }

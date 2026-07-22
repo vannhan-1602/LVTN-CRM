@@ -15,4 +15,9 @@ public class HopDong
     public string TrangThai { get; set; } = "DangThucHien";
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>ChinhThuc | GiaHan | BaoTri</summary>
+    public string LoaiHopDong { get; set; } = "ChinhThuc";
+    public ulong? HopDongGocId { get; set; }
+    public DateOnly? NgayNhacGiaHanCuoi { get; set; }
 }

@@ -88,6 +88,8 @@ namespace CRM.Infrastructure.Persistence.Repositories
             entity.NhanVienTiepNhan_Id = ticket.NhanVienTiepNhanId;
             entity.NhanVienXuLy_Id = ticket.NhanVienXuLyId;
             entity.NgayHenXuLy = ticket.NgayHenXuLy;
+            entity.ThoiHanSLA = ticket.ThoiHanSLA;
+            entity.SoLanEscalate = ticket.SoLanEscalate;
             entity.NgayDong = ticket.NgayDong;
             entity.LyDoDong = ticket.LyDoDong;
             entity.UpdatedAt = ticket.UpdatedAt;
@@ -167,6 +169,8 @@ namespace CRM.Infrastructure.Persistence.Repositories
             NhanVienTiepNhanId = e.NhanVienTiepNhan_Id,
             NhanVienXuLyId = e.NhanVienXuLy_Id,
             NgayHenXuLy = e.NgayHenXuLy,
+            ThoiHanSLA = e.ThoiHanSLA,
+            SoLanEscalate = e.SoLanEscalate,
             NgayDong = e.NgayDong,
             LyDoDong = e.LyDoDong,
             IsDeleted = e.IsDeleted,
@@ -190,6 +194,8 @@ namespace CRM.Infrastructure.Persistence.Repositories
             NhanVienTiepNhan_Id = t.NhanVienTiepNhanId,
             NhanVienXuLy_Id = t.NhanVienXuLyId,
             NgayHenXuLy = t.NgayHenXuLy,
+            ThoiHanSLA = t.ThoiHanSLA,
+            SoLanEscalate = t.SoLanEscalate,
             NgayDong = t.NgayDong,
             LyDoDong = t.LyDoDong,
             IsDeleted = t.IsDeleted,
@@ -231,6 +237,13 @@ namespace CRM.Infrastructure.Persistence.Repositories
             await _context.SaveChangesAsync(ct);
             return entity.Id;
         }
+
+        public Task<int?> GetSlaSoGioXuLyAsync(string mucDoUuTien, CancellationToken ct = default) =>
+            _context.Set<TkSlaEntity>()
+                .AsNoTracking()
+                .Where(x => x.MucDoUuTien == mucDoUuTien)
+                .Select(x => (int?)x.SoGioXuLy)
+                .FirstOrDefaultAsync(ct);
 
         private static TicketPhanHoi MapPhanHoiToDomain(TkTicketPhanHoiEntity e) => new()
         {

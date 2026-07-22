@@ -40,5 +40,8 @@ namespace CRM.Application.Interfaces.Tickets
             ulong khachHangId, ushort? loaiTicketId,
             string tieuDe, string moTa,
             CancellationToken ct = default);
+
+        /// <summary>Lấy số giờ tối đa để xử lý xong (TK_SLA.SoGioXuLy) theo mức độ ưu tiên — dùng tính ThoiHanSLA khi tạo ticket.</summary>
+        Task<int?> GetSlaSoGioXuLyAsync(string mucDoUuTien, CancellationToken ct = default);
     }
 }

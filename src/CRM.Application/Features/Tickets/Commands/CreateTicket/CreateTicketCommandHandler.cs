@@ -55,6 +55,14 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
 
             var maTicket = await _ticketRepository.GenerateMaTicketAsync(cancellationToken);
 
+            var mucDoUuTien = string.IsNullOrWhiteSpace(request.MucDoUuTien)
+                ? TicketPriority.TrungBinh
+                : Enum.Parse<TicketPriority>(request.MucDoUuTien);
+
+            var createdAt = DateTime.UtcNow;
+            var soGioXuLy = await _ticketRepository.GetSlaSoGioXuLyAsync(mucDoUuTien.ToString(), cancellationToken);
+            var thoiHanSla = soGioXuLy.HasValue ? createdAt.AddHours(soGioXuLy.Value) : (DateTime?)null;
+
             // Sale tạo ticket -> LUÔN là người tiếp nhận và người xử lý mặc định
             // Manager được toàn quyền chỉ định theo request.
             var nhanVienTiepNhanId = _currentUser.Role == Roles.Sale
@@ -74,9 +82,7 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
                 KhachHangId = request.KhachHangId,
                 HopDongId = request.HopDongId,
                 SanPhamId = request.SanPhamId,
-                MucDoUuTien = string.IsNullOrWhiteSpace(request.MucDoUuTien)
-                    ? TicketPriority.TrungBinh
-                    : Enum.Parse<TicketPriority>(request.MucDoUuTien),
+                MucDoUuTien = mucDoUuTien,
                 NguonTiepNhan = string.IsNullOrWhiteSpace(request.NguonTiepNhan)
                     ? TicketSource.Phone
                     : Enum.Parse<TicketSource>(request.NguonTiepNhan),
@@ -84,9 +90,10 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
                 NhanVienTiepNhanId = nhanVienTiepNhanId,
                 NhanVienXuLyId = nhanVienXuLyId,
                 NgayHenXuLy = request.NgayHenXuLy,
+                ThoiHanSLA = thoiHanSla,
                 IsDeleted = false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = createdAt,
+                UpdatedAt = createdAt
             };
 
             var created = await _ticketRepository.AddAsync(ticket, cancellationToken);

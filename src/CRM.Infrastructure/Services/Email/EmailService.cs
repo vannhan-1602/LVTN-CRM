@@ -184,16 +184,62 @@ public class EmailService : IEmailService
         await GuiAsync(khachHangId, email, tieuDe, html, "QuaHanThanhToan", null, ct);
     }
 
-    // NHẮC GIA HẠN HỢP ĐỒNG (sắp hết hạn — mốc 60/30/7 ngày, job ContractExpirationJobHostedService)
+    // KHẢO SÁT HÀI LÒNG (sau khi ticket đóng)
+    public async Task GuiEmailKhaoSatHaiLongAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maTicket, string csatLink,
+        CancellationToken ct = default)
+    {
+        var tieuDe = $"[CRM] ⭐ Đánh giá dịch vụ — ticket {maTicket}";
+        var html = EmailTemplateHelper.KhaoSatHaiLong(tenKhachHang, maTicket, csatLink);
+
+        await GuiAsync(khachHangId, email, tieuDe, html, "KhaoSatHaiLong", null, ct);
+    }
+
+    // NHẮC GIA HẠN HỢP ĐỒNG (còn 60/30/7 ngày hết hạn)
     public async Task GuiEmailNhacGiaHanHopDongAsync(
         ulong khachHangId, string tenKhachHang, string email,
         string maHopDong, DateOnly ngayKetThuc, int soNgayConLai,
         CancellationToken ct = default)
     {
-        var tieuDe = $"[CRM] ⏰ Hợp đồng {maHopDong} sắp hết hạn ({soNgayConLai} ngày)";
+        var tieuDe = $"[CRM] 📅 Hợp đồng {maHopDong} sắp hết hạn ({soNgayConLai} ngày)";
         var html = EmailTemplateHelper.NhacGiaHanHopDong(tenKhachHang, maHopDong, ngayKetThuc, soNgayConLai);
 
         await GuiAsync(khachHangId, email, tieuDe, html, "NhacGiaHanHopDong", null, ct);
+    }
+
+    // CẢNH BÁO SLA (nội bộ — gửi nhân viên xử lý, KHÔNG ghi vào KH_EmailLog vì
+    // bảng đó có KhachHang_Id NOT NULL, không phù hợp để log email gửi nhân viên).
+    public async Task GuiEmailCanhBaoSlaAsync(
+        string tenNhanVien, string email,
+        string maTicket, string tieuDeTicket, DateTime thoiHanSLA, uint soLanEscalate,
+        CancellationToken ct = default)
+    {
+        var tieuDe = $"[CRM] ⚠️ Ticket {maTicket} đã quá hạn SLA";
+        var html = EmailTemplateHelper.CanhBaoSla(tenNhanVien, maTicket, tieuDeTicket, thoiHanSLA, soLanEscalate);
+
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(FromName, SmtpUser));
+        message.To.Add(MailboxAddress.Parse(email));
+        message.Subject = tieuDe;
+        message.Body = new TextPart("html") { Text = html };
+
+        try
+        {
+            using var client = new SmtpClient();
+            var smtpPasswordClean = SmtpPassword.Replace(" ", "");
+
+            await client.ConnectAsync(SmtpHost, SmtpPort, SecureSocketOptions.StartTls, ct);
+            await client.AuthenticateAsync(SmtpUser, smtpPasswordClean, ct);
+            await client.SendAsync(message, ct);
+            await client.DisconnectAsync(true, ct);
+
+            _logger.LogInformation("✉️  Đã gửi email [CanhBaoSla] tới {Email} (ticket {MaTicket})", email, maTicket);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Gửi email [CanhBaoSla] tới {Email} thất bại", email);
+        }
     }
 
     // CORE — Gửi email thật qua MailKit + ghi log

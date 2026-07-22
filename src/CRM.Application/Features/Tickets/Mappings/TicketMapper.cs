@@ -22,6 +22,8 @@ namespace CRM.Application.Features.Tickets.Mappings
             NhanVienTiepNhanId = ticket.NhanVienTiepNhanId,
             NhanVienXuLyId = ticket.NhanVienXuLyId,
             NgayHenXuLy = ticket.NgayHenXuLy,
+            ThoiHanSLA = ticket.ThoiHanSLA,
+            SoLanEscalate = ticket.SoLanEscalate,
             NgayDong = ticket.NgayDong,
             LyDoDong = ticket.LyDoDong,
             CreatedAt = ticket.CreatedAt,

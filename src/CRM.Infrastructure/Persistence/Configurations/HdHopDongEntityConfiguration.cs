@@ -35,5 +35,15 @@ public class HdHopDongEntityConfiguration : IEntityTypeConfiguration<HdHopDongEn
          .HasForeignKey(x => x.BaoGiaId)
          .IsRequired(false)
          .OnDelete(DeleteBehavior.SetNull);
+
+        b.Property(x => x.LoaiHopDong).HasMaxLength(20).HasDefaultValue("ChinhThuc");
+        b.Property(x => x.HopDongGocId).HasColumnName("HopDongGoc_Id").IsRequired(false);
+        b.Property(x => x.NgayNhacGiaHanCuoi).IsRequired(false);
+
+        b.HasOne<HdHopDongEntity>()
+         .WithMany()
+         .HasForeignKey(x => x.HopDongGocId)
+         .IsRequired(false)
+         .OnDelete(DeleteBehavior.Restrict);
     }
 }

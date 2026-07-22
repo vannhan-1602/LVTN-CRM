@@ -38,10 +38,15 @@ public class ContractRepository : IContractRepository
                 hd.`HinhThucThanhToan`,
                 hd.`TrangThai`,
                 hd.`CreatedAt`,
-                hd.`UpdatedAt`
+                hd.`UpdatedAt`,
+                hd.`LoaiHopDong`,
+                hd.`HopDongGoc_Id` AS HopDongGocId,
+                goc.`MaHopDong`    AS MaHopDongGoc,
+                hd.`NgayNhacGiaHanCuoi`
             FROM `HD_HopDong` hd
-            LEFT JOIN `KH_KhachHang` kh ON kh.`Id` = hd.`KhachHang_Id`
-            LEFT JOIN `HD_BaoGia`    bg ON bg.`Id` = hd.`BaoGia_Id`
+            LEFT JOIN `KH_KhachHang` kh  ON kh.`Id`  = hd.`KhachHang_Id`
+            LEFT JOIN `HD_BaoGia`    bg  ON bg.`Id`  = hd.`BaoGia_Id`
+            LEFT JOIN `HD_HopDong`   goc ON goc.`Id` = hd.`HopDongGoc_Id`
             {(string.IsNullOrWhiteSpace(whereClause) ? "" : "WHERE " + whereClause)}
             ORDER BY hd.`Id` DESC
             {(skip.HasValue ? $"LIMIT {take ?? 20} OFFSET {skip}" : "")}
@@ -85,6 +90,10 @@ public class ContractRepository : IContractRepository
                     TrangThai = reader.GetString(reader.GetOrdinal("TrangThai")),
                     CreatedAt = reader.IsDBNull(reader.GetOrdinal("CreatedAt")) ? null : reader.GetDateTime(reader.GetOrdinal("CreatedAt")),
                     UpdatedAt = reader.IsDBNull(reader.GetOrdinal("UpdatedAt")) ? null : reader.GetDateTime(reader.GetOrdinal("UpdatedAt")),
+                    LoaiHopDong = reader.IsDBNull(reader.GetOrdinal("LoaiHopDong")) ? "ChinhThuc" : reader.GetString(reader.GetOrdinal("LoaiHopDong")),
+                    HopDongGocId = reader.IsDBNull(reader.GetOrdinal("HopDongGocId")) ? null : (ulong)reader.GetInt64(reader.GetOrdinal("HopDongGocId")),
+                    MaHopDongGoc = reader.IsDBNull(reader.GetOrdinal("MaHopDongGoc")) ? null : reader.GetString(reader.GetOrdinal("MaHopDongGoc")),
+                    NgayNhacGiaHanCuoi = reader.IsDBNull(reader.GetOrdinal("NgayNhacGiaHanCuoi")) ? null : DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("NgayNhacGiaHanCuoi"))),
                 });
             }
             return result;
@@ -139,7 +148,10 @@ public class ContractRepository : IContractRepository
     public async Task<ContractDto?> GetByIdEnrichedAsync(ulong id, CancellationToken ct = default)
     {
         var rows = await ExecuteEnrichedQueryAsync("hd.Id = @p0", new object[] { id }, null, null, ct);
-        return rows.FirstOrDefault();
+        var dto = rows.FirstOrDefault();
+        if (dto is not null)
+            dto.HopDongLienKet = await GetRenewalLinksAsync(id, ct);
+        return dto;
     }
 
     public async Task<PagedResult<ContractDto>> GetPagedAsync(
@@ -254,6 +266,28 @@ public class ContractRepository : IContractRepository
             })
             .ToListAsync(ct);
 
+    public async Task MarkDaNhacGiaHanAsync(ulong id, DateOnly ngayNhac, CancellationToken ct = default)
+    {
+        var entity = await _context.HdHopDongs.FindAsync(new object[] { id }, ct);
+        if (entity is null) return;
+        entity.NgayNhacGiaHanCuoi = ngayNhac;
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task<List<ContractRenewalLinkDto>> GetRenewalLinksAsync(ulong hopDongGocId, CancellationToken ct = default) =>
+        await _context.HdHopDongs
+            .AsNoTracking()
+            .Where(x => x.HopDongGocId == hopDongGocId)
+            .OrderByDescending(x => x.Id)
+            .Select(x => new ContractRenewalLinkDto
+            {
+                Id = x.Id,
+                MaHopDong = x.MaHopDong,
+                LoaiHopDong = x.LoaiHopDong,
+                TrangThai = x.TrangThai
+            })
+            .ToListAsync(ct);
+
     private static HopDong MapToDomain(HdHopDongEntity e) => new()
     {
         Id = e.Id,
@@ -266,7 +300,10 @@ public class ContractRepository : IContractRepository
         HinhThucThanhToan = e.HinhThucThanhToan,
         TrangThai = e.TrangThai,
         CreatedAt = e.CreatedAt,
-        UpdatedAt = e.UpdatedAt
+        UpdatedAt = e.UpdatedAt,
+        LoaiHopDong = e.LoaiHopDong,
+        HopDongGocId = e.HopDongGocId,
+        NgayNhacGiaHanCuoi = e.NgayNhacGiaHanCuoi
     };
 
     private static HdHopDongEntity MapToEntity(HopDong d) => new()
@@ -281,6 +318,9 @@ public class ContractRepository : IContractRepository
         HinhThucThanhToan = d.HinhThucThanhToan,
         TrangThai = d.TrangThai,
         CreatedAt = d.CreatedAt,
-        UpdatedAt = d.UpdatedAt
+        UpdatedAt = d.UpdatedAt,
+        LoaiHopDong = d.LoaiHopDong,
+        HopDongGocId = d.HopDongGocId,
+        NgayNhacGiaHanCuoi = d.NgayNhacGiaHanCuoi
     };
 }

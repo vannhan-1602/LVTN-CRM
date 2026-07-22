@@ -14,22 +14,6 @@ using System.Threading.Tasks;
 
 namespace CRM.Infrastructure.Services;
 
-/// <summary>
-/// Chạy 1 lần/ngày, quét bảng HD_HopDong để:
-///   - Hợp đồng còn đúng 60/30/7 ngày là hết hạn (TrangThai = DangThucHien)
-///     → gửi email nhắc khách + tạo Ticket loại "Nhắc gia hạn hợp đồng" cho nhân viên phụ trách.
-///   - Hợp đồng đã trễ NgayKetThuc thật sự mà chưa xử lý gì → tự động chuyển HetHan.
-///
-/// Khác với PaymentReminderJobHostedService (nhắc TỪNG ĐỢT trong lịch trả góp HD_LichThanhToan)
-/// — job này nhắc ở cấp HỢP ĐỒNG (hạn hợp đồng gốc, có thể không liên quan gì tới trả góp).
-/// 2 loại nhắc tách biệt hoàn toàn theo đúng yêu cầu ban đầu, tránh nhầm lẫn.
-///
-/// Idempotent theo mốc ngày chẵn: vì job chạy 1 lần/ngày và mỗi mốc (60/30/7) chỉ khớp đúng
-/// 1 ngày duy nhất trong vòng đời hợp đồng, nên mỗi mốc chỉ gửi email/tạo ticket đúng 1 lần.
-/// Nếu job bị gián đoạn (server tắt đúng ngày mốc) thì mốc đó sẽ bị bỏ lỡ — chấp nhận được cho
-/// phạm vi đồ án, có thể nâng cấp sau bằng cách đổi điều kiện "==" thành "<=" kèm 1 cột đánh dấu
-/// đã nhắc để tránh gửi trùng.
-/// </summary>
 public class ContractExpirationJobHostedService : BackgroundService
 {
     private static readonly int[] MocCanhBaoNgay = { 60, 30, 7 };

@@ -19,5 +19,10 @@ public class HdHopDongEntity
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>ChinhThuc | GiaHan | BaoTri — hợp đồng gia hạn/bảo trì tự tham chiếu qua HopDongGocId.</summary>
+    public string LoaiHopDong { get; set; } = "ChinhThuc";
+    public ulong? HopDongGocId { get; set; }
+    public DateOnly? NgayNhacGiaHanCuoi { get; set; }
+
     public ICollection<HdLichThanhToanEntity> LichThanhToans { get; set; } = new List<HdLichThanhToanEntity>();
 }

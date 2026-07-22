@@ -70,6 +70,13 @@ public class TkTicketEntityConfiguration : IEntityTypeConfiguration<TkTicketEnti
 
         builder.Property(x => x.HopDongId).HasColumnName("HopDong_Id").IsRequired(false);
 
+        builder.Property(x => x.ThoiHanSLA)
+            .HasColumnType("datetime")
+            .IsRequired(false);
+
+        builder.Property(x => x.SoLanEscalate)
+            .HasDefaultValue(0u);
+
         // FK relationships
         builder.HasOne<KhKhachHangEntity>()
                .WithMany()

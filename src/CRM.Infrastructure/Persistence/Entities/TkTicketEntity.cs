@@ -20,6 +20,8 @@ public class TkTicketEntity
     public uint? NhanVienTiepNhan_Id { get; set; }
     public uint? NhanVienXuLy_Id { get; set; }
     public DateTime? NgayHenXuLy { get; set; }
+    public DateTime? ThoiHanSLA { get; set; }
+    public uint SoLanEscalate { get; set; }
     public DateTime? NgayDong { get; set; }
     public string? LyDoDong { get; set; }
     public bool IsDeleted { get; set; }

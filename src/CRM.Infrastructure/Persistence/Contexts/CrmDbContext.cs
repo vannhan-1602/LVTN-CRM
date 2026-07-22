@@ -34,6 +34,8 @@ public partial class CrmDbContext : DbContext
     public virtual DbSet<HdBaoGiaChiTietEntity> HdBaoGiaChiTiets { get; set; }
     public virtual DbSet<HdHopDongEntity> HdHopDongs { get; set; }
     public virtual DbSet<HdLichThanhToanEntity> HdLichThanhToans { get; set; }
+    public virtual DbSet<HdLicenseEntity> HdLicenses { get; set; }
+    public virtual DbSet<HdMocTrienKhaiEntity> HdMocTrienKhais { get; set; }
 
     public virtual DbSet<KtHoaDonEntity> KtHoaDons { get; set; }
     public virtual DbSet<KtPhieuThuChiEntity> KtPhieuThuChis { get; set; }
@@ -41,6 +43,8 @@ public partial class CrmDbContext : DbContext
     public virtual DbSet<TkTicketEntity> TkTickets { get; set; }
     public virtual DbSet<TkLoaiTicketEntity> TkLoaiTickets { get; set; }
     public virtual DbSet<TkTicketPhanHoiEntity> TkTicketPhanHois { get; set; }
+    public virtual DbSet<TkSlaEntity> TkSlas { get; set; }
+    public virtual DbSet<TkDanhGiaHaiLongEntity> TkDanhGiaHaiLongs { get; set; }
 
     public virtual DbSet<KhXepHangEntity> KhXepHangs { get; set; }
     public virtual DbSet<KhNgayLeEntity> KhNgayLes { get; set; }
