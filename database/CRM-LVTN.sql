@@ -703,7 +703,7 @@ INSERT INTO `KH_DiemThuong` (`Id`, `KhachHang_Id`, `SoDiem`, `LoaiGiaoDich`, `Ho
 CREATE TABLE IF NOT EXISTS `KH_EmailLog` (
   `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `KhachHang_Id` bigint unsigned NOT NULL,
-  `LoaiEmail` enum('XacNhanThanhToan','ThangHang','XuongHang','CanhBaoXuongHang','SinhNhat','NgayThanhLap','NgayLe','CuoiNam','BaoGia','NhacThanhToan','QuaHanThanhToan','NhacGiaHanHopDong') CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `LoaiEmail` enum('XacNhanThanhToan','ThangHang','XuongHang','CanhBaoXuongHang','SinhNhat','NgayThanhLap','NgayLe','CuoiNam','BaoGia','NhacThanhToan','QuaHanThanhToan','NhacGiaHanHopDong','KhaoSatHaiLong') CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `Voucher_Id` bigint unsigned DEFAULT NULL,
   `EmailDen` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `TieuDe` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
