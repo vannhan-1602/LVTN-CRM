@@ -236,6 +236,27 @@ internal static class EmailTemplateHelper
             </p>
             """);
 
+    // ── Nhắc gia hạn hợp đồng (sắp hết hạn — mốc 60/30/7 ngày) ──────────────
+    public static string NhacGiaHanHopDong(
+        string tenKhachHang, string maHopDong, DateOnly ngayKetThuc, int soNgayConLai) =>
+        WrapLayout(tenKhachHang, $"⏰ Hợp đồng {maHopDong} sắp hết hạn", $"""
+            <p style="color:#334155;line-height:1.6;">
+              Hợp đồng <strong>{maHopDong}</strong> của quý khách sẽ hết hạn trong
+              <strong style="color:{WARNING_COLOR};">{soNgayConLai} ngày nữa</strong>.
+              Kính mong quý khách sắp xếp thời gian trao đổi với nhân viên phụ trách để gia hạn kịp thời.
+            </p>
+            <table style="width:100%;background:#FFF7ED;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #FED7AA;">
+              <tr><td style="color:#64748B;font-size:13px;">Mã hợp đồng</td>
+                  <td align="right" style="font-weight:700;color:#0F172A;">{maHopDong}</td></tr>
+              <tr><td style="color:#64748B;font-size:13px;">Ngày hết hạn</td>
+                  <td align="right" style="font-weight:700;color:{WARNING_COLOR};">{ngayKetThuc:dd/MM/yyyy}</td></tr>
+            </table>
+            <p style="color:#64748B;font-size:13px;">
+              Nhân viên phụ trách sẽ liên hệ với quý khách trong thời gian tới để hỗ trợ gia hạn,
+              tránh gián đoạn dịch vụ.
+            </p>
+            """);
+
     // ── Helper block voucher dùng chung ─────────────────────────────────────
     private static string VoucherBlock(
         string? maVoucher, decimal? phanTramGiam,

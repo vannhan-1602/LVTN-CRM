@@ -72,4 +72,11 @@ public interface IEmailService
         ulong khachHangId, string tenKhachHang, string email,
         string maHopDong, int soDot, decimal soTien, DateOnly hanThanhToan,
         CancellationToken ct = default);
+
+    // Nhắc gia hạn hợp đồng — gửi khi hợp đồng sắp hết hạn (mốc 60/30/7 ngày trước NgayKetThuc).
+    // Khác với GuiEmailNhacThanhToanAsync (nhắc 1 đợt trả góp) — đây là cảnh báo cấp hợp đồng.
+    Task GuiEmailNhacGiaHanHopDongAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maHopDong, DateOnly ngayKetThuc, int soNgayConLai,
+        CancellationToken ct = default);
 }

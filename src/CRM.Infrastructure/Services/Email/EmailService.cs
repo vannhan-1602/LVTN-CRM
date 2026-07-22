@@ -184,6 +184,18 @@ public class EmailService : IEmailService
         await GuiAsync(khachHangId, email, tieuDe, html, "QuaHanThanhToan", null, ct);
     }
 
+    // NHẮC GIA HẠN HỢP ĐỒNG (sắp hết hạn — mốc 60/30/7 ngày, job ContractExpirationJobHostedService)
+    public async Task GuiEmailNhacGiaHanHopDongAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maHopDong, DateOnly ngayKetThuc, int soNgayConLai,
+        CancellationToken ct = default)
+    {
+        var tieuDe = $"[CRM] ⏰ Hợp đồng {maHopDong} sắp hết hạn ({soNgayConLai} ngày)";
+        var html = EmailTemplateHelper.NhacGiaHanHopDong(tenKhachHang, maHopDong, ngayKetThuc, soNgayConLai);
+
+        await GuiAsync(khachHangId, email, tieuDe, html, "NhacGiaHanHopDong", null, ct);
+    }
+
     // CORE — Gửi email thật qua MailKit + ghi log
     private async Task<(bool ThanhCong, string? LoiChiTiet)> GuiAsync(
         ulong khachHangId, string emailDen, string tieuDe, string htmlBody,

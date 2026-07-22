@@ -230,6 +230,7 @@ export default function ContractDetailPage() {
                         <td className="py-2">{formatDate(l.hanThanhToan)}</td>
                         <td className="py-2">
                           <Badge
+                            label={l.trangThai}
                             tone={
                               l.trangThai === "DaThanhToan"
                                 ? "success"
@@ -237,9 +238,7 @@ export default function ContractDetailPage() {
                                   ? "danger"
                                   : "neutral"
                             }
-                          >
-                            {l.trangThai}
-                          </Badge>
+                          />
                         </td>
                       </tr>
                     ))}
