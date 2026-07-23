@@ -189,7 +189,7 @@ export default function ManagerDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         {/* Pipeline cơ hội bán hàng */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-4">
           <Card
             title="Pipeline cơ hội bán hàng"
             action={
@@ -247,6 +247,44 @@ export default function ManagerDashboard() {
               </div>
             </div>
           </Card>
+
+          {data.topKhachHangChi.length > 0 && (
+            <Card
+              title="Top khách hàng phát sinh chi phí"
+              action={
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  icon={ArrowRight}
+                  onClick={() => navigate("/phieu-thu-chi")}
+                >
+                  Xem tất cả
+                </Button>
+              }
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {data.topKhachHangChi.map((kh) => (
+                  <button
+                    key={kh.khachHangId}
+                    onClick={() => navigate(`/customers/${kh.khachHangId}`)}
+                    className="w-full flex items-center justify-between bg-surface-alt border border-ink-100 rounded-lg px-3 py-2.5 text-left hover:bg-ink-100"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-ink-900">
+                        {kh.tenKhachHang}
+                      </p>
+                      <p className="text-xs text-ink-400">
+                        {kh.soPhieu} phiếu chi
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-danger-600">
+                      {formatMoney(kh.tongChi)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
 
         {/* Lối tắt + cảnh báo */}
@@ -300,44 +338,6 @@ export default function ManagerDashboard() {
                 )}
             </div>
           </Card>
-
-          {data.topKhachHangChi.length > 0 && (
-            <Card
-              title="Top khách hàng phát sinh chi phí"
-              action={
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  icon={ArrowRight}
-                  onClick={() => navigate("/phieu-thu-chi")}
-                >
-                  Xem tất cả
-                </Button>
-              }
-            >
-              <div className="space-y-2">
-                {data.topKhachHangChi.map((kh) => (
-                  <button
-                    key={kh.khachHangId}
-                    onClick={() => navigate(`/customers/${kh.khachHangId}`)}
-                    className="w-full flex items-center justify-between bg-surface-alt border border-ink-100 rounded-lg px-3 py-2.5 text-left hover:bg-ink-100"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-ink-900">
-                        {kh.tenKhachHang}
-                      </p>
-                      <p className="text-xs text-ink-400">
-                        {kh.soPhieu} phiếu chi
-                      </p>
-                    </div>
-                    <span className="text-sm font-semibold text-danger-600">
-                      {formatMoney(kh.tongChi)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </Card>
-          )}
 
           <Card title="Truy cập nhanh">
             <div className="grid grid-cols-2 gap-2">
