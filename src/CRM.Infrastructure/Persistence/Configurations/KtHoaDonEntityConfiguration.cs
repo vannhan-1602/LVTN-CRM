@@ -19,10 +19,18 @@ public class KtHoaDonEntityConfiguration : IEntityTypeConfiguration<KtHoaDonEnti
         b.Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         b.Property(x => x.HopDongId).HasColumnName("HopDong_Id").IsRequired(false);
+        b.Property(x => x.LichThanhToanId).HasColumnName("LichThanhToan_Id").IsRequired(false);
 
         b.HasOne<HdHopDongEntity>()
          .WithMany()
          .HasForeignKey(x => x.HopDongId)
+         .OnDelete(DeleteBehavior.SetNull);
+
+        // Đợt trả góp (HD_LichThanhToan) mà hóa đơn này ứng với — NULL nếu thanh toán 1 lần
+        // hoặc bán lẻ, chỉ set khi hợp đồng trả góp và kế toán chọn đúng đợt.
+        b.HasOne<HdLichThanhToanEntity>()
+         .WithMany()
+         .HasForeignKey(x => x.LichThanhToanId)
          .OnDelete(DeleteBehavior.SetNull);
 
         b.HasOne<KhKhachHangEntity>()

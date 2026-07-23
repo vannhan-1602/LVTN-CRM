@@ -31,12 +31,12 @@ public class PhieuThuChiRepository : IPhieuThuChiRepository
         if (result is null) return null;
 
         var tenNguoiLap = await GetTenNguoiLapAsync(result.Phieu.NguoiLap_Id, ct);
-        return MapToDto(result.Phieu, result.TenKhachHang, result.MaHoaDon, tenNguoiLap);
+        return MapToDto(result.Phieu, result.TenKhachHang, result.MaHoaDon, tenNguoiLap, result.NhanVienPhuTrachId);
     }
 
     public async Task<PagedResult<PhieuThuChiDto>> GetPagedAsync(
         int pageNumber, int pageSize, ulong? khachHangId, ulong? hoaDonId,
-        string? loaiPhieu, CancellationToken ct = default)
+        string? loaiPhieu, uint? ownerUserId, CancellationToken ct = default)
     {
         var query = BuildBaseQuery();
 
@@ -48,6 +48,10 @@ public class PhieuThuChiRepository : IPhieuThuChiRepository
 
         if (!string.IsNullOrWhiteSpace(loaiPhieu))
             query = query.Where(x => x.Phieu.LoaiPhieu == loaiPhieu);
+
+        // Sale chỉ xem phiếu thu/chi của khách hàng mình phụ trách. Manager/Accountant xem toàn bộ.
+        if (ownerUserId.HasValue)
+            query = query.Where(x => x.NhanVienPhuTrachId == ownerUserId.Value);
 
         var total = await query.CountAsync(ct);
 
@@ -71,7 +75,8 @@ public class PhieuThuChiRepository : IPhieuThuChiRepository
                 x.Phieu, x.TenKhachHang, x.MaHoaDon,
                 x.Phieu.NguoiLap_Id.HasValue
                     && tenNguoiLapMap.TryGetValue(x.Phieu.NguoiLap_Id.Value, out var ten)
-                    ? ten : null
+                    ? ten : null,
+                x.NhanVienPhuTrachId
             )).ToList(),
             PageNumber = pageNumber,
             PageSize = pageSize,
@@ -116,6 +121,7 @@ public class PhieuThuChiRepository : IPhieuThuChiRepository
         {
             Phieu = p,
             TenKhachHang = kh != null ? kh.TenKhachHang : null,
+            NhanVienPhuTrachId = kh != null ? kh.NhanVienPhuTrachId : null,
             MaHoaDon = hd != null ? hd.MaHoaDon : null
         };
 
@@ -146,6 +152,7 @@ public class PhieuThuChiRepository : IPhieuThuChiRepository
     {
         public KtPhieuThuChiEntity Phieu { get; set; } = null!;
         public string? TenKhachHang { get; set; }
+        public uint? NhanVienPhuTrachId { get; set; }
         public string? MaHoaDon { get; set; }
     }
 
@@ -176,13 +183,14 @@ public class PhieuThuChiRepository : IPhieuThuChiRepository
     };
 
     private static PhieuThuChiDto MapToDto(
-        KtPhieuThuChiEntity e, string? tenKhachHang, string? maHoaDon, string? tenNguoiLap) => new()
+        KtPhieuThuChiEntity e, string? tenKhachHang, string? maHoaDon, string? tenNguoiLap, uint? nhanVienPhuTrachId = null) => new()
     {
         Id = e.Id,
         MaPhieu = e.MaPhieu,
         LoaiPhieu = e.LoaiPhieu,
         KhachHangId = e.KhachHang_Id,
         TenKhachHang = tenKhachHang,
+        NhanVienPhuTrachId = nhanVienPhuTrachId,
         HoaDonId = e.HoaDon_Id,
         MaHoaDon = maHoaDon,
         SoTien = e.SoTien,

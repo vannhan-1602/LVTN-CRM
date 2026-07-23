@@ -2,6 +2,7 @@ using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.PhieuThuChi.DTOs;
 using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
+using CRM.Application.Interfaces.Contracts;
 using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Invoices;
 using CRM.Application.Interfaces.PhieuThuChi;
@@ -67,6 +68,7 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
 
     private readonly IPhieuThuChiRepository _phieuThuChiRepo;
     private readonly IInvoiceRepository _invoiceRepo;
+    private readonly IContractRepository _contractRepo;
     private readonly ICustomerRepository _customerRepo;
     private readonly ICurrentUserService _currentUser;
     private readonly IAuditLogPublisher _auditLog;
@@ -76,6 +78,7 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
     public CreatePhieuThuChiCommandHandler(
         IPhieuThuChiRepository phieuThuChiRepo,
         IInvoiceRepository invoiceRepo,
+        IContractRepository contractRepo,
         ICustomerRepository customerRepo,
         ICurrentUserService currentUser,
         IAuditLogPublisher auditLog,
@@ -84,6 +87,7 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
     {
         _phieuThuChiRepo = phieuThuChiRepo;
         _invoiceRepo = invoiceRepo;
+        _contractRepo = contractRepo;
         _customerRepo = customerRepo;
         _currentUser = currentUser;
         _auditLog = auditLog;
@@ -95,10 +99,11 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
     {
         // ── 1. Validate hóa đơn ───────────────────────────────────────────
         ulong? resolvedKhachHangId = request.KhachHangId;
+        CRM.Domain.Entities.Sales.HoaDon? hoaDon = null;
 
         if (request.HoaDonId.HasValue)
         {
-            var hoaDon = await _invoiceRepo.GetByIdAsync(request.HoaDonId.Value, ct)
+            hoaDon = await _invoiceRepo.GetByIdAsync(request.HoaDonId.Value, ct)
                 ?? throw new NotFoundException("Hóa đơn", request.HoaDonId.Value);
 
             // Tự lấy KhachHangId từ hóa đơn nếu không truyền
@@ -156,6 +161,22 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
             if (soTienDaThuSauKhiCong > tongTienHoaDon)
                 throw new BusinessRuleException(
                     "Có phiếu thu khác vừa được tạo cho hóa đơn này cùng lúc, khiến tổng tiền thu vượt quá hóa đơn. Vui lòng thử lại.");
+
+            // Hóa đơn vừa hoàn tất VÀ ứng với 1 đợt trả góp → đồng bộ trạng thái đợt đó,
+            // tránh job nhắc thanh toán báo "quá hạn" oan cho đợt đã thu xong.
+            if (soTienDaThuSauKhiCong >= tongTienHoaDon && hoaDon?.LichThanhToanId.HasValue == true)
+            {
+                try
+                {
+                    await _contractRepo.MarkLichThanhToanDaThanhToanAsync(hoaDon.LichThanhToanId.Value, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Không đồng bộ được trạng thái đợt trả góp {LichThanhToanId} sau khi hóa đơn {HoaDonId} hoàn tất.",
+                        hoaDon.LichThanhToanId.Value, request.HoaDonId.Value);
+                }
+            }
         }
 
         // ── 5. Xử lý Loyalty (tích điểm + tính hạng + voucher + email) ──────

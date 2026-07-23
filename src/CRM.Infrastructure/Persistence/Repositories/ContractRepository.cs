@@ -42,7 +42,8 @@ public class ContractRepository : IContractRepository
                 hd.`LoaiHopDong`,
                 hd.`HopDongGoc_Id` AS HopDongGocId,
                 goc.`MaHopDong`    AS MaHopDongGoc,
-                hd.`NgayNhacGiaHanCuoi`
+                hd.`NgayNhacGiaHanCuoi`,
+                (SELECT COALESCE(SUM(kt.`SoTienDaThu`), 0) FROM `KT_HoaDon` kt WHERE kt.`HopDong_Id` = hd.`Id`) AS TongDaThu
             FROM `HD_HopDong` hd
             LEFT JOIN `KH_KhachHang` kh  ON kh.`Id`  = hd.`KhachHang_Id`
             LEFT JOIN `HD_BaoGia`    bg  ON bg.`Id`  = hd.`BaoGia_Id`
@@ -94,6 +95,7 @@ public class ContractRepository : IContractRepository
                     HopDongGocId = reader.IsDBNull(reader.GetOrdinal("HopDongGocId")) ? null : (ulong)reader.GetInt64(reader.GetOrdinal("HopDongGocId")),
                     MaHopDongGoc = reader.IsDBNull(reader.GetOrdinal("MaHopDongGoc")) ? null : reader.GetString(reader.GetOrdinal("MaHopDongGoc")),
                     NgayNhacGiaHanCuoi = reader.IsDBNull(reader.GetOrdinal("NgayNhacGiaHanCuoi")) ? null : DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("NgayNhacGiaHanCuoi"))),
+                    TongDaThu = reader.GetDecimal(reader.GetOrdinal("TongDaThu")),
                 });
             }
             return result;
@@ -262,9 +264,58 @@ public class ContractRepository : IContractRepository
                 SoDot = x.SoDot,
                 SoTien = x.SoTien,
                 HanThanhToan = x.HanThanhToan,
-                TrangThai = x.TrangThai
+                TrangThai = x.TrangThai,
+                DaCoHoaDon = _context.KtHoaDons.Any(h => h.LichThanhToanId == x.Id)
             })
             .ToListAsync(ct);
+
+    public async Task<LichThanhToanDto?> GetLichThanhToanByIdAsync(ulong id, CancellationToken ct = default) =>
+        await _context.HdLichThanhToans
+            .AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => new LichThanhToanDto
+            {
+                Id = x.Id,
+                HopDongId = x.HopDong_Id,
+                SoDot = x.SoDot,
+                SoTien = x.SoTien,
+                HanThanhToan = x.HanThanhToan,
+                TrangThai = x.TrangThai,
+                DaCoHoaDon = _context.KtHoaDons.Any(h => h.LichThanhToanId == x.Id)
+            })
+            .FirstOrDefaultAsync(ct);
+
+    public async Task MarkLichThanhToanDaThanhToanAsync(ulong lichThanhToanId, CancellationToken ct = default)
+    {
+        await _context.HdLichThanhToans
+            .Where(x => x.Id == lichThanhToanId)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.TrangThai, "DaThanhToan"), ct);
+    }
+
+    public async Task LockHopDongForUpdateAsync(ulong hopDongId, CancellationToken ct = default)
+    {
+        var conn = _context.Database.GetDbConnection();
+        var openedHere = conn.State != System.Data.ConnectionState.Open;
+        if (openedHere) await conn.OpenAsync(ct);
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT `Id` FROM `HD_HopDong` WHERE `Id` = @p0 FOR UPDATE";
+            cmd.Transaction = _context.Database.CurrentTransaction?.GetDbTransaction();
+            var param = cmd.CreateParameter();
+            param.ParameterName = "@p0";
+            param.Value = hopDongId;
+            cmd.Parameters.Add(param);
+
+            using var reader = await cmd.ExecuteReaderAsync(ct);
+            if (!await reader.ReadAsync(ct))
+                throw new CRM.Application.Common.Exceptions.NotFoundException("Hợp đồng", hopDongId);
+        }
+        finally
+        {
+            if (openedHere) await conn.CloseAsync();
+        }
+    }
 
     public async Task MarkDaNhacGiaHanAsync(ulong id, DateOnly ngayNhac, CancellationToken ct = default)
     {

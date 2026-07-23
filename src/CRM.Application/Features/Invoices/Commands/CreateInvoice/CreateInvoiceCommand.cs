@@ -29,6 +29,7 @@ namespace CRM.Application.Features.Invoices.Commands.CreateInvoice;
 public record CreateInvoiceCommand(
     ulong? HopDongId,
     ulong? KhachHangId,
+    ulong? LichThanhToanId,
     decimal TongTien
 ) : IRequest<InvoiceDto>;
 
@@ -46,6 +47,10 @@ public class CreateInvoiceCommandValidator : AbstractValidator<CreateInvoiceComm
             RuleFor(x => x.KhachHangId)
                 .NotNull().WithMessage("Phải cung cấp khách hàng khi tạo hóa đơn không gắn hợp đồng.")
                 .GreaterThan(0UL).WithMessage("Khách hàng không hợp lệ.");
+
+            // Đợt trả góp chỉ có ý nghĩa khi gắn với hợp đồng
+            RuleFor(x => x.LichThanhToanId)
+                .Null().WithMessage("Không thể chọn đợt trả góp khi hóa đơn không gắn hợp đồng.");
         });
     }
 }
@@ -84,7 +89,14 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         // ── 1. Validate hợp đồng (nếu có) ───────────────────────────────
         if (request.HopDongId.HasValue)
         {
-            var contract = await _contractRepo.GetByIdAsync(request.HopDongId.Value, ct)
+            // Khoá dòng hợp đồng TRƯỚC khi đọc bất kỳ số liệu tổng hợp nào (tổng đã xuất, đợt đã
+            // dùng...). Toàn bộ command này đã chạy trong 1 transaction (TransactionBehavior), nên
+            // nếu 2 request tạo hóa đơn cho CÙNG hợp đồng đến gần như đồng thời, request thứ 2 sẽ
+            // phải chờ request thứ 1 commit xong mới được đọc tiếp — tránh cả 2 cùng đọc "còn hạn
+            // mức" trước khi ai kịp ghi, dẫn tới vượt giá trị hợp đồng hoặc trùng đợt trả góp.
+            await _contractRepo.LockHopDongForUpdateAsync(request.HopDongId.Value, ct);
+
+            var contract = await _contractRepo.GetByIdEnrichedAsync(request.HopDongId.Value, ct)
                 ?? throw new NotFoundException("Hợp đồng", request.HopDongId.Value);
 
             // Chỉ tạo hóa đơn từ hợp đồng đang còn hiệu lực
@@ -94,6 +106,34 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                     "không thể tạo hóa đơn. Chỉ hợp đồng đang thực hiện mới được phép.");
 
             resolvedKhachHangId = contract.KhachHangId;
+
+            if (request.LichThanhToanId.HasValue)
+            {
+                // ── Trả góp: hóa đơn phải ứng đúng 1 đợt của chính hợp đồng này ──
+                var dot = await _contractRepo.GetLichThanhToanByIdAsync(request.LichThanhToanId.Value, ct)
+                    ?? throw new NotFoundException("Đợt thanh toán", request.LichThanhToanId.Value);
+
+                if (dot.HopDongId != request.HopDongId.Value)
+                    throw new BusinessRuleException(
+                        $"Đợt thanh toán #{request.LichThanhToanId.Value} không thuộc hợp đồng {contract.MaHopDong}.");
+
+                if (dot.DaCoHoaDon)
+                    throw new BusinessRuleException(
+                        $"Đợt {dot.SoDot} của hợp đồng {contract.MaHopDong} đã có hóa đơn khác, không thể xuất trùng.");
+
+                if (request.TongTien != dot.SoTien)
+                    throw new BusinessRuleException(
+                        $"Tổng tiền hóa đơn phải bằng đúng số tiền của đợt {dot.SoDot} ({dot.SoTien:N0} đ).");
+            }
+            else if (contract.GiaTri.HasValue)
+            {
+                // ── Thanh toán 1 lần: tổng đã xuất + hóa đơn mới không được vượt giá trị hợp đồng ──
+                var tongDaXuat = await _invoiceRepo.GetTongDaXuatHoaDonByHopDongAsync(request.HopDongId.Value, ct);
+                if (tongDaXuat + request.TongTien > contract.GiaTri.Value)
+                    throw new BusinessRuleException(
+                        $"Tổng tiền hóa đơn ({tongDaXuat + request.TongTien:N0} đ) vượt quá giá trị hợp đồng " +
+                        $"{contract.MaHopDong} ({contract.GiaTri.Value:N0} đ). Đã xuất {tongDaXuat:N0} đ trước đó.");
+            }
         }
         else
         {
@@ -115,6 +155,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         {
             MaHoaDon = maHoaDon,
             HopDongId = request.HopDongId,
+            LichThanhToanId = request.LichThanhToanId,
             KhachHangId = resolvedKhachHangId,
             TongTien = request.TongTien,
             SoTienDaThu = 0m,

@@ -11,7 +11,7 @@ public interface IPhieuThuChiRepository
 
     Task<PagedResult<PhieuThuChiDto>> GetPagedAsync(
         int pageNumber, int pageSize, ulong? khachHangId, ulong? hoaDonId,
-        string? loaiPhieu, CancellationToken ct = default);
+        string? loaiPhieu, uint? ownerUserId, CancellationToken ct = default);
 
     Task<DomainPhieuThuChi> AddAsync(DomainPhieuThuChi phieu, CancellationToken ct = default);
 

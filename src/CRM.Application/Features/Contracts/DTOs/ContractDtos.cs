@@ -12,6 +12,9 @@ public class ContractDto
     public ulong? BaoGiaId { get; set; }
     public string? MaBaoGia { get; set; }
     public decimal? GiaTri { get; set; }
+
+    /// <summary>Tổng SoTienDaThu cộng dồn từ mọi hóa đơn của hợp đồng — dùng để cảnh báo "đã thu đủ, có thể thanh lý".</summary>
+    public decimal TongDaThu { get; set; }
     public DateOnly? NgayKy { get; set; }
     public int? ThoiHan { get; set; }
     public DateOnly? NgayKetThuc { get; set; }
@@ -107,6 +110,9 @@ public class LichThanhToanDto
     public decimal SoTien { get; set; }
     public DateOnly HanThanhToan { get; set; }
     public string TrangThai { get; set; } = "ChuaDenHan";
+
+    /// <summary>Đợt này đã có hóa đơn nào trỏ tới chưa — dùng để ẩn khỏi dropdown chọn đợt khi tạo hóa đơn mới.</summary>
+    public bool DaCoHoaDon { get; set; }
 }
 
 public class UpdateContractStatusRequestDto

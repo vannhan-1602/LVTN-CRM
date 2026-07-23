@@ -7,6 +7,7 @@ public class PhieuThuChiDto
     public string LoaiPhieu { get; set; } = string.Empty;
     public ulong? KhachHangId { get; set; }
     public string? TenKhachHang { get; set; }
+    public uint? NhanVienPhuTrachId { get; set; }
     public ulong? HoaDonId { get; set; }
     public string? MaHoaDon { get; set; }
     public decimal SoTien { get; set; }

@@ -11,7 +11,7 @@ public interface IInvoiceRepository
 
     Task<PagedResult<InvoiceDto>> GetPagedAsync(
         int pageNumber, int pageSize, string? search, string? trangThaiThanhToan,
-        ulong? khachHangId, CancellationToken ct = default);
+        ulong? khachHangId, uint? ownerUserId, CancellationToken ct = default);
 
     Task<HoaDon> AddAsync(HoaDon invoice, CancellationToken ct = default);
 
@@ -23,4 +23,10 @@ public interface IInvoiceRepository
     Task<string> GenerateMaHoaDonAsync(CancellationToken ct = default);
 
     Task<bool> ExistsForHopDongAsync(ulong hopDongId, CancellationToken ct = default);
+
+    /// <summary>Tổng TongTien của tất cả hóa đơn đã xuất cho hợp đồng này (dùng validate không xuất vượt giá trị hợp đồng).</summary>
+    Task<decimal> GetTongDaXuatHoaDonByHopDongAsync(ulong hopDongId, CancellationToken ct = default);
+
+    /// <summary>Đợt trả góp (HD_LichThanhToan) này đã có hóa đơn nào trỏ tới chưa — tránh xuất trùng 2 hóa đơn cho 1 đợt.</summary>
+    Task<bool> ExistsForLichThanhToanAsync(ulong lichThanhToanId, CancellationToken ct = default);
 }

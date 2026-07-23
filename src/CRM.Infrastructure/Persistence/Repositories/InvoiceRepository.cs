@@ -29,12 +29,12 @@ public class InvoiceRepository : IInvoiceRepository
             .FirstOrDefaultAsync(ct);
 
         return result is null ? null
-            : MapToDto(result.HoaDon, result.TenKhachHang, result.MaHopDong);
+            : MapToDto(result.HoaDon, result.TenKhachHang, result.MaHopDong, result.SoDot, result.NhanVienPhuTrachId);
     }
 
     public async Task<PagedResult<InvoiceDto>> GetPagedAsync(
         int pageNumber, int pageSize, string? search,
-        string? trangThaiThanhToan, ulong? khachHangId,
+        string? trangThaiThanhToan, ulong? khachHangId, uint? ownerUserId,
         CancellationToken ct = default)
     {
         var query = BuildEnrichedQuery();
@@ -50,6 +50,10 @@ public class InvoiceRepository : IInvoiceRepository
         if (khachHangId.HasValue)
             query = query.Where(x => x.HoaDon.KhachHang_Id == khachHangId.Value);
 
+        // Sale chỉ xem hóa đơn của khách hàng mình phụ trách. Manager/Accountant xem toàn bộ.
+        if (ownerUserId.HasValue)
+            query = query.Where(x => x.NhanVienPhuTrachId == ownerUserId.Value);
+
         var total = await query.CountAsync(ct);
         var items = await query
             .OrderByDescending(x => x.HoaDon.Id)
@@ -59,7 +63,7 @@ public class InvoiceRepository : IInvoiceRepository
 
         return new PagedResult<InvoiceDto>
         {
-            Items = items.Select(x => MapToDto(x.HoaDon, x.TenKhachHang, x.MaHopDong)).ToList(),
+            Items = items.Select(x => MapToDto(x.HoaDon, x.TenKhachHang, x.MaHopDong, x.SoDot, x.NhanVienPhuTrachId)).ToList(),
             PageNumber = pageNumber,
             PageSize = pageSize,
             TotalCount = total
@@ -118,6 +122,17 @@ public class InvoiceRepository : IInvoiceRepository
     public Task<bool> ExistsForHopDongAsync(ulong hopDongId, CancellationToken ct = default) =>
         _context.KtHoaDons.AnyAsync(x => x.HopDongId == hopDongId, ct);
 
+    public async Task<decimal> GetTongDaXuatHoaDonByHopDongAsync(ulong hopDongId, CancellationToken ct = default)
+    {
+        var tong = await _context.KtHoaDons
+            .Where(x => x.HopDongId == hopDongId)
+            .SumAsync(x => (decimal?)x.TongTien, ct);
+        return tong ?? 0m;
+    }
+
+    public Task<bool> ExistsForLichThanhToanAsync(ulong lichThanhToanId, CancellationToken ct = default) =>
+        _context.KtHoaDons.AnyAsync(x => x.LichThanhToanId == lichThanhToanId, ct);
+
     // ── Query enriched dùng chung ─────────────────────────────────────────────
     private IQueryable<InvoiceProjection> BuildEnrichedQuery() =>
         from hd in _context.KtHoaDons
@@ -127,18 +142,25 @@ public class InvoiceRepository : IInvoiceRepository
         join hdong in _context.HdHopDongs
             on hd.HopDongId equals hdong.Id into hdongJoin
         from hdong in hdongJoin.DefaultIfEmpty()
+        join dot in _context.HdLichThanhToans
+            on hd.LichThanhToanId equals dot.Id into dotJoin
+        from dot in dotJoin.DefaultIfEmpty()
         select new InvoiceProjection
         {
             HoaDon = hd,
             TenKhachHang = kh != null ? kh.TenKhachHang : null,
-            MaHopDong = hdong != null ? hdong.MaHopDong : null
+            NhanVienPhuTrachId = kh != null ? kh.NhanVienPhuTrachId : null,
+            MaHopDong = hdong != null ? hdong.MaHopDong : null,
+            SoDot = dot != null ? (int?)dot.SoDot : null
         };
 
     private class InvoiceProjection
     {
         public KtHoaDonEntity HoaDon { get; set; } = null!;
         public string? TenKhachHang { get; set; }
+        public uint? NhanVienPhuTrachId { get; set; }
         public string? MaHopDong { get; set; }
+        public int? SoDot { get; set; }
     }
 
     // ── Mappers ───────────────────────────────────────────────────────────────
@@ -147,6 +169,7 @@ public class InvoiceRepository : IInvoiceRepository
         Id = e.Id,
         MaHoaDon = e.MaHoaDon,
         HopDongId = e.HopDongId,
+        LichThanhToanId = e.LichThanhToanId,
         KhachHangId = e.KhachHang_Id,
         TongTien = e.TongTien,
         SoTienDaThu = e.SoTienDaThu ?? 0m,
@@ -159,6 +182,7 @@ public class InvoiceRepository : IInvoiceRepository
     {
         MaHoaDon = d.MaHoaDon,
         HopDongId = d.HopDongId,
+        LichThanhToanId = d.LichThanhToanId,
         KhachHang_Id = d.KhachHangId,
         TongTien = d.TongTien,
         SoTienDaThu = d.SoTienDaThu,
@@ -168,14 +192,17 @@ public class InvoiceRepository : IInvoiceRepository
     };
 
     private static InvoiceDto MapToDto(
-        KtHoaDonEntity e, string? tenKhachHang, string? maHopDong) => new()
+        KtHoaDonEntity e, string? tenKhachHang, string? maHopDong, int? soDot = null, uint? nhanVienPhuTrachId = null) => new()
     {
         Id = e.Id,
         MaHoaDon = e.MaHoaDon,
         HopDongId = e.HopDongId,
         MaHopDong = maHopDong,
+        LichThanhToanId = e.LichThanhToanId,
+        SoDot = soDot,
         KhachHangId = e.KhachHang_Id,
         TenKhachHang = tenKhachHang,
+        NhanVienPhuTrachId = nhanVienPhuTrachId,
         TongTien = e.TongTien,
         SoTienDaThu = e.SoTienDaThu ?? 0m,
         TrangThaiThanhToan = e.TrangThaiThanhToan,

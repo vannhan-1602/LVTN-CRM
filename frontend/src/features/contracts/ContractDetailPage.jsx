@@ -116,6 +116,11 @@ export default function ContractDetailPage() {
   const isFinal =
     contract.trangThai === "ThanhLy" || contract.trangThai === "HetHan";
 
+  const daThuDu =
+    contract.trangThai === "DangThucHien" &&
+    contract.giaTri != null &&
+    Number(contract.tongDaThu ?? 0) >= Number(contract.giaTri);
+
   return (
     <div className="space-y-5">
       {showEditModal && (
@@ -158,6 +163,12 @@ export default function ContractDetailPage() {
           </>
         }
       />
+
+      {daThuDu && (
+        <div className="text-sm text-success-700 bg-success-50 border border-success-100 rounded-lg p-3">
+          Đã thu đủ 100% giá trị hợp đồng ({formatMoney(contract.giaTri)}) — có thể thanh lý.
+        </div>
+      )}
 
       {error && (
         <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-3">
