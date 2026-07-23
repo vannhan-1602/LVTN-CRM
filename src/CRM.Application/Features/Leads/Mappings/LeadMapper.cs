@@ -17,6 +17,7 @@ namespace CRM.Application.Features.Leads.Mappings
             TenCongTy = lead.TenCongTy,
             SoDienThoai = lead.SoDienThoai,
             Email = lead.Email,
+            NguonLead = lead.NguonLead,
             TinhTrang = lead.TinhTrang,
             NhanVienPhuTrachId = lead.NhanVienPhuTrachId,
             IsDeleted = lead.IsDeleted,

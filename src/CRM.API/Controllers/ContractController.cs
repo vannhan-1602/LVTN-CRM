@@ -107,8 +107,9 @@ public class ContractController : ControllerBase
         return Ok(ApiResponse<List<MocTrienKhaiDto>>.Ok(result));
     }
 
+    // Chỉ Manager tạo mốc triển khai (bao gồm gán nhân viên phụ trách) — Sale không được tạo.
     [HttpPost("{id:long}/moc-trien-khai")]
-    [Authorize(Policy = Policies.SalesTeam)]
+    [Authorize(Policy = Policies.ManagerOnly)]
     public async Task<IActionResult> CreateMocTrienKhai(ulong id, [FromBody] CreateMocTrienKhaiRequestDto request, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateMilestoneCommand(
@@ -126,8 +127,9 @@ public class ContractController : ControllerBase
         return Ok(ApiResponse<MocTrienKhaiDto>.Ok(result, "Cập nhật mốc triển khai thành công."));
     }
 
+    // Chỉ Manager xóa mốc triển khai — Sale không được xóa.
     [HttpDelete("moc-trien-khai/{mocId:long}")]
-    [Authorize(Policy = Policies.SalesTeam)]
+    [Authorize(Policy = Policies.ManagerOnly)]
     public async Task<IActionResult> DeleteMocTrienKhai(ulong mocId, CancellationToken ct)
     {
         await _mediator.Send(new DeleteMilestoneCommand(mocId), ct);

@@ -1,5 +1,7 @@
+using CRM.Application.Common.Constants;
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Contracts.DTOs;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Contracts;
 using FluentValidation;
 using MediatR;
@@ -29,12 +31,41 @@ public class UpdateMilestoneCommandValidator : AbstractValidator<UpdateMilestone
 public class UpdateMilestoneCommandHandler : IRequestHandler<UpdateMilestoneCommand, MocTrienKhaiDto>
 {
     private readonly IContractMilestoneRepository _milestoneRepository;
-    public UpdateMilestoneCommandHandler(IContractMilestoneRepository milestoneRepository) =>
-        _milestoneRepository = milestoneRepository;
+    private readonly ICurrentUserService _currentUser;
 
-    public async Task<MocTrienKhaiDto> Handle(UpdateMilestoneCommand request, CancellationToken ct) =>
-        await _milestoneRepository.UpdateAsync(
-            request.Id, request.NoiDung?.Trim(), request.NgayThucHien, request.NhanVienThucHienId,
+    public UpdateMilestoneCommandHandler(
+        IContractMilestoneRepository milestoneRepository, ICurrentUserService currentUser)
+    {
+        _milestoneRepository = milestoneRepository;
+        _currentUser = currentUser;
+    }
+
+    public async Task<MocTrienKhaiDto> Handle(UpdateMilestoneCommand request, CancellationToken ct)
+    {
+        var noiDung = request.NoiDung?.Trim();
+        var ngayThucHien = request.NgayThucHien;
+        var nhanVienThucHienId = request.NhanVienThucHienId;
+
+        if (_currentUser.Role == Roles.Sale)
+        {
+            var existing = await _milestoneRepository.GetByIdAsync(request.Id, ct)
+                ?? throw new NotFoundException("HD_MocTrienKhai", request.Id);
+
+            // Sale chỉ được cập nhật mốc triển khai được gán cho chính mình — không được
+            // thao tác trên mốc của người khác, và không được đổi nội dung/ngày thực hiện/
+            // người phụ trách, chỉ được cập nhật trạng thái thực hiện, người xác nhận khách,
+            // và file biên bản. Việc tạo mới hoặc gán lại cho người khác do Manager thực hiện.
+            if (existing.NhanVienThucHienId != _currentUser.UserId)
+                throw new ForbiddenException("Bạn chỉ có thể cập nhật mốc triển khai được gán cho mình.");
+
+            noiDung = existing.NoiDung;
+            ngayThucHien = existing.NgayThucHien;
+            nhanVienThucHienId = existing.NhanVienThucHienId;
+        }
+
+        return await _milestoneRepository.UpdateAsync(
+            request.Id, noiDung, ngayThucHien, nhanVienThucHienId,
             request.NguoiXacNhanKhach?.Trim(), request.FileBienBan, request.TrangThai, ct)
         ?? throw new NotFoundException("HD_MocTrienKhai", request.Id);
+    }
 }

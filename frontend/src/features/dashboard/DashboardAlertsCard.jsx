@@ -11,6 +11,7 @@ const ENTITY_ROUTE = {
   Ticket: (id) => `/tickets/${id}`,
   Contract: (id) => `/contracts/${id}`,
   Invoice: (id) => `/invoices/${id}`,
+  User: (id) => `/users/${id}`,
 };
 
 // Màu theo mức độ nghiêm trọng (Info/Warning/Danger) — khớp bảng màu đã dùng ở ManagerDashboard.

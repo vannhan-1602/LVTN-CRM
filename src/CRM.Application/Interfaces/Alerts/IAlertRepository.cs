@@ -30,4 +30,14 @@ public interface IAlertRepository
 
 
     Task<DashboardAlertGroupDto> GetHoaDonConNoAsync(CancellationToken ct = default);
+
+    /// <summary>Tài khoản (HT_Users) chưa được gán RoleId — Admin cần gán vai trò.</summary>
+    Task<DashboardAlertGroupDto> GetTaiKhoanChuaGanVaiTroAsync(CancellationToken ct = default);
+
+    /// <summary>Tài khoản (HT_Users) đang ở trạng thái Locked — Admin cần xem xét/mở khóa.</summary>
+    Task<DashboardAlertGroupDto> GetTaiKhoanBiKhoaAsync(CancellationToken ct = default);
+
+    /// <summary>Mốc triển khai (HD_MocTrienKhai) chưa được khách xác nhận (TrangThai != DaXacNhan).
+    /// nhanVienId = null nghĩa là toàn team; truyền id để lọc riêng mốc được gán cho 1 Sale.</summary>
+    Task<DashboardAlertGroupDto> GetMocTrienKhaiCanThucHienAsync(uint? nhanVienId, CancellationToken ct = default);
 }

@@ -32,7 +32,14 @@ public class GetDashboardAlertsQueryHandler : IRequestHandler<GetDashboardAlerts
 
         var groups = new List<DashboardAlertGroupDto>();
 
-        if (role == Roles.Admin || role == Roles.Manager)
+        if (role == Roles.Admin)
+        {
+            // Admin chỉ phụ trách quản trị tài khoản/hệ thống, không phụ trách nghiệp vụ
+            // kinh doanh — không dùng chung cảnh báo Lead/Ticket/Khách hàng với Manager.
+            groups.Add(await _alertRepository.GetTaiKhoanChuaGanVaiTroAsync(cancellationToken));
+            groups.Add(await _alertRepository.GetTaiKhoanBiKhoaAsync(cancellationToken));
+        }
+        else if (role == Roles.Manager)
         {
             groups.Add(await _alertRepository.GetLeadsChuaPhanCongAsync(cancellationToken));
             groups.Add(await _alertRepository.GetCustomersChuaPhanCongAsync(cancellationToken));
@@ -45,6 +52,7 @@ public class GetDashboardAlertsQueryHandler : IRequestHandler<GetDashboardAlerts
             groups.Add(await _alertRepository.GetTicketKhanCapAsync(userId, cancellationToken));
             groups.Add(await _alertRepository.GetTicketSapHenXuLyAsync(userId, cancellationToken));
             groups.Add(await _alertRepository.GetTicketNhacThanhToanGiaHanAsync(userId, cancellationToken));
+            groups.Add(await _alertRepository.GetMocTrienKhaiCanThucHienAsync(userId, cancellationToken));
         }
         else if (role == Roles.Accountant)
         {

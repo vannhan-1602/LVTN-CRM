@@ -340,4 +340,103 @@ public class AlertRepository : IAlertRepository
             Items = items
         };
     }
+
+    public async Task<DashboardAlertGroupDto> GetTaiKhoanChuaGanVaiTroAsync(CancellationToken ct = default)
+    {
+        var query = _context.HtUsers.AsNoTracking()
+            .Where(u => u.RoleId == null);
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Take(SoLuongToiDaMoiNhom)
+            .Select(u => new DashboardAlertDto
+            {
+                Type = "TaiKhoanChuaGanVaiTro",
+                Severity = AlertSeverity.Warning,
+                Title = u.Username,
+                Description = "Tài khoản chưa được gán vai trò (Role).",
+                EntityType = "User",
+                EntityId = u.Id,
+                DueAt = null
+            })
+            .ToListAsync(ct);
+
+        return new DashboardAlertGroupDto
+        {
+            GroupKey = "tai_khoan_chua_gan_vai_tro",
+            GroupTitle = "Tài khoản chưa gán vai trò",
+            Severity = AlertSeverity.Warning,
+            Count = total,
+            Items = items
+        };
+    }
+
+    public async Task<DashboardAlertGroupDto> GetTaiKhoanBiKhoaAsync(CancellationToken ct = default)
+    {
+        var query = _context.HtUsers.AsNoTracking()
+            .Where(u => u.TrangThai == "Locked");
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(u => u.UpdatedAt)
+            .Take(SoLuongToiDaMoiNhom)
+            .Select(u => new DashboardAlertDto
+            {
+                Type = "TaiKhoanBiKhoa",
+                Severity = AlertSeverity.Danger,
+                Title = u.Username,
+                Description = "Tài khoản đang bị khóa.",
+                EntityType = "User",
+                EntityId = u.Id,
+                DueAt = null
+            })
+            .ToListAsync(ct);
+
+        return new DashboardAlertGroupDto
+        {
+            GroupKey = "tai_khoan_bi_khoa",
+            GroupTitle = "Tài khoản bị khóa",
+            Severity = AlertSeverity.Danger,
+            Count = total,
+            Items = items
+        };
+    }
+
+    public async Task<DashboardAlertGroupDto> GetMocTrienKhaiCanThucHienAsync(uint? nhanVienId, CancellationToken ct = default)
+    {
+        var query = _context.HdMocTrienKhais.AsNoTracking()
+            .Include(x => x.HopDong)
+            .Where(x => x.TrangThai != "DaXacNhan");
+
+        if (nhanVienId is not null)
+            query = query.Where(x => x.NhanVienThucHien_Id == nhanVienId);
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderBy(x => x.NgayThucHien ?? DateTime.MaxValue)
+            .Take(SoLuongToiDaMoiNhom)
+            .Select(x => new DashboardAlertDto
+            {
+                Type = "MocTrienKhaiCanThucHien",
+                Severity = x.TrangThai == "ChuaThucHien" ? AlertSeverity.Warning : AlertSeverity.Info,
+                Title = $"Mốc {x.LoaiMoc} — Hợp đồng {(x.HopDong != null ? x.HopDong.MaHopDong : "")}",
+                Description = x.TrangThai == "ChuaThucHien"
+                    ? "Mốc triển khai chưa thực hiện."
+                    : "Đã thực hiện, đang chờ khách xác nhận.",
+                EntityType = "Contract",
+                EntityId = x.HopDong_Id,
+                DueAt = x.NgayThucHien
+            })
+            .ToListAsync(ct);
+
+        return new DashboardAlertGroupDto
+        {
+            GroupKey = "moc_trien_khai_can_thuc_hien",
+            GroupTitle = "Mốc triển khai cần thực hiện",
+            Severity = AlertSeverity.Warning,
+            Count = total,
+            Items = items
+        };
+    }
 }

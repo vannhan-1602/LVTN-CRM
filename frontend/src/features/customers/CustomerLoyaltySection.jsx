@@ -74,16 +74,18 @@ export default function CustomerLoyaltySection({ khachHangId }) {
 
   if (!info) return null;
 
+  // Khách chưa từng có giao dịch nào (mua hàng) trong 12 tháng gần nhất —
+  // lúc này "còn 0 điểm nữa để lên hạng" gây hiểu lầm, nên đổi sang thông điệp
+  // yêu cầu giao dịch đầu tiên thay vì hiển thị số/phần trăm.
+  const chuaCoGiaoDich = (info.soLanThu12Thang ?? 0) === 0;
+
+  const mauSoTienDo =
+    (info.tongDiem12Thang ?? 0) + (info.soDiemCanThemDeLenHang ?? 0);
   const tienDoPhanTram =
-    info.soDiemCanThemDeLenHang != null && info.tongDiem12Thang != null
-      ? Math.min(
-          100,
-          Math.round(
-            (info.tongDiem12Thang /
-              (info.tongDiem12Thang + info.soDiemCanThemDeLenHang)) *
-              100,
-          ),
-        )
+    info.soDiemCanThemDeLenHang != null &&
+    info.tongDiem12Thang != null &&
+    mauSoTienDo > 0
+      ? Math.min(100, Math.round((info.tongDiem12Thang / mauSoTienDo) * 100))
       : null;
 
   return (
@@ -127,15 +129,18 @@ export default function CustomerLoyaltySection({ khachHangId }) {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs text-ink-500">
               <span>
-                Còn {info.soDiemCanThemDeLenHang?.toLocaleString("vi-VN")} điểm
-                nữa để lên hạng {info.tenHangTiepTheo}
+                {chuaCoGiaoDich
+                  ? `Cần giao dịch đầu tiên để bắt đầu tích điểm lên hạng ${info.tenHangTiepTheo}`
+                  : `Còn ${info.soDiemCanThemDeLenHang?.toLocaleString("vi-VN")} điểm nữa để lên hạng ${info.tenHangTiepTheo}`}
               </span>
-              {tienDoPhanTram != null && <span>{tienDoPhanTram}%</span>}
+              {!chuaCoGiaoDich && tienDoPhanTram != null && (
+                <span>{tienDoPhanTram}%</span>
+              )}
             </div>
             <div className="h-1.5 bg-ink-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-accent-500 rounded-full"
-                style={{ width: `${tienDoPhanTram ?? 0}%` }}
+                style={{ width: `${chuaCoGiaoDich ? 0 : (tienDoPhanTram ?? 0)}%` }}
               />
             </div>
           </div>

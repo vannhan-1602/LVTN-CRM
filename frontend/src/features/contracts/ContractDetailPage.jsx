@@ -264,6 +264,8 @@ export default function ContractDetailPage() {
           <MilestoneSection
             hopDongId={contract.id}
             canEdit={canManage}
+            isManager={user?.role === ROLES.Manager}
+            currentUserId={user?.userId}
             isFinal={isFinal}
           />
 

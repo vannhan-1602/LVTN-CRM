@@ -61,8 +61,19 @@ const emptyForm = {
  *  - hopDongId: id hợp đồng
  *  - canEdit: true nếu role hiện tại là Sale/Manager
  *  - isFinal: hợp đồng đã Thanh lý/Hết hạn — khóa thêm/sửa/xóa mốc
+ *  - isManager: true nếu role hiện tại là Manager — chỉ Manager được tạo/xóa mốc
+ *    và gán/đổi nhân viên phụ trách. Sale chỉ được cập nhật trạng thái/người xác
+ *    nhận/biên bản của mốc đang gán cho chính mình (backend đã enforce, FE ẩn/khóa
+ *    bớt để tránh gây hiểu lầm là thao tác được).
+ *  - currentUserId: id tài khoản đang đăng nhập, dùng để biết mốc nào là "của mình"
  */
-export default function MilestoneSection({ hopDongId, canEdit, isFinal }) {
+export default function MilestoneSection({
+  hopDongId,
+  canEdit,
+  isFinal,
+  isManager,
+  currentUserId,
+}) {
   const [milestones, setMilestones] = useState([]);
   const [nhanVienList, setNhanVienList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,7 +193,15 @@ export default function MilestoneSection({ hopDongId, canEdit, isFinal }) {
     }
   };
 
-  const canAdd = canEdit && !isFinal;
+  const canAdd = isManager && !isFinal;
+  // Sale chỉ sửa được mốc đang gán cho chính mình; Manager sửa được mọi mốc.
+  const canEditMoc = (moc) =>
+    canEdit && !isFinal && (isManager || moc.nhanVienThucHienId === currentUserId);
+  // Chỉ Manager được xóa mốc triển khai.
+  const canDeleteMoc = isManager && !isFinal;
+  // Khi Sale đang sửa mốc của mình: chỉ được đổi trạng thái / người xác nhận / biên bản,
+  // không được đổi nội dung, ngày thực hiện hay người phụ trách (khớp ràng buộc ở backend).
+  const isRestrictedSaleEdit = Boolean(editingId) && !isManager;
 
   return (
     <Card
@@ -251,7 +270,8 @@ export default function MilestoneSection({ hopDongId, canEdit, isFinal }) {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, ngayThucHien: e.target.value }))
                 }
-                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
+                disabled={isRestrictedSaleEdit}
+                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm disabled:bg-ink-50 disabled:text-ink-400"
               />
             </div>
           </div>
@@ -267,7 +287,8 @@ export default function MilestoneSection({ hopDongId, canEdit, isFinal }) {
                 setForm((f) => ({ ...f, noiDung: e.target.value }))
               }
               placeholder="Mô tả công việc đã/sẽ thực hiện..."
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm resize-none"
+              disabled={isRestrictedSaleEdit}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm resize-none disabled:bg-ink-50 disabled:text-ink-400"
             />
           </div>
 
@@ -282,6 +303,7 @@ export default function MilestoneSection({ hopDongId, canEdit, isFinal }) {
                   setForm((f) => ({ ...f, nhanVienThucHienId: v }))
                 }
                 options={nhanVienList}
+                disabled={isRestrictedSaleEdit}
               />
             ) : (
               <input
@@ -292,7 +314,8 @@ export default function MilestoneSection({ hopDongId, canEdit, isFinal }) {
                   setForm((f) => ({ ...f, nhanVienThucHienId: e.target.value }))
                 }
                 placeholder="ID nhân viên"
-                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
+                disabled={isRestrictedSaleEdit}
+                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm disabled:bg-ink-50 disabled:text-ink-400"
               />
             )}
           </div>
@@ -444,20 +467,24 @@ export default function MilestoneSection({ hopDongId, canEdit, isFinal }) {
                     </a>
                   )}
                 </div>
-                {canEdit && !isFinal && (
+                {(canEditMoc(moc) || canDeleteMoc) && (
                   <div className="flex gap-3 shrink-0">
-                    <button
-                      onClick={() => handleEdit(moc)}
-                      className="text-xs font-medium text-info-600 hover:underline"
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      onClick={() => handleDelete(moc.id)}
-                      className="text-xs font-medium text-danger-600 hover:underline"
-                    >
-                      Xóa
-                    </button>
+                    {canEditMoc(moc) && (
+                      <button
+                        onClick={() => handleEdit(moc)}
+                        className="text-xs font-medium text-info-600 hover:underline"
+                      >
+                        Sửa
+                      </button>
+                    )}
+                    {canDeleteMoc && (
+                      <button
+                        onClick={() => handleDelete(moc.id)}
+                        className="text-xs font-medium text-danger-600 hover:underline"
+                      >
+                        Xóa
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
