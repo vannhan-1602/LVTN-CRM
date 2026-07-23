@@ -88,6 +88,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IPhieuThuChiRepository, PhieuThuChiRepository>();
+        services.AddScoped<CRM.Application.Interfaces.Alerts.IAlertRepository, CRM.Infrastructure.Persistence.Repositories.AlertRepository>();
 
         services.AddScoped<IAuditLogPublisher, AuditLogPublisher>();
         services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();

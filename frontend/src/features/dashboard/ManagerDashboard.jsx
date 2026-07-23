@@ -27,6 +27,7 @@ import {
   GIAI_DOAN_HEADER_COLOR,
 } from "../../utils/constants";
 import AiSalesAnalysisCard from "./AiSalesAnalysisCard";
+import DashboardAlertsCard from "./DashboardAlertsCard";
 
 function formatMoney(n) {
   if (!n && n !== 0) return "—";
@@ -250,6 +251,8 @@ export default function ManagerDashboard() {
 
         {/* Lối tắt + cảnh báo */}
         <div className="space-y-4">
+          <DashboardAlertsCard />
+
           <Card title="Cần chú ý">
             <div className="space-y-2">
               {data.ticketKhanCap > 0 && (
