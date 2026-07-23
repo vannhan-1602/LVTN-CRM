@@ -157,6 +157,7 @@ export default function LeadDetailPage() {
         <LeadFormModal
           lead={lead}
           nhanVienList={nhanVienList}
+          canAssign={user?.role === ROLES.Manager}
           onClose={() => setShowEditModal(false)}
           onSaved={() => {
             setShowEditModal(false);

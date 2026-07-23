@@ -22,10 +22,10 @@ namespace CRM.Application.Features.Leads.Queries.GetAllLeads
         public async Task<PagedResult<LeadDto>> Handle(GetAllLeadsQuery request, CancellationToken cancellationToken)
         {
             // Sale chỉ xem Lead mình phụ trách  Manager xem toàn đội 
-            uint? ownerNhanSuId = _currentUser.Role == Roles.Sale ? _currentUser.NhanSuId : null;
+            uint? ownerUserId = _currentUser.Role == Roles.Sale ? _currentUser.UserId : null;
 
             var result = await _leadRepository.GetPagedAsync(
-                request.PageNumber, request.PageSize, request.Search, ownerNhanSuId, request.IsDeleted, request.TinhTrang, cancellationToken);
+                request.PageNumber, request.PageSize, request.Search, ownerUserId, request.IsDeleted, request.TinhTrang, cancellationToken);
 
             return new PagedResult<LeadDto>
             {

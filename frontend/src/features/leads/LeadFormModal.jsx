@@ -26,9 +26,14 @@ const emptyForm = {
 const toInt = (v) => (v === "" || v == null ? null : Number(v));
 
 // Modal Thêm/Sửa Lead. Có prop `lead` => chế độ Sửa.
+// `canAssign`: chỉ Manager mới được chọn/đổi người phụ trách; Sale luôn tự
+// động gán cho mình ở backend (CreateLeadCommandHandler/UpdateLeadCommandHandler
+// bỏ qua NhanVienPhuTrachId gửi lên nếu role là Sale) — dropdown phải khóa
+// tương ứng để không gây hiểu lầm là Sale chọn được người khác.
 export default function LeadFormModal({
   lead,
   nhanVienList = [],
+  canAssign = false,
   onClose,
   onSaved,
 }) {
@@ -184,24 +189,30 @@ export default function LeadFormModal({
           <label className="block text-sm font-medium text-ink-700 mb-1.5">
             Nhân viên phụ trách
           </label>
-          {nhanVienList.length > 0 ? (
-            <EmployeeSelect
-              value={form.nhanVienPhuTrachId}
-              onChange={(v) =>
-                setForm((f) => ({ ...f, nhanVienPhuTrachId: v }))
-              }
-              options={nhanVienList}
-            />
+          {canAssign ? (
+            nhanVienList.length > 0 ? (
+              <EmployeeSelect
+                value={form.nhanVienPhuTrachId}
+                onChange={(v) =>
+                  setForm((f) => ({ ...f, nhanVienPhuTrachId: v }))
+                }
+                options={nhanVienList}
+              />
+            ) : (
+              <input
+                name="nhanVienPhuTrachId"
+                type="number"
+                min="1"
+                value={form.nhanVienPhuTrachId}
+                onChange={handleChange}
+                placeholder="ID nhân viên"
+                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+              />
+            )
           ) : (
-            <input
-              name="nhanVienPhuTrachId"
-              type="number"
-              min="1"
-              value={form.nhanVienPhuTrachId}
-              onChange={handleChange}
-              placeholder="ID nhân viên"
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
-            />
+            <div className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm bg-surface-alt text-ink-400">
+              Tự động gán cho bạn
+            </div>
           )}
         </div>
 

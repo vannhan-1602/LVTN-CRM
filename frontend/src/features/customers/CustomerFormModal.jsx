@@ -5,6 +5,8 @@ import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 import EmployeeSelect from "../../components/common/EmployeeSelect";
 import useDanhMucStore from "../../stores/danhMucStore";
+import useAuthStore from "../auth/authStore";
+import { ROLES } from "../../utils/constants";
 
 const emptyForm = {
   tenKhachHang: "",
@@ -22,6 +24,12 @@ const toInt = (v) => (v === "" || v == null ? null : Number(v));
 
 export default function CustomerFormModal({ customer, onClose, onSaved }) {
   const isEdit = Boolean(customer);
+  const { user } = useAuthStore();
+  // Sale luôn tự động gán khách hàng mới cho chính mình ở backend
+  // (CreateCustomerCommandHandler bỏ qua NhanVienPhuTrachId gửi lên nếu role
+  // là Sale) — dropdown lúc Tạo mới phải khóa tương ứng, tránh hiểu lầm là
+  // Sale chọn được người khác. Manager mới được chọn tự do.
+  const canAssign = user?.role === ROLES.Manager;
   const { loaiKhachHang, tinhTrang, load: loadDanhMuc } = useDanhMucStore();
 
   useEffect(() => {
@@ -301,10 +309,16 @@ export default function CustomerFormModal({ customer, onClose, onSaved }) {
               }
               className="w-full border border-ink-100 bg-surface-alt rounded-lg px-3 py-2 text-sm text-ink-500 cursor-not-allowed"
             />
+          ) : !canAssign ? (
+            <div className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm bg-surface-alt text-ink-400">
+              Tự động gán cho bạn
+            </div>
           ) : nhanVienList.length > 0 ? (
             <EmployeeSelect
               value={form.nhanVienPhuTrachId}
-              onChange={(v) => setForm((prev) => ({ ...prev, nhanVienPhuTrachId: v }))}
+              onChange={(v) =>
+                setForm((prev) => ({ ...prev, nhanVienPhuTrachId: v }))
+              }
               options={nhanVienList}
             />
           ) : (

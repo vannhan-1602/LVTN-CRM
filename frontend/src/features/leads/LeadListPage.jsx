@@ -176,6 +176,7 @@ export default function LeadListPage() {
       {showCreateModal && (
         <LeadFormModal
           nhanVienList={nhanVienList}
+          canAssign={user?.role === ROLES.Manager}
           onClose={() => setShowCreateModal(false)}
           onSaved={() => {
             setShowCreateModal(false);
@@ -188,6 +189,7 @@ export default function LeadListPage() {
         <LeadFormModal
           lead={editingLead}
           nhanVienList={nhanVienList}
+          canAssign={user?.role === ROLES.Manager}
           onClose={() => setEditingLead(null)}
           onSaved={() => {
             setEditingLead(null);

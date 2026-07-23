@@ -111,6 +111,31 @@ export const CONTRACT_STATUS_COLOR = {
   ThanhLy: "bg-ink-100 text-ink-500",
 };
 
+// HD_MocTrienKhai.LoaiMoc
+export const MOC_LOAI_OPTIONS = [
+  { value: "DaoTao", label: "Đào tạo" },
+  { value: "BanGiao", label: "Bàn giao" },
+  { value: "NghiemThu", label: "Nghiệm thu" },
+];
+export const MOC_LOAI_LABEL = Object.fromEntries(
+  MOC_LOAI_OPTIONS.map((o) => [o.value, o.label]),
+);
+
+// HD_MocTrienKhai.TrangThai
+export const MOC_TRANG_THAI_OPTIONS = [
+  { value: "ChuaThucHien", label: "Chưa thực hiện" },
+  { value: "DaThucHien", label: "Đã thực hiện" },
+  { value: "DaXacNhan", label: "Đã xác nhận" },
+];
+export const MOC_TRANG_THAI_LABEL = Object.fromEntries(
+  MOC_TRANG_THAI_OPTIONS.map((o) => [o.value, o.label]),
+);
+export const MOC_TRANG_THAI_COLOR = {
+  ChuaThucHien: "bg-ink-100 text-ink-500",
+  DaThucHien: "bg-info-50 text-info-700",
+  DaXacNhan: "bg-success-50 text-success-700",
+};
+
 export const STOCK_TRANSACTION_TYPE_OPTIONS = [
   { value: "NhapMua", label: "Nhập mua" },
   { value: "XuatBan", label: "Xuất bán" },

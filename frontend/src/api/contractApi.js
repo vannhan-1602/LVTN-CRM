@@ -8,6 +8,15 @@ const contractApi = {
   updateStatus: (id, trangThai) =>
     axiosClient.put(`/Contract/${id}/status`, { trangThai }),
   delete: (id) => axiosClient.delete(`/Contract/${id}`),
+
+  // ── Mốc triển khai (Đào tạo / Bàn giao / Nghiệm thu) ──────────────────
+  getMocTrienKhai: (id) => axiosClient.get(`/Contract/${id}/moc-trien-khai`),
+  createMocTrienKhai: (id, data) =>
+    axiosClient.post(`/Contract/${id}/moc-trien-khai`, data),
+  updateMocTrienKhai: (mocId, data) =>
+    axiosClient.put(`/Contract/moc-trien-khai/${mocId}`, data),
+  deleteMocTrienKhai: (mocId) =>
+    axiosClient.delete(`/Contract/moc-trien-khai/${mocId}`),
 };
 
 export default contractApi;

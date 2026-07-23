@@ -15,6 +15,7 @@ import Card, { Field } from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import EditContractModal from "./EditContractModal";
+import MilestoneSection from "./MilestoneSection";
 import { ROLES, CONTRACT_STATUS } from "../../utils/constants";
 import { formatDate, formatDateTime } from "../../utils/formatters";
 
@@ -166,7 +167,8 @@ export default function ContractDetailPage() {
 
       {daThuDu && (
         <div className="text-sm text-success-700 bg-success-50 border border-success-100 rounded-lg p-3">
-          Đã thu đủ 100% giá trị hợp đồng ({formatMoney(contract.giaTri)}) — có thể thanh lý.
+          Đã thu đủ 100% giá trị hợp đồng ({formatMoney(contract.giaTri)}) — có
+          thể thanh lý.
         </div>
       )}
 
@@ -258,6 +260,12 @@ export default function ContractDetailPage() {
               )}
             </Card>
           )}
+
+          <MilestoneSection
+            hopDongId={contract.id}
+            canEdit={canManage}
+            isFinal={isFinal}
+          />
 
           {contract.maBaoGia && (
             <Card title="Báo giá đính kèm">
