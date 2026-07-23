@@ -10,6 +10,9 @@ public interface IAlertRepository
     /// <summary>Customer chưa gán NhanVienPhuTrachId — Admin/Manager cần phân công.</summary>
     Task<DashboardAlertGroupDto> GetCustomersChuaPhanCongAsync(CancellationToken ct = default);
 
+    /// <summary>Ticket chưa gán cả NhanVienTiepNhan lẫn NhanVienXuLy, chưa đóng — Admin/Manager cần phân công.</summary>
+    Task<DashboardAlertGroupDto> GetTicketsChuaPhanCongAsync(CancellationToken ct = default);
+
     /// <summary>Ticket ưu tiên KhanCap, chưa đóng. nhanVienId = null nghĩa là toàn team (Manager/Admin).</summary>
     Task<DashboardAlertGroupDto> GetTicketKhanCapAsync(uint? nhanVienId, CancellationToken ct = default);
 
@@ -24,4 +27,7 @@ public interface IAlertRepository
 
     /// <summary>Đợt trong lịch trả góp (HD_LichThanhToan) đang chờ/quá hạn thanh toán — toàn hệ thống, cho Accountant.</summary>
     Task<DashboardAlertGroupDto> GetDotThanhToanCanXuLyAsync(CancellationToken ct = default);
+
+
+    Task<DashboardAlertGroupDto> GetHoaDonConNoAsync(CancellationToken ct = default);
 }

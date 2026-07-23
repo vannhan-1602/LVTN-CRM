@@ -8,9 +8,9 @@ namespace CRM.Application.Features.Alerts.Queries.GetDashboardAlerts;
 
 /// <summary>
 /// Mỗi vai trò thấy 1 tập cảnh báo khác nhau, phù hợp với phạm vi công việc của họ:
-///   - Admin/Manager: Lead/Customer chưa phân công (toàn team), Ticket khẩn cấp + quá hạn SLA (toàn team).
+///   - Admin/Manager: Lead/Customer/Ticket chưa phân công (toàn team), Ticket khẩn cấp + quá hạn SLA (toàn team).
 ///   - Sale: Ticket khẩn cấp / sắp hẹn xử lý / nhắc thanh toán-gia hạn của riêng mình.
-///   - Accountant: Đợt thanh toán trả góp toàn hệ thống đang chờ/quá hạn.
+///   - Accountant: Đợt thanh toán trả góp + Hóa đơn còn nợ, toàn hệ thống.
 /// Không gửi email — chỉ tổng hợp để hiển thị trên Dashboard, bấm vào thì FE điều hướng
 /// tới trang chi tiết theo EntityType/EntityId.
 /// </summary>
@@ -36,6 +36,7 @@ public class GetDashboardAlertsQueryHandler : IRequestHandler<GetDashboardAlerts
         {
             groups.Add(await _alertRepository.GetLeadsChuaPhanCongAsync(cancellationToken));
             groups.Add(await _alertRepository.GetCustomersChuaPhanCongAsync(cancellationToken));
+            groups.Add(await _alertRepository.GetTicketsChuaPhanCongAsync(cancellationToken));
             groups.Add(await _alertRepository.GetTicketKhanCapAsync(nhanVienId: null, cancellationToken));
             groups.Add(await _alertRepository.GetTicketQuaHanSlaAsync(nhanVienId: null, cancellationToken));
         }
@@ -48,6 +49,7 @@ public class GetDashboardAlertsQueryHandler : IRequestHandler<GetDashboardAlerts
         else if (role == Roles.Accountant)
         {
             groups.Add(await _alertRepository.GetDotThanhToanCanXuLyAsync(cancellationToken));
+            groups.Add(await _alertRepository.GetHoaDonConNoAsync(cancellationToken));
             groups.Add(await _alertRepository.GetTicketNhacThanhToanGiaHanAsync(nhanVienId: null, cancellationToken));
         }
 

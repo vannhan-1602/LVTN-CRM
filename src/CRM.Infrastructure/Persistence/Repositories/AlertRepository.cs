@@ -78,6 +78,39 @@ public class AlertRepository : IAlertRepository
         };
     }
 
+    public async Task<DashboardAlertGroupDto> GetTicketsChuaPhanCongAsync(CancellationToken ct = default)
+    {
+        var query = _context.TkTickets.AsNoTracking()
+            .Where(t => !t.IsDeleted && t.TrangThai != "Dong"
+                        && t.NhanVienTiepNhan_Id == null && t.NhanVienXuLy_Id == null);
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(t => t.MucDoUuTien == "KhanCap")
+            .ThenByDescending(t => t.CreatedAt)
+            .Take(SoLuongToiDaMoiNhom)
+            .Select(t => new DashboardAlertDto
+            {
+                Type = "TicketChuaPhanCong",
+                Severity = t.MucDoUuTien == "KhanCap" ? AlertSeverity.Danger : AlertSeverity.Warning,
+                Title = $"[{t.MaTicket}] {t.TieuDe}",
+                Description = $"Ticket chưa được phân công nhân viên xử lý (mức độ: {t.MucDoUuTien}).",
+                EntityType = "Ticket",
+                EntityId = t.Id,
+                DueAt = t.ThoiHanSLA
+            })
+            .ToListAsync(ct);
+
+        return new DashboardAlertGroupDto
+        {
+            GroupKey = "ticket_chua_phan_cong",
+            GroupTitle = "Ticket chưa phân công",
+            Severity = AlertSeverity.Warning,
+            Count = total,
+            Items = items
+        };
+    }
+
     public async Task<DashboardAlertGroupDto> GetTicketKhanCapAsync(uint? nhanVienId, CancellationToken ct = default)
     {
         var query = _context.TkTickets.AsNoTracking()
@@ -255,6 +288,53 @@ public class AlertRepository : IAlertRepository
         {
             GroupKey = "dot_thanh_toan",
             GroupTitle = "Đợt thanh toán cần xử lý",
+            Severity = AlertSeverity.Warning,
+            Count = total,
+            Items = items
+        };
+    }
+
+    public async Task<DashboardAlertGroupDto> GetHoaDonConNoAsync(CancellationToken ct = default)
+    {
+        var now = DateTime.UtcNow;
+
+        // Chỉ hóa đơn thanh toán 1 lần (không thuộc lịch trả góp) — hóa đơn thuộc lịch trả góp
+        // đã được cảnh báo qua GetDotThanhToanCanXuLyAsync (dựa trên HanThanhToan cụ thể).
+        var query =
+            from hd in _context.KtHoaDons.AsNoTracking()
+            join kh in _context.KhKhachHangs.AsNoTracking()
+                on hd.KhachHang_Id equals kh.Id into khJoin
+            from kh in khJoin.DefaultIfEmpty()
+            where hd.TrangThaiThanhToan != "HoanTat" && hd.LichThanhToanId == null
+            select new { HoaDon = hd, TenKhachHang = kh != null ? kh.TenKhachHang : null };
+
+        var total = await query.CountAsync(ct);
+        var raw = await query
+            .OrderBy(x => x.HoaDon.CreatedAt)
+            .Take(SoLuongToiDaMoiNhom)
+            .ToListAsync(ct);
+
+        var items = raw.Select(x =>
+        {
+            var soTienConLai = x.HoaDon.TongTien - (x.HoaDon.SoTienDaThu ?? 0m);
+            var soNgayTonDong = x.HoaDon.CreatedAt != null ? (now - x.HoaDon.CreatedAt.Value).Days : 0;
+
+            return new DashboardAlertDto
+            {
+                Type = "HoaDonConNo",
+                Severity = soNgayTonDong >= 30 ? AlertSeverity.Danger : AlertSeverity.Warning,
+                Title = $"{x.HoaDon.MaHoaDon}" + (x.TenKhachHang != null ? $" — {x.TenKhachHang}" : ""),
+                Description = $"Còn nợ {soTienConLai:N0}đ, tồn đọng {soNgayTonDong} ngày kể từ ngày xuất hóa đơn.",
+                EntityType = "Invoice",
+                EntityId = x.HoaDon.Id,
+                DueAt = x.HoaDon.CreatedAt
+            };
+        }).ToList();
+
+        return new DashboardAlertGroupDto
+        {
+            GroupKey = "hoa_don_con_no",
+            GroupTitle = "Hóa đơn còn nợ",
             Severity = AlertSeverity.Warning,
             Count = total,
             Items = items

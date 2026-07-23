@@ -10,6 +10,7 @@ const ENTITY_ROUTE = {
   Customer: (id) => `/customers/${id}`,
   Ticket: (id) => `/tickets/${id}`,
   Contract: (id) => `/contracts/${id}`,
+  Invoice: (id) => `/invoices/${id}`,
 };
 
 // Màu theo mức độ nghiêm trọng (Info/Warning/Danger) — khớp bảng màu đã dùng ở ManagerDashboard.
@@ -104,7 +105,8 @@ export default function DashboardAlertsCard() {
       ) : (
         <div className="space-y-4">
           {groups.map((group) => {
-            const style = SEVERITY_STYLE[group.severity] ?? SEVERITY_STYLE.Warning;
+            const style =
+              SEVERITY_STYLE[group.severity] ?? SEVERITY_STYLE.Warning;
             return (
               <div key={group.groupKey}>
                 <div className="flex items-center justify-between mb-2">
@@ -125,7 +127,9 @@ export default function DashboardAlertsCard() {
                       className={`w-full flex items-center justify-between gap-3 border rounded-lg px-3 py-2 text-left transition-colors ${style.item}`}
                     >
                       <div className="min-w-0">
-                        <p className={`text-sm font-medium truncate ${style.text}`}>
+                        <p
+                          className={`text-sm font-medium truncate ${style.text}`}
+                        >
                           {item.title}
                         </p>
                         {item.description && (
@@ -134,7 +138,10 @@ export default function DashboardAlertsCard() {
                           </p>
                         )}
                       </div>
-                      <ArrowRight size={15} className={`shrink-0 ${style.icon}`} />
+                      <ArrowRight
+                        size={15}
+                        className={`shrink-0 ${style.icon}`}
+                      />
                     </button>
                   ))}
                 </div>
