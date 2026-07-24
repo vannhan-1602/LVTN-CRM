@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `BH_CoHoiBanHang` (
   CONSTRAINT `chk_ty_le` CHECK ((`TyLeThanhCong` between 0 and 100))
 ) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.BH_CoHoiBanHang: ~20 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.BH_CoHoiBanHang: ~24 rows (xấp xỉ)
 INSERT INTO `BH_CoHoiBanHang` (`Id`, `TenThuongVu`, `GiaiDoan`, `KhachHang_Id`, `Lead_Id`, `TyLeThanhCong`, `DoanhThuKyVong`, `GhiChu`, `NgayDuKien`, `NhanVienPhuTrach_Id`, `IsDeleted`, `CreatedAt`, `UpdatedAt`) VALUES
 	(1, 'Triển khai CRM Pro cho Giải pháp Số Việt', 'ThanhCong', 1, NULL, 100, 45000000.00, 'Đã ký hợp đồng HD2026-001', NULL, 3, 0, '2026-05-02 09:30:00', '2026-05-10 10:00:00'),
 	(2, 'Bán CRM Basic cho Hoàng Phát', 'ThuongLuong', 2, NULL, 60, 15000000.00, 'Khách đang chờ duyệt ngân sách quý 3', '2026-07-15', 4, 0, '2026-05-02 09:45:00', '2026-06-20 11:00:00'),
@@ -62,7 +62,7 @@ INSERT INTO `BH_CoHoiBanHang` (`Id`, `TenThuongVu`, `GiaiDoan`, `KhachHang_Id`, 
 	(14, 'Phần mềm quản lý sản xuất cho Cơ khí Chính Xác', 'DeXuat', 19, NULL, 30, 25000000.00, 'Đã gửi đề xuất kỹ thuật', '2026-08-05', 5, 0, '2026-05-25 09:00:00', '2026-06-10 10:00:00'),
 	(15, 'Đề xuất phần mềm bán sách cho Tri Thức Việt', 'ThatBai', 20, NULL, 0, 7000000.00, 'Khách ngừng kinh doanh, hủy dự án', NULL, 6, 0, '2026-05-19 10:00:00', '2026-06-01 10:00:00'),
 	(16, 'Gói CRM du lịch cho Việt Xanh', 'KhaoSat', 21, NULL, 25, 22000000.00, 'Mới khảo sát nhu cầu', '2026-08-10', 3, 0, '2026-06-25 09:00:00', '2026-06-25 09:00:00'),
-	(17, 'Phần mềm quản lý hội viên cho Gym Sức Sống', 'DeXuat', 22, NULL, 45, 9500000.00, 'Đã gửi báo giá', '2026-07-30', 4, 0, '2026-06-05 09:00:00', '2026-06-20 10:00:00'),
+	(17, 'Phần mềm quản lý hội viên cho Gym Sức Sống', 'ThanhCong', 22, NULL, 100, 9500000.00, 'Đã gửi báo giá', '2026-07-30', 4, 0, '2026-06-05 09:00:00', '2026-07-23 10:14:45'),
 	(18, 'Triển khai CRM Pro quản lý đơn hàng cho In ấn Kim Long', 'ThanhCong', 23, 6, 100, 15000000.00, 'Chuyển đổi từ Lead, đã ký hợp đồng HD2026-008', NULL, 5, 0, '2026-06-18 14:20:00', '2026-06-24 10:00:00'),
 	(19, 'Gói ERP cho Thiết bị Y tế Hòa Bình', 'KhaoSat', 25, NULL, 20, 65000000.00, 'Mới khảo sát quy mô dự án', '2026-08-15', 3, 0, '2026-06-27 09:00:00', '2026-06-27 09:00:00'),
 	(20, 'Nâng cấp CRM cho Điện máy Thành Công', 'ThatBai', 8, NULL, 0, 9000000.00, 'Khách ngừng giao dịch, không tiếp tục', NULL, 3, 0, '2026-05-05 09:00:00', '2026-06-15 10:00:00'),
@@ -101,9 +101,9 @@ CREATE TABLE IF NOT EXISTS `BH_SanPham` (
   UNIQUE KEY `MaSP` (`MaSP`),
   KEY `fk_sp_loai` (`LoaiSanPham_Id`),
   CONSTRAINT `fk_sp_loai` FOREIGN KEY (`LoaiSanPham_Id`) REFERENCES `BH_LoaiSanPham` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.BH_SanPham: ~14 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.BH_SanPham: ~15 rows (xấp xỉ)
 INSERT INTO `BH_SanPham` (`Id`, `LoaiSanPham_Id`, `MaSP`, `TenSP`, `DonVi`, `GiaBan`, `SoLuongTon`, `TrangThai`, `CreatedAt`, `UpdatedAt`) VALUES
 	(1, 1, 'CRM-BASIC', 'Phần mềm CRM Bản Basic', 'License', 5000000.00, 60, 1, '2026-05-01 08:00:00', '2026-06-24 10:00:00'),
 	(2, 1, 'CRM-PRO', 'Phần mềm CRM Bản Pro', 'License', 15000000.00, 32, 1, '2026-05-01 08:00:00', '2026-06-24 10:00:00'),
@@ -118,7 +118,8 @@ INSERT INTO `BH_SanPham` (`Id`, `LoaiSanPham_Id`, `MaSP`, `TenSP`, `DonVi`, `Gia
 	(11, 2, 'SRV-CUSTOM', 'Dịch vụ tùy biến phần mềm theo yêu cầu', 'Gói', 20000000.00, 999, 0, '2026-05-01 08:00:00', '2026-06-24 10:00:00'),
 	(12, 2, 'SRV-MIGRATE', 'Dịch vụ chuyển đổi dữ liệu từ hệ thống cũ', 'Gói', 15000000.00, 999, 1, '2026-05-01 08:00:00', '2026-06-24 10:00:00'),
 	(13, 2, 'SRV-CONSULT', 'Dịch vụ tư vấn giải pháp CNTT', 'Giờ', 1500000.00, 999, 1, '2026-05-01 08:00:00', '2026-06-24 10:00:00'),
-	(14, 2, 'SRV-SUPPORT-VIP', 'Dịch vụ hỗ trợ ưu tiên (gói VIP)', 'Gói/năm', 25000000.00, 999, 1, '2026-05-01 08:00:00', '2026-06-24 10:00:00');
+	(14, 2, 'SRV-SUPPORT-VIP', 'Dịch vụ hỗ trợ ưu tiên (gói VIP)', 'Gói/năm', 25000000.00, 999, 1, '2026-05-01 08:00:00', '2026-06-24 10:00:00'),
+	(15, 2, 'SRV-TEST', 'Test', 'gói', 100000.00, 10, 1, '2026-07-23 10:16:13', '2026-07-23 10:16:12');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.BH_SanPham_HinhAnh
 CREATE TABLE IF NOT EXISTS `BH_SanPham_HinhAnh` (
@@ -129,12 +130,13 @@ CREATE TABLE IF NOT EXISTS `BH_SanPham_HinhAnh` (
   PRIMARY KEY (`id`),
   KEY `fk_sphinhanh_sp` (`SanPham_Id`),
   CONSTRAINT `fk_sphinhanh_sp` FOREIGN KEY (`SanPham_Id`) REFERENCES `BH_SanPham` (`Id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.BH_SanPham_HinhAnh: ~2 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.BH_SanPham_HinhAnh: ~3 rows (xấp xỉ)
 INSERT INTO `BH_SanPham_HinhAnh` (`id`, `SanPham_Id`, `UrlHinhAnh`, `IsMain`) VALUES
 	(3, 14, '/uploads/products/2cb38112-e3e9-42f9-8bd0-4d225684084b.jpg', 0),
-	(4, 14, '/uploads/products/cdc7f0fd-a3cd-44c7-9f61-10e8a2435729.jpg', 1);
+	(4, 14, '/uploads/products/cdc7f0fd-a3cd-44c7-9f61-10e8a2435729.jpg', 1),
+	(5, 15, '/uploads/products/4910f0c2-4a45-4970-8e48-eba5fb18b06d.jpg', 1);
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.DM_PhuongXa
 CREATE TABLE IF NOT EXISTS `DM_PhuongXa` (
@@ -233,9 +235,9 @@ CREATE TABLE IF NOT EXISTS `HD_BaoGia` (
   UNIQUE KEY `MaBaoGia` (`MaBaoGia`),
   KEY `fk_bg_kh` (`KhachHang_Id`),
   CONSTRAINT `fk_bg_kh` FOREIGN KEY (`KhachHang_Id`) REFERENCES `KH_KhachHang` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_BaoGia: ~23 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_BaoGia: ~30 rows (xấp xỉ)
 INSERT INTO `HD_BaoGia` (`Id`, `MaBaoGia`, `KhachHang_Id`, `TongTien`, `TrangThai`, `NhanVien_Id`, `LyDoTuChoi`, `CreatedAt`, `UpdatedAt`) VALUES
 	(1, 'BG2026-001', 1, 45000000.00, 'ChapNhan', 3, NULL, '2026-05-04 09:00:00', '2026-05-09 16:00:00'),
 	(2, 'BG2026-002', 2, 15000000.00, 'DaGui', 4, NULL, '2026-05-06 10:00:00', '2026-05-06 15:00:00'),
@@ -260,11 +262,13 @@ INSERT INTO `HD_BaoGia` (`Id`, `MaBaoGia`, `KhachHang_Id`, `TongTien`, `TrangTha
 	(21, 'BG00021', 28, 25000000.00, 'DaGui', 2, NULL, '2026-07-15 01:10:41', '2026-07-15 01:10:44'),
 	(22, 'BG00022', 27, 7500000.00, 'ChapNhan', 2, NULL, '2026-07-15 01:12:01', '2026-07-15 01:28:15'),
 	(23, 'BG00023', 27, 1500000.00, 'Nhap', 2, NULL, '2026-07-15 01:41:16', '2026-07-15 01:41:16'),
-	(24, 'BG00024', 27, 24250000.00, 'Nhap', 2, NULL, '2026-07-15 02:04:48', '2026-07-15 02:04:48'),
+	(24, 'BG00024', 27, 24250000.00, 'TuChoi', 2, 'quá mắc', '2026-07-15 02:04:48', '2026-07-23 10:36:11'),
 	(25, 'BG00025', 29, 25000000.00, 'ChapNhan', 2, NULL, '2026-07-21 01:14:09', '2026-07-21 01:16:15'),
 	(26, 'BG00026', 29, 24250000.00, 'ChapNhan', 3, NULL, '2026-07-21 01:21:37', '2026-07-21 01:22:03'),
 	(27, 'BG00027', 31, 25000000.00, 'ChapNhan', 3, NULL, '2026-07-21 13:33:13', '2026-07-21 13:33:49'),
-	(28, 'BG00028', 31, 3000000.00, 'ChapNhan', 2, NULL, '2026-07-22 13:38:19', '2026-07-22 13:39:07');
+	(28, 'BG00028', 31, 3000000.00, 'ChapNhan', 2, NULL, '2026-07-22 13:38:19', '2026-07-22 13:39:07'),
+	(29, 'BG00029', 32, 100000.00, 'ChapNhan', 2, NULL, '2026-07-23 10:17:05', '2026-07-23 10:17:53'),
+	(30, 'BG00030', 32, 8000000.00, 'ChapNhan', 2, NULL, '2026-07-23 10:27:24', '2026-07-23 10:27:34');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.HD_BaoGia_ChiTiet
 CREATE TABLE IF NOT EXISTS `HD_BaoGia_ChiTiet` (
@@ -278,9 +282,9 @@ CREATE TABLE IF NOT EXISTS `HD_BaoGia_ChiTiet` (
   KEY `fk_bgct_sp` (`SanPham_Id`),
   CONSTRAINT `fk_bgct_bg` FOREIGN KEY (`BaoGia_Id`) REFERENCES `HD_BaoGia` (`Id`) ON DELETE CASCADE,
   CONSTRAINT `fk_bgct_sp` FOREIGN KEY (`SanPham_Id`) REFERENCES `BH_SanPham` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_BaoGia_ChiTiet: ~35 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_BaoGia_ChiTiet: ~41 rows (xấp xỉ)
 INSERT INTO `HD_BaoGia_ChiTiet` (`Id`, `BaoGia_Id`, `SanPham_Id`, `SoLuong`, `DonGia`) VALUES
 	(1, 1, 2, 2, 15000000.00),
 	(2, 1, 8, 1, 10000000.00),
@@ -320,7 +324,9 @@ INSERT INTO `HD_BaoGia_ChiTiet` (`Id`, `BaoGia_Id`, `SanPham_Id`, `SoLuong`, `Do
 	(36, 25, 14, 1, 25000000.00),
 	(37, 26, 14, 1, 25000000.00),
 	(38, 27, 14, 1, 25000000.00),
-	(39, 28, 9, 1, 3000000.00);
+	(39, 28, 9, 1, 3000000.00),
+	(40, 29, 15, 1, 100000.00),
+	(41, 30, 7, 1, 8000000.00);
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.HD_HopDong
 CREATE TABLE IF NOT EXISTS `HD_HopDong` (
@@ -346,9 +352,9 @@ CREATE TABLE IF NOT EXISTS `HD_HopDong` (
   CONSTRAINT `fk_hdong_baogia` FOREIGN KEY (`BaoGia_Id`) REFERENCES `HD_BaoGia` (`Id`),
   CONSTRAINT `fk_hdong_kh` FOREIGN KEY (`KhachHang_Id`) REFERENCES `KH_KhachHang` (`Id`),
   CONSTRAINT `fk_hopdong_goc` FOREIGN KEY (`HopDongGoc_Id`) REFERENCES `HD_HopDong` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_HopDong: ~15 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_HopDong: ~18 rows (xấp xỉ)
 INSERT INTO `HD_HopDong` (`Id`, `MaHopDong`, `KhachHang_Id`, `BaoGia_Id`, `NgayKy`, `ThoiHan`, `NgayKetThuc`, `HinhThucThanhToan`, `TrangThai`, `CreatedAt`, `UpdatedAt`, `LoaiHopDong`, `HopDongGoc_Id`, `NgayNhacGiaHanCuoi`) VALUES
 	(1, 'HD2026-001', 1, 1, '2026-05-10', 12, '2027-05-10', 'ThanhToanMotLan', 'DangThucHien', '2026-05-10 10:00:00', '2026-07-21 15:37:03', 'ChinhThuc', NULL, NULL),
 	(2, 'HD2026-002', 10, 4, '2026-06-15', 12, '2027-06-15', 'ThanhToanMotLan', 'DangThucHien', '2026-06-15 10:00:00', '2026-07-21 15:37:03', 'ChinhThuc', NULL, NULL),
@@ -365,7 +371,9 @@ INSERT INTO `HD_HopDong` (`Id`, `MaHopDong`, `KhachHang_Id`, `BaoGia_Id`, `NgayK
 	(13, 'HD00013', 27, 22, '2026-07-15', 12, '2027-07-15', 'ThanhToanMotLan', 'DangThucHien', '2026-07-15 01:29:06', '2026-07-21 15:37:03', 'ChinhThuc', NULL, NULL),
 	(14, 'HD00014', 29, 25, '2026-07-21', 12, '2027-07-21', 'ThanhToanMotLan', 'DangThucHien', '2026-07-21 01:16:35', '2026-07-21 15:37:03', 'ChinhThuc', NULL, NULL),
 	(15, 'HD00015', 31, 27, '2026-07-21', 12, '2027-07-21', 'ThanhToanMotLan', 'DangThucHien', '2026-07-21 13:34:02', '2026-07-21 15:37:03', 'ChinhThuc', NULL, NULL),
-	(16, 'HD00016', 31, 28, '2026-07-22', 12, '2027-07-22', 'ThanhToanMotLan', 'DangThucHien', '2026-07-22 13:39:20', '2026-07-22 13:39:20', 'ChinhThuc', NULL, NULL);
+	(16, 'HD00016', 31, 28, '2026-07-22', 12, '2027-07-22', 'ThanhToanMotLan', 'DangThucHien', '2026-07-22 13:39:20', '2026-07-22 13:39:20', 'ChinhThuc', NULL, NULL),
+	(17, 'HD00017', 32, 29, '2026-07-23', 12, '2027-07-23', 'TraGop', 'DangThucHien', '2026-07-23 10:18:38', '2026-07-23 10:18:38', 'ChinhThuc', NULL, NULL),
+	(18, 'HD00018', 32, 30, '2026-07-23', 12, '2027-07-23', 'TraGop', 'ThanhLy', '2026-07-23 10:28:40', '2026-07-23 10:35:01', 'ChinhThuc', NULL, NULL);
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.HD_License
 CREATE TABLE IF NOT EXISTS `HD_License` (
@@ -402,9 +410,15 @@ CREATE TABLE IF NOT EXISTS `HD_LichThanhToan` (
   PRIMARY KEY (`Id`),
   KEY `HopDong_Id` (`HopDong_Id`),
   CONSTRAINT `HD_LichThanhToan_ibfk_1` FOREIGN KEY (`HopDong_Id`) REFERENCES `HD_HopDong` (`Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_LichThanhToan: ~0 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_LichThanhToan: ~5 rows (xấp xỉ)
+INSERT INTO `HD_LichThanhToan` (`Id`, `HopDong_Id`, `SoDot`, `SoTien`, `HanThanhToan`, `TrangThai`) VALUES
+	(1, 17, 1, 20000.00, '2026-07-23', 'ChoThanhToan'),
+	(2, 17, 2, 30000.00, '2026-07-24', 'ChoThanhToan'),
+	(3, 17, 3, 50000.00, '2026-07-30', 'ChuaDenHan'),
+	(4, 18, 1, 7000000.00, '2026-07-23', 'DaThanhToan'),
+	(5, 18, 2, 1000000.00, '2026-07-24', 'DaThanhToan');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.HD_MocTrienKhai
 CREATE TABLE IF NOT EXISTS `HD_MocTrienKhai` (
@@ -424,9 +438,12 @@ CREATE TABLE IF NOT EXISTS `HD_MocTrienKhai` (
   KEY `NhanVienThucHien_Id` (`NhanVienThucHien_Id`),
   CONSTRAINT `HD_MocTrienKhai_ibfk_1` FOREIGN KEY (`HopDong_Id`) REFERENCES `HD_HopDong` (`Id`),
   CONSTRAINT `HD_MocTrienKhai_ibfk_2` FOREIGN KEY (`NhanVienThucHien_Id`) REFERENCES `HT_User` (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_MocTrienKhai: ~0 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.HD_MocTrienKhai: ~2 rows (xấp xỉ)
+INSERT INTO `HD_MocTrienKhai` (`Id`, `HopDong_Id`, `LoaiMoc`, `NoiDung`, `NgayThucHien`, `NhanVienThucHien_Id`, `NguoiXacNhanKhach`, `FileBienBan`, `TrangThai`, `CreatedAt`, `UpdatedAt`) VALUES
+	(1, 17, 'DaoTao', 'đi qua dạy', '2026-07-23 10:03:00', 4, NULL, NULL, 'ChuaThucHien', '2026-07-23 10:19:26', '2026-07-23 10:19:26'),
+	(2, 17, 'BanGiao', 'đi qua bàn giao', '2026-07-24 10:03:00', 3, 'Nhân', 'https://docs.google.com/spreadsheets/d/1AuGZ1ofWgDlV8ZalfoSrEad34XgnEfg1LPviBAiuWvo/edit?usp=sharing', 'ChuaThucHien', '2026-07-23 10:19:57', '2026-07-23 11:08:50');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.HT_ChucVu
 CREATE TABLE IF NOT EXISTS `HT_ChucVu` (
@@ -563,9 +580,9 @@ CREATE TABLE IF NOT EXISTS `KT_HoaDon` (
   CONSTRAINT `fk_hdon_hopdong` FOREIGN KEY (`HopDong_Id`) REFERENCES `HD_HopDong` (`Id`) ON DELETE SET NULL,
   CONSTRAINT `fk_hdon_kh` FOREIGN KEY (`KhachHang_Id`) REFERENCES `KH_KhachHang` (`Id`),
   CONSTRAINT `fk_hdon_lichthanhtoan` FOREIGN KEY (`LichThanhToan_Id`) REFERENCES `HD_LichThanhToan` (`Id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KT_HoaDon: ~8 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KT_HoaDon: ~16 rows (xấp xỉ)
 INSERT INTO `KT_HoaDon` (`Id`, `MaHoaDon`, `HopDong_Id`, `LichThanhToan_Id`, `KhachHang_Id`, `TongTien`, `SoTienDaThu`, `TrangThaiThanhToan`, `CreatedAt`, `UpdatedAt`) VALUES
 	(1, 'INV2026-001', 1, NULL, 1, 45000000.00, 45000000.00, 'HoanTat', '2026-05-11 09:00:00', '2026-05-15 14:00:00'),
 	(2, 'INV2026-002', 2, NULL, 10, 60000000.00, 30000000.00, 'ThanhToan1Phan', '2026-06-16 09:00:00', '2026-06-20 11:00:00'),
@@ -580,7 +597,9 @@ INSERT INTO `KT_HoaDon` (`Id`, `MaHoaDon`, `HopDong_Id`, `LichThanhToan_Id`, `Kh
 	(11, 'INV-20260715-F9B6F1', 12, NULL, 27, 5000000.00, 5000000.00, 'HoanTat', '2026-07-15 01:17:13', '2026-07-15 01:27:51'),
 	(12, 'INV-20260715-C86A01', 13, NULL, 27, 50000000.00, 50000000.00, 'HoanTat', '2026-07-15 01:32:03', '2026-07-15 01:34:59'),
 	(13, 'INV-20260721-CE1577', 14, NULL, 29, 50000000.00, 50000000.00, 'HoanTat', '2026-07-21 01:16:58', '2026-07-21 01:17:04'),
-	(14, 'INV-20260721-562FEF', 15, NULL, 31, 50000000.00, 5000000.00, 'ThanhToan1Phan', '2026-07-21 13:34:33', '2026-07-21 13:34:40');
+	(14, 'INV-20260721-562FEF', 15, NULL, 31, 50000000.00, 5000000.00, 'ThanhToan1Phan', '2026-07-21 13:34:33', '2026-07-21 13:34:40'),
+	(15, 'INV-20260723-845440', 18, 4, 32, 7000000.00, 7000000.00, 'HoanTat', '2026-07-23 10:29:04', '2026-07-23 10:29:08'),
+	(16, 'INV-20260723-2B9923', 18, 5, 32, 1000000.00, 1000000.00, 'HoanTat', '2026-07-23 10:29:30', '2026-07-23 10:29:32');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.KT_PhieuThuChi
 CREATE TABLE IF NOT EXISTS `KT_PhieuThuChi` (
@@ -601,9 +620,9 @@ CREATE TABLE IF NOT EXISTS `KT_PhieuThuChi` (
   CONSTRAINT `fk_ptc_hdon` FOREIGN KEY (`HoaDon_Id`) REFERENCES `KT_HoaDon` (`Id`),
   CONSTRAINT `fk_ptc_kh` FOREIGN KEY (`KhachHang_Id`) REFERENCES `KH_KhachHang` (`Id`),
   CONSTRAINT `fk_ptc_user` FOREIGN KEY (`NguoiLap_Id`) REFERENCES `HT_User` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KT_PhieuThuChi: ~15 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KT_PhieuThuChi: ~24 rows (xấp xỉ)
 INSERT INTO `KT_PhieuThuChi` (`Id`, `MaPhieu`, `LoaiPhieu`, `KhachHang_Id`, `HoaDon_Id`, `SoTien`, `NguoiLap_Id`, `NgayTao`, `UpdatedAt`) VALUES
 	(1, 'PT2026-001', 'Thu', 1, 1, 45000000.00, 7, '2026-05-15 14:00:00', '2026-05-15 14:00:00'),
 	(2, 'PT2026-002', 'Thu', 10, 2, 30000000.00, 7, '2026-06-20 11:00:00', '2026-06-20 11:00:00'),
@@ -626,7 +645,9 @@ INSERT INTO `KT_PhieuThuChi` (`Id`, `MaPhieu`, `LoaiPhieu`, `KhachHang_Id`, `Hoa
 	(19, 'PC-20260721-ABC729', 'Chi', 29, NULL, 2000.00, 2, '2026-07-21 01:17:32', '2026-07-21 01:17:31'),
 	(20, 'PT-20260721-444F45', 'Thu', 26, 9, 1.00, 2, '2026-07-21 11:36:01', '2026-07-21 11:36:01'),
 	(21, 'PT-20260721-CED3F4', 'Thu', 31, 14, 5000000.00, 8, '2026-07-21 13:34:41', '2026-07-21 13:34:40'),
-	(22, 'PC-20260721-3BE8DB', 'Chi', 31, NULL, 22000.00, 8, '2026-07-21 13:35:36', '2026-07-21 13:35:36');
+	(22, 'PC-20260721-3BE8DB', 'Chi', 31, NULL, 22000.00, 8, '2026-07-21 13:35:36', '2026-07-21 13:35:36'),
+	(23, 'PT-20260723-671008', 'Thu', 32, 15, 7000000.00, 2, '2026-07-23 10:29:09', '2026-07-23 10:29:08'),
+	(24, 'PT-20260723-00BC63', 'Thu', 32, 16, 1000000.00, 2, '2026-07-23 10:29:33', '2026-07-23 10:29:32');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.KH_DiaChi
 CREATE TABLE IF NOT EXISTS `KH_DiaChi` (
@@ -644,9 +665,9 @@ CREATE TABLE IF NOT EXISTS `KH_DiaChi` (
   CONSTRAINT `fk_dc_kh` FOREIGN KEY (`KhachHang_Id`) REFERENCES `KH_KhachHang` (`Id`) ON DELETE CASCADE,
   CONSTRAINT `fk_dc_phuong` FOREIGN KEY (`PhuongXa_Id`) REFERENCES `DM_PhuongXa` (`Id`),
   CONSTRAINT `fk_dc_tinh` FOREIGN KEY (`TinhThanh_Id`) REFERENCES `DM_TinhThanh` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_DiaChi: ~23 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_DiaChi: ~26 rows (xấp xỉ)
 INSERT INTO `KH_DiaChi` (`Id`, `KhachHang_Id`, `DiaChiChiTiet`, `TinhThanh_Id`, `PhuongXa_Id`, `LoaiDiaChi`, `IsDefault`) VALUES
 	(1, 1, 'Tòa nhà Bitexco Financial Tower', 2, 11, 'Office', 1),
 	(2, 1, 'Lầu 5, Tòa nhà Bitexco (Phòng Kế toán)', 2, 11, 'Billing', 0),
@@ -672,7 +693,8 @@ INSERT INTO `KH_DiaChi` (`Id`, `KhachHang_Id`, `DiaChiChiTiet`, `TinhThanh_Id`, 
 	(22, 29, 'a', NULL, NULL, 'Office', 1),
 	(23, 31, 'aaa', NULL, NULL, 'Office', 1),
 	(24, 30, 'đường 1', 2, 13, 'Office', 0),
-	(25, 30, 'aaa', 2, 11, 'Shipping', 1);
+	(25, 30, 'aaa', 2, 11, 'Shipping', 1),
+	(26, 32, 'zaaaa', 1, 3, 'Office', 1);
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.KH_DiemThuong
 CREATE TABLE IF NOT EXISTS `KH_DiemThuong` (
@@ -696,16 +718,18 @@ CREATE TABLE IF NOT EXISTS `KH_DiemThuong` (
   CONSTRAINT `fk_diemthuong_kh` FOREIGN KEY (`KhachHang_Id`) REFERENCES `KH_KhachHang` (`Id`) ON DELETE CASCADE,
   CONSTRAINT `fk_diemthuong_phieuthu` FOREIGN KEY (`PhieuThuChi_Id`) REFERENCES `KT_PhieuThuChi` (`Id`) ON DELETE SET NULL,
   CONSTRAINT `fk_diemthuong_user` FOREIGN KEY (`NguoiTao_Id`) REFERENCES `HT_User` (`Id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Lịch sử tích điểm/trừ điểm, dùng chung cho B2C và B2B, tỷ lệ 100.000 VNĐ = 1 điểm';
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Lịch sử tích điểm/trừ điểm, dùng chung cho B2C và B2B, tỷ lệ 100.000 VNĐ = 1 điểm';
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_DiemThuong: ~3 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_DiemThuong: ~8 rows (xấp xỉ)
 INSERT INTO `KH_DiemThuong` (`Id`, `KhachHang_Id`, `SoDiem`, `LoaiGiaoDich`, `HoaDon_Id`, `PhieuThuChi_Id`, `NgayPhatSinh`, `GhiChu`, `NguoiTao_Id`, `CreatedAt`) VALUES
 	(1, 27, 5, 'MuaHang', 10, 11, '2026-07-13', 'Tự động từ phiếu thu PT-11', NULL, '2026-07-13 16:45:47'),
 	(2, 27, 50, 'MuaHang', 11, 15, '2026-07-15', 'Tự động từ phiếu thu PT-15', NULL, '2026-07-15 01:27:52'),
 	(3, 27, 400, 'MuaHang', 12, 16, '2026-07-15', 'Tự động từ phiếu thu PT-16', NULL, '2026-07-15 01:32:14'),
 	(4, 27, 100, 'MuaHang', 12, 17, '2026-07-15', 'Tự động từ phiếu thu PT-17', NULL, '2026-07-15 01:35:00'),
 	(5, 29, 500, 'MuaHang', 13, 18, '2026-07-21', 'Tự động từ phiếu thu PT-18', NULL, '2026-07-21 01:17:04'),
-	(6, 31, 50, 'MuaHang', 14, 21, '2026-07-21', 'Tự động từ phiếu thu PT-21', NULL, '2026-07-21 13:34:41');
+	(6, 31, 50, 'MuaHang', 14, 21, '2026-07-21', 'Tự động từ phiếu thu PT-21', NULL, '2026-07-21 13:34:41'),
+	(7, 32, 70, 'MuaHang', 15, 23, '2026-07-23', 'Tự động từ phiếu thu PT-23', NULL, '2026-07-23 10:29:09'),
+	(8, 32, 10, 'MuaHang', 16, 24, '2026-07-23', 'Tự động từ phiếu thu PT-24', NULL, '2026-07-23 10:29:33');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.KH_EmailLog
 CREATE TABLE IF NOT EXISTS `KH_EmailLog` (
@@ -724,9 +748,9 @@ CREATE TABLE IF NOT EXISTS `KH_EmailLog` (
   KEY `fk_emaillog_voucher` (`Voucher_Id`),
   CONSTRAINT `fk_emaillog_kh` FOREIGN KEY (`KhachHang_Id`) REFERENCES `KH_KhachHang` (`Id`) ON DELETE CASCADE,
   CONSTRAINT `fk_emaillog_voucher` FOREIGN KEY (`Voucher_Id`) REFERENCES `KH_Voucher` (`Id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Log mọi email đã gửi cho khách, dùng để chống gửi trùng trong cùng tháng/năm và để demo/audit';
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Log mọi email đã gửi cho khách, dùng để chống gửi trùng trong cùng tháng/năm và để demo/audit';
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_EmailLog: ~28 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_EmailLog: ~42 rows (xấp xỉ)
 INSERT INTO `KH_EmailLog` (`Id`, `KhachHang_Id`, `LoaiEmail`, `Voucher_Id`, `EmailDen`, `TieuDe`, `TrangThaiGui`, `LoiChiTiet`, `CreatedAt`) VALUES
 	(1, 24, 'SinhNhat', NULL, 'duyen.le88@gmail.com', '[CRM] 🎂 Chúc mừng sinh nhật!', 'ThanhCong', NULL, '2026-07-06 01:13:49'),
 	(2, 4, 'CanhBaoXuongHang', NULL, 'contact@dongaco.vn', '[CRM] ⚠️ Hạng Bạc của bạn cần được duy trì', 'ThanhCong', NULL, '2026-07-06 01:13:54'),
@@ -761,7 +785,15 @@ INSERT INTO `KH_EmailLog` (`Id`, `KhachHang_Id`, `LoaiEmail`, `Voucher_Id`, `Ema
 	(31, 31, 'BaoGia', NULL, 'vovannhan160204@gmail.com', '[CRM] 📄 Báo giá BG00027 từ chúng tôi', 'ThanhCong', NULL, '2026-07-21 13:33:27'),
 	(32, 31, 'ThangHang', NULL, 'vovannhan160204@gmail.com', '[CRM] 🎉 Chúc mừng! Bạn đã lên hạng Đồng', 'ThanhCong', NULL, '2026-07-21 13:34:46'),
 	(33, 31, 'XacNhanThanhToan', NULL, 'vovannhan160204@gmail.com', '[CRM] Xác nhận thanh toán hóa đơn INV-20260721-562FEF', 'ThanhCong', NULL, '2026-07-21 13:34:52'),
-	(34, 31, 'BaoGia', NULL, 'vovannhan160204@gmail.com', '[CRM] 📄 Báo giá BG00028 từ chúng tôi', 'ThanhCong', NULL, '2026-07-22 13:38:34');
+	(34, 31, 'BaoGia', NULL, 'vovannhan160204@gmail.com', '[CRM] 📄 Báo giá BG00028 từ chúng tôi', 'ThanhCong', NULL, '2026-07-22 13:38:34'),
+	(35, 32, 'BaoGia', NULL, 'vovannhan160204@gmail.com', '[CRM] 📄 Báo giá BG00029 từ chúng tôi', 'ThanhCong', NULL, '2026-07-23 10:17:13'),
+	(36, 32, 'BaoGia', NULL, 'vovannhan160204@gmail.com', '[CRM] 📄 Báo giá BG00030 từ chúng tôi', 'ThanhCong', NULL, '2026-07-23 10:27:33'),
+	(37, 32, 'ThangHang', NULL, 'vovannhan160204@gmail.com', '[CRM] 🎉 Chúc mừng! Bạn đã lên hạng Đồng', 'ThanhCong', NULL, '2026-07-23 10:29:14'),
+	(38, 32, 'XacNhanThanhToan', NULL, 'vovannhan160204@gmail.com', '[CRM] Xác nhận thanh toán hóa đơn INV-20260723-845440', 'ThanhCong', NULL, '2026-07-23 10:29:20'),
+	(39, 32, 'XacNhanThanhToan', NULL, 'vovannhan160204@gmail.com', '[CRM] Xác nhận thanh toán hóa đơn INV-20260723-2B9923', 'ThanhCong', NULL, '2026-07-23 10:29:38'),
+	(40, 27, 'BaoGia', NULL, 'vovannhan160204@gmail.com', '[CRM] 📄 Báo giá BG00024 từ chúng tôi', 'ThanhCong', NULL, '2026-07-23 10:35:34'),
+	(41, 32, 'NhacThanhToan', NULL, 'vovannhan160204@gmail.com', '[CRM] ⏰ Nhắc thanh toán đợt 1 hợp đồng HD00017', 'ThanhCong', NULL, '2026-07-23 10:47:36'),
+	(42, 32, 'NhacThanhToan', NULL, 'vovannhan160204@gmail.com', '[CRM] ⏰ Nhắc thanh toán đợt 2 hợp đồng HD00017', 'ThanhCong', NULL, '2026-07-23 10:47:41');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.KH_HoatDong
 CREATE TABLE IF NOT EXISTS `KH_HoatDong` (
@@ -782,9 +814,9 @@ CREATE TABLE IF NOT EXISTS `KH_HoatDong` (
   CONSTRAINT `fk_hd_lead` FOREIGN KEY (`Lead_Id`) REFERENCES `KH_Lead` (`Id`) ON DELETE CASCADE,
   CONSTRAINT `fk_hd_nv` FOREIGN KEY (`NhanVien_Id`) REFERENCES `HT_User` (`Id`),
   CONSTRAINT `chk_hd_target` CHECK (((`KhachHang_Id` is not null) or (`Lead_Id` is not null)))
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_HoatDong: ~30 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_HoatDong: ~44 rows (xấp xỉ)
 INSERT INTO `KH_HoatDong` (`Id`, `KhachHang_Id`, `Lead_Id`, `LoaiHoatDong`, `NoiDung`, `ThoiGianThucHien`, `NhanVien_Id`, `CreatedAt`, `UpdatedAt`) VALUES
 	(1, NULL, 1, 'Call', 'Gọi điện giới thiệu giải pháp CRM cho xưởng cơ khí.', '2026-06-10 09:15:00', 3, '2026-06-10 09:15:00', '2026-06-10 09:15:00'),
 	(2, NULL, 2, 'Zalo', 'Gửi bảng giá dịch vụ chăm sóc khách hàng qua Zalo.', '2026-06-12 14:30:00', 4, '2026-06-12 14:30:00', '2026-06-12 14:30:00'),
@@ -827,7 +859,9 @@ INSERT INTO `KH_HoatDong` (`Id`, `KhachHang_Id`, `Lead_Id`, `LoaiHoatDong`, `Noi
 	(39, 29, NULL, 'Call', 'a', '2026-07-21 01:10:00', 2, '2026-07-21 01:12:48', NULL),
 	(40, NULL, 14, 'Call', 'hi', '2026-07-21 13:02:00', 2, '2026-07-21 13:29:21', NULL),
 	(41, NULL, 20, 'Call', 'saaaa', '2026-07-21 13:02:00', 3, '2026-07-21 13:31:34', NULL),
-	(42, 31, NULL, 'Call', 'aaaaa', '2026-07-21 13:02:00', 3, '2026-07-21 13:32:26', NULL);
+	(42, 31, NULL, 'Call', 'aaaaa', '2026-07-21 13:02:00', 3, '2026-07-21 13:32:26', NULL),
+	(43, NULL, 22, 'Meeting', 'aaa', '2026-07-23 10:03:00', 2, '2026-07-23 10:11:00', NULL),
+	(44, 32, NULL, 'Call', 'aaaa', '2026-07-23 10:03:00', 2, '2026-07-23 10:12:22', NULL);
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.KH_KhachHang
 CREATE TABLE IF NOT EXISTS `KH_KhachHang` (
@@ -858,9 +892,9 @@ CREATE TABLE IF NOT EXISTS `KH_KhachHang` (
   CONSTRAINT `fk_kh_loai` FOREIGN KEY (`LoaiKhachHang_Id`) REFERENCES `KH_LoaiKhachHang` (`Id`),
   CONSTRAINT `fk_kh_nv` FOREIGN KEY (`NhanVienPhuTrach_Id`) REFERENCES `HT_User` (`Id`),
   CONSTRAINT `fk_kh_ttrang` FOREIGN KEY (`TinhTrang_Id`) REFERENCES `KH_TinhTrangKhachHang` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_KhachHang: ~25 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_KhachHang: ~32 rows (xấp xỉ)
 INSERT INTO `KH_KhachHang` (`Id`, `MaKhachHang`, `TenKhachHang`, `LoaiKhachHang_Id`, `HangKhachHang_Id`, `TinhTrang_Id`, `Email`, `SoDienThoai`, `MaSoThue`, `NgaySinh`, `NgayThanhLap`, `NhanVienPhuTrach_Id`, `IsDeleted`, `CreatedAt`, `UpdatedAt`) VALUES
 	(1, 'KH0001', 'Công ty CP Giải pháp Số Việt', 2, 3, 1, 'info@giaiphapso.vn', '02838123456', '0312345678', NULL, '2018-03-10', 3, 0, '2026-05-02 09:00:00', '2026-05-02 09:00:00'),
 	(2, 'KH0002', 'Công ty TNHH Thương mại Hoàng Phát', 2, 2, 1, 'lienhe@hoangphat.vn', '02839988776', '0309876543', NULL, '2012-07-22', 4, 0, '2026-05-02 09:15:00', '2026-05-02 09:15:00'),
@@ -892,7 +926,8 @@ INSERT INTO `KH_KhachHang` (`Id`, `MaKhachHang`, `TenKhachHang`, `LoaiKhachHang_
 	(28, 'KH0028', 'Tập đoàn TEST', 2, NULL, 2, 'henrydz1602@gmail.com', '0937374822', NULL, NULL, NULL, 5, 0, '2026-07-15 00:29:16', '2026-07-18 03:40:11'),
 	(29, 'KH0029', 'Test Test', 2, 2, 1, 'vovannhan16022004@gmail.com', '01233333330', '11111110', NULL, '2026-07-20', 3, 0, '2026-07-21 01:11:38', '2026-07-21 01:17:04'),
 	(30, 'KH0030', 'Garage Ô tô Thành Đạt', NULL, NULL, NULL, 'son.thanhdat@gmail.com', '0988223344', NULL, NULL, NULL, 5, 0, '2026-07-21 13:29:25', '2026-07-21 13:29:25'),
-	(31, 'KH0031', 'công ty a', NULL, 1, NULL, 'vovannhan160204@gmail.com', '0901234567', NULL, NULL, NULL, 3, 0, '2026-07-21 13:31:41', '2026-07-21 13:34:40');
+	(31, 'KH0031', 'công ty a', NULL, 1, NULL, 'vovannhan160204@gmail.com', '0901234567', NULL, NULL, NULL, 3, 0, '2026-07-21 13:31:41', '2026-07-21 13:34:40'),
+	(32, 'KH0032', 'aaaa', 2, 1, 1, 'vovannhan160204@gmail.com', '01222222222', '0123456789', '2026-07-15', '2026-07-22', 3, 0, '2026-07-23 10:11:14', '2026-07-23 10:29:08');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.KH_Lead
 CREATE TABLE IF NOT EXISTS `KH_Lead` (
@@ -911,9 +946,9 @@ CREATE TABLE IF NOT EXISTS `KH_Lead` (
   KEY `fk_lead_nv` (`NhanVienPhuTrach_Id`),
   FULLTEXT KEY `idx_fts_lead` (`TenLead`,`TenCongTy`),
   CONSTRAINT `fk_lead_nv` FOREIGN KEY (`NhanVienPhuTrach_Id`) REFERENCES `HT_User` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_Lead: ~20 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_Lead: ~22 rows (xấp xỉ)
 INSERT INTO `KH_Lead` (`Id`, `TenLead`, `TenCongTy`, `SoDienThoai`, `Email`, `NguonLead`, `TinhTrang`, `NhanVienPhuTrach_Id`, `IsDeleted`, `CreatedAt`, `UpdatedAt`) VALUES
 	(1, 'Anh Tuấn', 'Công ty TNHH Cơ khí Phương Nam', '0901112222', 'tuan.pn@gmail.com', 'Manual', 'Moi', 3, 0, '2026-06-10 09:00:00', '2026-06-10 09:00:00'),
 	(2, 'Chị Lan', 'Spa Hương Sen', '0933444555', 'lan.huongsen@gmail.com', 'Manual', 'DangChamSoc', 4, 0, '2026-06-08 13:00:00', '2026-06-12 14:30:00'),
@@ -934,7 +969,9 @@ INSERT INTO `KH_Lead` (`Id`, `TenLead`, `TenCongTy`, `SoDienThoai`, `Email`, `Ng
 	(17, 'TEST01', 'Cong ty TEST', '0123333333', 'vovannhan160204@gmail.com', 'Manual', 'DaChuyenDoi', 12, 0, '2026-07-13 16:32:03', '2026-07-13 16:33:22'),
 	(18, 'TEST02', 'Tập đoàn TEST', '0937374822', 'henrydz1602@gmail.com', 'Manual', 'DaChuyenDoi', 5, 0, '2026-07-15 00:28:28', '2026-07-15 00:29:15'),
 	(19, 'Nhân Nhân Test', 'Test Test', '0123333333', 'vovannhan16022004@gmail.com', 'Manual', 'DaChuyenDoi', 3, 0, '2026-07-21 01:09:49', '2026-07-21 01:11:37'),
-	(20, 'nhân', 'công ty a', '0901234567', 'vovannhan160204@gmail.com', 'Manual', 'DaChuyenDoi', 3, 0, '2026-07-21 13:31:08', '2026-07-21 13:31:41');
+	(20, 'nhân', 'công ty a', '0901234567', 'vovannhan160204@gmail.com', 'Manual', 'DaChuyenDoi', 3, 0, '2026-07-21 13:31:08', '2026-07-21 13:31:41'),
+	(21, 'Chị Lan', 'Công ty ABC', '0123333333', 'vovannhan160204@gmail.com', 'Manual', 'Moi', 3, 0, '2026-07-23 07:03:49', '2026-07-23 07:03:49'),
+	(22, 'Võ Nhân', 'aaaa', '01222222222', 'vovannhan160204@gmail.com', 'Website', 'DaChuyenDoi', 3, 0, '2026-07-23 07:09:17', '2026-07-23 10:11:14');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.KH_LichSuHang
 CREATE TABLE IF NOT EXISTS `KH_LichSuHang` (
@@ -955,15 +992,16 @@ CREATE TABLE IF NOT EXISTS `KH_LichSuHang` (
   CONSTRAINT `fk_lichsuhang_hangmoi` FOREIGN KEY (`HangMoi_Id`) REFERENCES `KH_XepHang` (`Id`),
   CONSTRAINT `fk_lichsuhang_kh` FOREIGN KEY (`KhachHang_Id`) REFERENCES `KH_KhachHang` (`Id`) ON DELETE CASCADE,
   CONSTRAINT `fk_lichsuhang_user` FOREIGN KEY (`NguoiThucHien_Id`) REFERENCES `HT_User` (`Id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Lịch sử thay đổi hạng của khách hàng, dùng để truy vết và làm minh chứng khi cần';
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Lịch sử thay đổi hạng của khách hàng, dùng để truy vết và làm minh chứng khi cần';
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_LichSuHang: ~0 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_LichSuHang: ~6 rows (xấp xỉ)
 INSERT INTO `KH_LichSuHang` (`Id`, `KhachHang_Id`, `HangCu_Id`, `HangMoi_Id`, `LyDo`, `GhiChu`, `NguoiThucHien_Id`, `CreatedAt`) VALUES
 	(1, 27, NULL, 1, 'TuDongDuDieuKien', 'Điểm 12T: 5, Số lần thu: 1', NULL, '2026-07-13 16:45:47'),
 	(2, 27, 1, 2, 'TuDongDuDieuKien', 'Điểm 12T: 555, Số lần thu: 4', NULL, '2026-07-15 01:35:00'),
 	(3, 29, NULL, 2, 'TuDongDuDieuKien', 'Điểm 12T: 500, Số lần thu: 1', NULL, '2026-07-21 01:17:04'),
 	(4, 26, NULL, 1, 'TuDongDuDieuKien', 'Điểm 12T: 0, Số lần thu: 1', NULL, '2026-07-21 11:36:01'),
-	(5, 31, NULL, 1, 'TuDongDuDieuKien', 'Điểm 12T: 50, Số lần thu: 1', NULL, '2026-07-21 13:34:41');
+	(5, 31, NULL, 1, 'TuDongDuDieuKien', 'Điểm 12T: 50, Số lần thu: 1', NULL, '2026-07-21 13:34:41'),
+	(6, 32, NULL, 1, 'TuDongDuDieuKien', 'Điểm 12T: 70, Số lần thu: 1', NULL, '2026-07-23 10:29:09');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.KH_LoaiKhachHang
 CREATE TABLE IF NOT EXISTS `KH_LoaiKhachHang` (
@@ -996,7 +1034,7 @@ CREATE TABLE IF NOT EXISTS `KH_NgayLe` (
   CONSTRAINT `fk_ngayle_hang` FOREIGN KEY (`HangToiThieuApDung`) REFERENCES `KH_XepHang` (`Id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Cấu hình ngày lễ/sự kiện để hệ thống tự gửi email ưu đãi, admin tự thêm/sửa/xóa được';
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_NgayLe: ~4 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_NgayLe: ~5 rows (xấp xỉ)
 INSERT INTO `KH_NgayLe` (`Id`, `TenNgayLe`, `Thang`, `Ngay`, `SoNgayGuiTruoc`, `ApDungChoLoaiKH`, `HangToiThieuApDung`, `IsActive`, `CreatedAt`) VALUES
 	(1, 'Tết Dương Lịch', 1, 1, 5, 'TatCa', NULL, 1, '2026-05-01 08:00:00'),
 	(2, 'Quốc tế Phụ nữ 8/3', 3, 8, 5, 'B2C', NULL, 1, '2026-05-01 08:00:00'),
@@ -1055,7 +1093,7 @@ CREATE TABLE IF NOT EXISTS `KH_Voucher` (
   CONSTRAINT `chk_voucher_ngay` CHECK ((`NgayHetHan` >= `NgayBatDau`))
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Voucher phát cho khách hàng qua email, khách bấm link tạo yêu cầu, nhân viên xử lý qua Ticket';
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_Voucher: ~2 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_Voucher: ~3 rows (xấp xỉ)
 INSERT INTO `KH_Voucher` (`Id`, `MaVoucher`, `KhachHang_Id`, `LoaiGiamGia`, `GiaTriGiam`, `GiaTriGiamToiDa`, `NgayBatDau`, `NgayHetHan`, `LyDoPhatHanh`, `LichSuHang_Id`, `TrangThaiYeuCau`, `Ticket_Id`, `IsUsed`, `AppliedTo_BaoGia_Id`, `NgaySuDung`, `NguoiApDung_Id`, `CreatedAt`, `UpdatedAt`) VALUES
 	(1, 'VC-20260715-131B8A', 27, 'PhanTram', 3.00, 5000000.00, '2026-07-15', '2026-10-13', 'ThangHang', 2, 'DaYeuCau', 16, 1, 24, '2026-07-15 02:04:48', 2, '2026-07-15 01:35:00', '2026-07-15 02:04:48'),
 	(2, 'VC-20260721-235211', 29, 'PhanTram', 3.00, 5000000.00, '2026-07-21', '2026-10-19', 'ThangHang', 3, 'DaYeuCau', 17, 1, 26, '2026-07-21 01:21:37', 3, '2026-07-21 01:17:04', '2026-07-21 01:21:37'),
@@ -1075,7 +1113,7 @@ CREATE TABLE IF NOT EXISTS `KH_Voucher_Token` (
   CONSTRAINT `fk_vouchertoken_voucher` FOREIGN KEY (`Voucher_Id`) REFERENCES `KH_Voucher` (`Id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='Token bảo mật cho link sử dụng voucher trong email, tách riêng để không bị đoán mã qua Id tuần tự';
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_Voucher_Token: ~0 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.KH_Voucher_Token: ~3 rows (xấp xỉ)
 INSERT INTO `KH_Voucher_Token` (`Id`, `Voucher_Id`, `Token`, `NgayHetHanToken`, `DaSuDung`, `CreatedAt`) VALUES
 	(1, 1, 'ws9XIftNrQ_4Fab285WSvmFzyl5dHJLUbm_0XgumNtU', '2026-10-13 00:00:00', 1, '2026-07-15 01:35:00'),
 	(2, 2, 'd_W20Pyv4AekmVJz_qbCx5NSnzr-Lpl7yY9NBNEk9jY', '2026-10-19 00:00:00', 1, '2026-07-21 01:17:04'),
@@ -1123,9 +1161,9 @@ CREATE TABLE IF NOT EXISTS `Kho_TheKho` (
   KEY `idx_thekho_truyvan` (`SanPham_Id`,`NgayGiaoDich`),
   CONSTRAINT `fk_thekho_sp` FOREIGN KEY (`SanPham_Id`) REFERENCES `BH_SanPham` (`Id`),
   CONSTRAINT `fk_thekho_user` FOREIGN KEY (`NguoiThucHien_Id`) REFERENCES `HT_User` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.Kho_TheKho: ~19 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.Kho_TheKho: ~20 rows (xấp xỉ)
 INSERT INTO `Kho_TheKho` (`Id`, `SanPham_Id`, `MaChungTu`, `LoaiGiaoDich`, `SoLuongThayDoi`, `TonCuoi`, `NgayGiaoDich`, `NguoiThucHien_Id`, `GhiChu`) VALUES
 	(1, 1, 'NK-2026-001', 'NhapMua', 60, 60, '2026-05-01 08:30:00', 1, 'Nhập kho đầu kỳ: Phần mềm CRM Bản Basic'),
 	(2, 2, 'NK-2026-002', 'NhapMua', 35, 35, '2026-05-01 08:30:00', 1, 'Nhập kho đầu kỳ: Phần mềm CRM Bản Pro'),
@@ -1145,7 +1183,8 @@ INSERT INTO `Kho_TheKho` (`Id`, `SanPham_Id`, `MaChungTu`, `LoaiGiaoDich`, `SoLu
 	(16, 4, 'PX-2026-002', 'XuatBan', -1, 11, '2026-06-15 10:00:00', 5, 'Xuất license ERP Basic cho hợp đồng HD2026-002'),
 	(17, 3, 'PX-2026-003', 'XuatBan', -1, 14, '2026-06-20 10:00:00', 3, 'Xuất license CRM Enterprise cho hợp đồng HD2026-006'),
 	(18, 7, 'PX-2026-004', 'XuatBan', -2, 23, '2026-06-22 10:00:00', 6, 'Xuất license POS-RETAIL cho hợp đồng HD2026-007'),
-	(19, 6, 'PX-2026-005', 'XuatBan', -1, 19, '2026-06-24 10:00:00', 4, 'Xuất license HRM-BASIC cho hợp đồng HD2026-008');
+	(19, 6, 'PX-2026-005', 'XuatBan', -1, 19, '2026-06-24 10:00:00', 4, 'Xuất license HRM-BASIC cho hợp đồng HD2026-008'),
+	(20, 15, NULL, 'NhapMua', 10, 10, '2026-07-23 10:16:13', 2, 'Tồn kho ban đầu khi tạo sản phẩm');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.SYS_AuditLog
 CREATE TABLE IF NOT EXISTS `SYS_AuditLog` (
@@ -1159,9 +1198,9 @@ CREATE TABLE IF NOT EXISTS `SYS_AuditLog` (
   `ChangedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`Id`),
   KEY `idx_audit_main` (`TableName`,`RecordId`)
-) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=134 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.SYS_AuditLog: ~95 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.SYS_AuditLog: ~133 rows (xấp xỉ)
 INSERT INTO `SYS_AuditLog` (`Id`, `TableName`, `RecordId`, `Action`, `OldData`, `NewData`, `UserId`, `ChangedAt`) VALUES
 	(1, 'KH_Lead', 0, 'INSERT', NULL, '{"Id": 0, "Email": "vovannhan160204@gmail.com", "TenLead": "Nhân", "CreatedAt": "2026-07-08T11:50:58.507234Z", "IsDeleted": false, "TenCongTy": "Công ty Nhân Nhân", "TinhTrang": "Moi", "UpdatedAt": "2026-07-08T11:50:58.5072346Z", "SoDienThoai": "0123333333", "NhanVienPhuTrachId": 9}', 2, '2026-07-08 11:50:59'),
 	(2, 'KH_Lead', 16, 'UPDATE', '{"Id": 16, "Email": "vovannhan160204@gmail.com", "TenLead": "Nhân", "CreatedAt": "2026-07-08T11:50:59", "IsDeleted": false, "TenCongTy": "Công ty Nhân Nhân", "TinhTrang": "Moi", "UpdatedAt": "2026-07-08T11:50:58", "SoDienThoai": "0123333333", "NhanVienPhuTrachId": 9}', '{"Id": 16, "Email": "vovannhan160204@gmail.com", "TenLead": "Nhân", "CreatedAt": "2026-07-08T11:50:59", "IsDeleted": false, "TenCongTy": "Công ty Nhân Nhân", "TinhTrang": "DangChamSoc", "UpdatedAt": "2026-07-08T11:51:04.868959Z", "SoDienThoai": "0123333333", "NhanVienPhuTrachId": 9}', 2, '2026-07-08 11:51:05'),
@@ -1269,7 +1308,33 @@ INSERT INTO `SYS_AuditLog` (`Id`, `TableName`, `RecordId`, `Action`, `OldData`, 
 	(104, 'HD_BaoGia', 28, 'INSERT', NULL, '{"Id": 28, "ChiTiet": [{"Id": 39, "MaSP": "SRV-TRAINING", "DonVi": "Buổi", "TenSP": "Dịch vụ đào tạo sử dụng phần mềm", "DonGia": 3000000.0, "SoLuong": 1, "SanPhamId": 9, "ThanhTien": 3000000.0}], "MaBaoGia": "BG00028", "TongTien": 3000000, "CreatedAt": "2026-07-22T13:38:18.5772098Z", "TrangThai": "Nhap", "UpdatedAt": "2026-07-22T13:38:18.5772103Z", "EmailDaGui": null, "LyDoTuChoi": null, "NhanVienId": 2, "KhachHangId": 31, "TenNhanVien": "manager.ha", "TenKhachHang": "công ty a", "MaVoucherApDung": null, "EmailLyDoKhongGui": null, "SoTienGiamVoucher": null}', 2, '2026-07-22 13:38:19'),
 	(105, 'HD_BaoGia', 28, 'UPDATE', '{"TrangThai": "Nhap"}', '{"TrangThai": "DaGui"}', 2, '2026-07-22 13:38:29'),
 	(106, 'HD_BaoGia', 28, 'UPDATE', '{"TrangThai": "DaGui"}', '{"TrangThai": "ChapNhan"}', NULL, '2026-07-22 13:39:07'),
-	(107, 'HD_HopDong', 16, 'INSERT', NULL, '{"Id": 16, "GiaTri": 3000000.0, "NgayKy": "2026-07-22", "ThoiHan": 12, "BaoGiaId": 28, "MaBaoGia": "BG00028", "CreatedAt": "2026-07-22T13:39:20", "MaHopDong": "HD00016", "TrangThai": "DangThucHien", "UpdatedAt": "2026-07-22T13:39:20", "KhachHangId": 31, "LoaiHopDong": "ChinhThuc", "NgayKetThuc": "2027-07-22", "HopDongGocId": null, "MaHopDongGoc": null, "TenKhachHang": "công ty a", "HopDongLienKet": [], "HinhThucThanhToan": "ThanhToanMotLan", "NgayNhacGiaHanCuoi": null}', 2, '2026-07-22 13:39:20');
+	(107, 'HD_HopDong', 16, 'INSERT', NULL, '{"Id": 16, "GiaTri": 3000000.0, "NgayKy": "2026-07-22", "ThoiHan": 12, "BaoGiaId": 28, "MaBaoGia": "BG00028", "CreatedAt": "2026-07-22T13:39:20", "MaHopDong": "HD00016", "TrangThai": "DangThucHien", "UpdatedAt": "2026-07-22T13:39:20", "KhachHangId": 31, "LoaiHopDong": "ChinhThuc", "NgayKetThuc": "2027-07-22", "HopDongGocId": null, "MaHopDongGoc": null, "TenKhachHang": "công ty a", "HopDongLienKet": [], "HinhThucThanhToan": "ThanhToanMotLan", "NgayNhacGiaHanCuoi": null}', 2, '2026-07-22 13:39:20'),
+	(108, 'KH_Lead', 0, 'INSERT', NULL, '{"Id": 0, "Email": "vovannhan160204@gmail.com", "TenLead": "Chị Lan", "CreatedAt": "2026-07-23T07:03:49.4559271Z", "IsDeleted": false, "NguonLead": null, "TenCongTy": "Công ty ABC", "TinhTrang": "Moi", "UpdatedAt": "2026-07-23T07:03:49.4559275Z", "SoDienThoai": "0123333333", "NhanVienPhuTrachId": 3}', 3, '2026-07-23 07:03:50'),
+	(109, 'TK_Ticket', 17, 'UPDATE', '{"Id": 17, "MoTa": "Khách hàng đã bấm link trong email xác nhận muốn sử dụng voucher VC-20260721-235211 (giảm 3,00%, tối đa 5.000.000đ, hạn dùng đến 19/10/2026). Vui lòng liên hệ khách hàng để hỗ trợ áp dụng vào báo giá/hóa đơn gần nhất.", "TieuDe": "Khách hàng xác nhận sử dụng voucher VC-20260721-235211", "LyDoDong": null, "MaTicket": "TK00017", "NgayDong": null, "CreatedAt": "2026-07-21T01:18:19", "HopDongId": null, "SanPhamId": null, "TrangThai": "DangXuLy", "UpdatedAt": "2026-07-21T01:20:08", "ThoiHanSLA": null, "FileDinhKem": null, "KhachHangId": 29, "MucDoUuTien": "TrungBinh", "NgayHenXuLy": "2026-07-21T08:19:00", "LoaiTicketId": 4, "NguonTiepNhan": "Web", "SoLanEscalate": 0, "NhanVienXuLyId": 3, "NhanVienTiepNhanId": null}', '{"Id": 17, "MoTa": "Khách hàng đã bấm link trong email xác nhận muốn sử dụng voucher VC-20260721-235211 (giảm 3,00%, tối đa 5.000.000đ, hạn dùng đến 19/10/2026). Vui lòng liên hệ khách hàng để hỗ trợ áp dụng vào báo giá/hóa đơn gần nhất.", "TieuDe": "Khách hàng xác nhận sử dụng voucher VC-20260721-235211", "LyDoDong": null, "MaTicket": "TK00017", "NgayDong": null, "CreatedAt": "2026-07-21T01:18:19", "HopDongId": null, "SanPhamId": null, "TrangThai": "DangXuLy", "UpdatedAt": "2026-07-23T07:35:50.4581606Z", "ThoiHanSLA": null, "FileDinhKem": null, "KhachHangId": 29, "MucDoUuTien": "KhanCap", "NgayHenXuLy": "2026-07-21T08:19:00", "LoaiTicketId": 4, "NguonTiepNhan": "Web", "SoLanEscalate": 0, "NhanVienXuLyId": 3, "NhanVienTiepNhanId": null}', 2, '2026-07-23 07:35:51'),
+	(110, 'TK_Ticket', 16, 'UPDATE', '{"Id": 16, "MoTa": "Khách hàng đã bấm link trong email xác nhận muốn sử dụng voucher VC-20260715-131B8A (giảm 3,00%, tối đa 5.000.000đ, hạn dùng đến 13/10/2026). Vui lòng liên hệ khách hàng để hỗ trợ áp dụng vào báo giá/hóa đơn gần nhất.", "TieuDe": "Khách hàng xác nhận sử dụng voucher VC-20260715-131B8A", "LyDoDong": null, "MaTicket": "TK00016", "NgayDong": null, "CreatedAt": "2026-07-15T01:35:35", "HopDongId": null, "SanPhamId": null, "TrangThai": "DangXuLy", "UpdatedAt": "2026-07-15T01:44:16", "ThoiHanSLA": null, "FileDinhKem": null, "KhachHangId": 27, "MucDoUuTien": "TrungBinh", "NgayHenXuLy": "2026-07-15T08:43:00", "LoaiTicketId": 4, "NguonTiepNhan": "Web", "SoLanEscalate": 0, "NhanVienXuLyId": null, "NhanVienTiepNhanId": null}', '{"Id": 16, "MoTa": "Khách hàng đã bấm link trong email xác nhận muốn sử dụng voucher VC-20260715-131B8A (giảm 3,00%, tối đa 5.000.000đ, hạn dùng đến 13/10/2026). Vui lòng liên hệ khách hàng để hỗ trợ áp dụng vào báo giá/hóa đơn gần nhất.", "TieuDe": "Khách hàng xác nhận sử dụng voucher VC-20260715-131B8A", "LyDoDong": null, "MaTicket": "TK00016", "NgayDong": null, "CreatedAt": "2026-07-15T01:35:35", "HopDongId": null, "SanPhamId": null, "TrangThai": "DangXuLy", "UpdatedAt": "2026-07-23T07:35:57.9773645Z", "ThoiHanSLA": null, "FileDinhKem": null, "KhachHangId": 27, "MucDoUuTien": "KhanCap", "NgayHenXuLy": "2026-07-15T08:43:00", "LoaiTicketId": 4, "NguonTiepNhan": "Web", "SoLanEscalate": 0, "NhanVienXuLyId": null, "NhanVienTiepNhanId": null}', 2, '2026-07-23 07:35:58'),
+	(111, 'KH_Lead', 22, 'UPDATE', '{"Id": 22, "Email": "vovannhan160204@gmail.com", "TenLead": "Võ Nhân", "CreatedAt": "2026-07-23T07:09:17", "IsDeleted": false, "NguonLead": null, "TenCongTy": "aaaa", "TinhTrang": "Moi", "UpdatedAt": "2026-07-23T07:09:17", "SoDienThoai": "01222222222", "NhanVienPhuTrachId": null}', '{"Id": 22, "Email": "vovannhan160204@gmail.com", "TenLead": "Võ Nhân", "CreatedAt": "2026-07-23T07:09:17", "IsDeleted": false, "NguonLead": null, "TenCongTy": "aaaa", "TinhTrang": "Moi", "UpdatedAt": "2026-07-23T10:10:51.514601Z", "SoDienThoai": "01222222222", "NhanVienPhuTrachId": 3}', 2, '2026-07-23 10:10:52'),
+	(112, 'KH_Lead', 22, 'UPDATE', '{"Id": 22, "Email": "vovannhan160204@gmail.com", "TenLead": "Võ Nhân", "CreatedAt": "2026-07-23T07:09:17", "IsDeleted": false, "NguonLead": null, "TenCongTy": "aaaa", "TinhTrang": "Moi", "UpdatedAt": "2026-07-23T10:10:51", "SoDienThoai": "01222222222", "NhanVienPhuTrachId": 3}', '{"Id": 22, "Email": "vovannhan160204@gmail.com", "TenLead": "Võ Nhân", "CreatedAt": "2026-07-23T07:09:17", "IsDeleted": false, "NguonLead": null, "TenCongTy": "aaaa", "TinhTrang": "DangChamSoc", "UpdatedAt": "2026-07-23T10:10:52.7978028Z", "SoDienThoai": "01222222222", "NhanVienPhuTrachId": 3}', 2, '2026-07-23 10:10:53'),
+	(113, 'KH_KhachHang', 32, 'INSERT', NULL, '{"Id": 32, "Email": "vovannhan160204@gmail.com", "MaSoThue": null, "NgaySinh": null, "CreatedAt": "2026-07-23T10:11:14", "UpdatedAt": "2026-07-23T10:11:14", "MaKhachHang": "KH0032", "SoDienThoai": "01222222222", "TinhTrangId": null, "NgayThanhLap": null, "TenKhachHang": "aaaa", "TenTinhTrang": null, "HangKhachHangId": null, "LoaiKhachHangId": null, "TenHangKhachHang": null, "TenLoaiKhachHang": null, "NhanVienPhuTrachId": 3, "TenNhanVienPhuTrach": null}', 2, '2026-07-23 10:11:14'),
+	(114, 'KH_Lead', 22, 'UPDATE', '{"TinhTrang": "Cũ"}', '{"TinhTrang": "DaChuyenDoi"}', 2, '2026-07-23 10:11:14'),
+	(115, 'KH_KhachHang', 32, 'UPDATE', '{"Id": 32, "Email": "vovannhan160204@gmail.com", "MaSoThue": null, "NgaySinh": null, "CreatedAt": "2026-07-23T10:11:14", "UpdatedAt": "2026-07-23T10:11:14", "MaKhachHang": "KH0032", "SoDienThoai": "01222222222", "TinhTrangId": null, "NgayThanhLap": null, "TenKhachHang": "aaaa", "TenTinhTrang": null, "HangKhachHangId": null, "LoaiKhachHangId": null, "TenHangKhachHang": null, "TenLoaiKhachHang": null, "NhanVienPhuTrachId": 3, "TenNhanVienPhuTrach": null}', '{"Id": 32, "Email": "vovannhan160204@gmail.com", "MaSoThue": "0123456789", "NgaySinh": "2026-07-15", "CreatedAt": "2026-07-23T10:11:14", "UpdatedAt": "2026-07-23T10:12:01.6998939Z", "MaKhachHang": "KH0032", "SoDienThoai": "01222222222", "TinhTrangId": 1, "NgayThanhLap": "2026-07-22", "TenKhachHang": "aaaa", "TenTinhTrang": null, "HangKhachHangId": null, "LoaiKhachHangId": 2, "TenHangKhachHang": null, "TenLoaiKhachHang": null, "NhanVienPhuTrachId": 3, "TenNhanVienPhuTrach": null}', 2, '2026-07-23 10:12:02'),
+	(116, 'BH_CoHoiBanHang', 17, 'UPDATE', NULL, '{"Id": 17, "GhiChu": "Đã gửi báo giá", "LeadId": null, "TenLead": null, "GiaiDoan": "ThuongLuong", "CreatedAt": "2026-06-05T09:00:00", "UpdatedAt": "2026-07-23T10:14:43", "NgayDuKien": "2026-07-30", "KhachHangId": 22, "TenNhanVien": "sale.mai", "TenThuongVu": "Phần mềm quản lý hội viên cho Gym Sức Sống", "TenKhachHang": "Phòng tập Gym Sức Sống", "TyLeThanhCong": 45, "DoanhThuKyVong": 9500000.0, "NhanVienPhuTrachId": 4}', 2, '2026-07-23 10:14:43'),
+	(117, 'BH_CoHoiBanHang', 17, 'UPDATE', NULL, '{"Id": 17, "GhiChu": "Đã gửi báo giá", "LeadId": null, "TenLead": null, "GiaiDoan": "ThanhCong", "CreatedAt": "2026-06-05T09:00:00", "UpdatedAt": "2026-07-23T10:14:45", "NgayDuKien": "2026-07-30", "KhachHangId": 22, "TenNhanVien": "sale.mai", "TenThuongVu": "Phần mềm quản lý hội viên cho Gym Sức Sống", "TenKhachHang": "Phòng tập Gym Sức Sống", "TyLeThanhCong": 100, "DoanhThuKyVong": 9500000.0, "NhanVienPhuTrachId": 4}', 2, '2026-07-23 10:14:45'),
+	(118, 'BH_SanPham', 15, 'INSERT', NULL, '{"Id": 15, "MaSP": "SRV-TEST", "DonVi": "gói", "TenSP": "Test", "GiaBan": 100000, "TenLoai": "Dịch vụ", "CreatedAt": "2026-07-23T10:16:12.8390302Z", "UpdatedAt": "2026-07-23T10:16:12.8390581Z", "AnhDaiDien": null, "SoLuongTon": 0, "DangKinhDoanh": true, "LoaiSanPhamId": 2}', 2, '2026-07-23 10:16:13'),
+	(119, 'HD_BaoGia', 29, 'INSERT', NULL, '{"Id": 29, "ChiTiet": [{"Id": 40, "MaSP": "SRV-TEST", "DonVi": "gói", "TenSP": "Test", "DonGia": 100000.0, "SoLuong": 1, "SanPhamId": 15, "ThanhTien": 100000.0}], "MaBaoGia": "BG00029", "TongTien": 100000, "CreatedAt": "2026-07-23T10:17:04.8737634Z", "TrangThai": "Nhap", "UpdatedAt": "2026-07-23T10:17:04.8737639Z", "EmailDaGui": null, "LyDoTuChoi": null, "NhanVienId": 2, "KhachHangId": 32, "TenNhanVien": "manager.ha", "TenKhachHang": "aaaa", "MaVoucherApDung": null, "EmailLyDoKhongGui": null, "SoTienGiamVoucher": null}', 2, '2026-07-23 10:17:05'),
+	(120, 'HD_BaoGia', 29, 'UPDATE', '{"TrangThai": "Nhap"}', '{"TrangThai": "DaGui"}', 2, '2026-07-23 10:17:07'),
+	(121, 'HD_BaoGia', 29, 'UPDATE', '{"TrangThai": "DaGui"}', '{"TrangThai": "ChapNhan"}', NULL, '2026-07-23 10:17:53'),
+	(122, 'HD_HopDong', 17, 'INSERT', NULL, '{"Id": 17, "GiaTri": 100000.0, "NgayKy": "2026-07-23", "ThoiHan": 12, "BaoGiaId": 29, "MaBaoGia": "BG00029", "CreatedAt": "2026-07-23T10:18:38", "MaHopDong": "HD00017", "TongDaThu": 0.0, "TrangThai": "DangThucHien", "UpdatedAt": "2026-07-23T10:18:38", "KhachHangId": 32, "LoaiHopDong": "ChinhThuc", "NgayKetThuc": "2027-07-23", "HopDongGocId": null, "MaHopDongGoc": null, "TenKhachHang": "aaaa", "HopDongLienKet": [], "HinhThucThanhToan": "TraGop", "NgayNhacGiaHanCuoi": null}', 2, '2026-07-23 10:18:38'),
+	(123, 'HD_BaoGia', 30, 'INSERT', NULL, '{"Id": 30, "ChiTiet": [{"Id": 41, "MaSP": "POS-RETAIL", "DonVi": "License", "TenSP": "Phần mềm bán hàng POS cho bán lẻ", "DonGia": 8000000.0, "SoLuong": 1, "SanPhamId": 7, "ThanhTien": 8000000.0}], "MaBaoGia": "BG00030", "TongTien": 8000000, "CreatedAt": "2026-07-23T10:27:24.1039598Z", "TrangThai": "Nhap", "UpdatedAt": "2026-07-23T10:27:24.1039602Z", "EmailDaGui": null, "LyDoTuChoi": null, "NhanVienId": 2, "KhachHangId": 32, "TenNhanVien": "manager.ha", "TenKhachHang": "aaaa", "MaVoucherApDung": null, "EmailLyDoKhongGui": null, "SoTienGiamVoucher": null}', 2, '2026-07-23 10:27:24'),
+	(124, 'HD_BaoGia', 30, 'UPDATE', '{"TrangThai": "Nhap"}', '{"TrangThai": "DaGui"}', 2, '2026-07-23 10:27:27'),
+	(125, 'HD_BaoGia', 30, 'UPDATE', '{"TrangThai": "DaGui"}', '{"TrangThai": "ChapNhan"}', 2, '2026-07-23 10:27:34'),
+	(126, 'HD_HopDong', 18, 'INSERT', NULL, '{"Id": 18, "GiaTri": 8000000.0, "NgayKy": "2026-07-23", "ThoiHan": 12, "BaoGiaId": 30, "MaBaoGia": "BG00030", "CreatedAt": "2026-07-23T10:28:40", "MaHopDong": "HD00018", "TongDaThu": 0.0, "TrangThai": "DangThucHien", "UpdatedAt": "2026-07-23T10:28:40", "KhachHangId": 32, "LoaiHopDong": "ChinhThuc", "NgayKetThuc": "2027-07-23", "HopDongGocId": null, "MaHopDongGoc": null, "TenKhachHang": "aaaa", "HopDongLienKet": [], "HinhThucThanhToan": "TraGop", "NgayNhacGiaHanCuoi": null}', 2, '2026-07-23 10:28:40'),
+	(127, 'KT_HoaDon', 15, 'INSERT', NULL, '{"Id": 15, "SoDot": 1, "MaHoaDon": "INV-20260723-845440", "TongTien": 7000000, "CreatedAt": "2026-07-23T10:29:03.5395297Z", "HopDongId": 18, "MaHopDong": "HD00018", "UpdatedAt": "2026-07-23T10:29:03.5395303Z", "KhachHangId": 32, "SoTienDaThu": 0, "SoTienConLai": 7000000, "TenKhachHang": "aaaa", "LichThanhToanId": 4, "NhanVienPhuTrachId": 3, "TrangThaiThanhToan": "ChuaThanhToan"}', 2, '2026-07-23 10:29:04'),
+	(128, 'KT_PhieuThuChi', 23, 'INSERT', NULL, '{"Id": 23, "SoTien": 7000000, "MaPhieu": "PT-20260723-671008", "NgayTao": "2026-07-23T10:29:08.7391322Z", "HoaDonId": 15, "MaHoaDon": "INV-20260723-845440", "LoaiPhieu": "Thu", "UpdatedAt": "2026-07-23T10:29:08", "NguoiLapId": 2, "KhachHangId": 32, "TenNguoiLap": "Trần Thị Bích Hà", "TenKhachHang": "aaaa", "NhanVienPhuTrachId": 3}', 2, '2026-07-23 10:29:20'),
+	(129, 'KT_HoaDon', 16, 'INSERT', NULL, '{"Id": 16, "SoDot": 2, "MaHoaDon": "INV-20260723-2B9923", "TongTien": 1000000, "CreatedAt": "2026-07-23T10:29:29.6810045Z", "HopDongId": 18, "MaHopDong": "HD00018", "UpdatedAt": "2026-07-23T10:29:29.6810053Z", "KhachHangId": 32, "SoTienDaThu": 0, "SoTienConLai": 1000000, "TenKhachHang": "aaaa", "LichThanhToanId": 5, "NhanVienPhuTrachId": 3, "TrangThaiThanhToan": "ChuaThanhToan"}', 2, '2026-07-23 10:29:30'),
+	(130, 'KT_PhieuThuChi', 24, 'INSERT', NULL, '{"Id": 24, "SoTien": 1000000, "MaPhieu": "PT-20260723-00BC63", "NgayTao": "2026-07-23T10:29:32.8129882Z", "HoaDonId": 16, "MaHoaDon": "INV-20260723-2B9923", "LoaiPhieu": "Thu", "UpdatedAt": "2026-07-23T10:29:32", "NguoiLapId": 2, "KhachHangId": 32, "TenNguoiLap": "Trần Thị Bích Hà", "TenKhachHang": "aaaa", "NhanVienPhuTrachId": 3}', 2, '2026-07-23 10:29:38'),
+	(131, 'HD_HopDong', 18, 'UPDATE', '{"Id": 18, "GiaTri": 8000000.0, "NgayKy": "2026-07-23", "ThoiHan": 12, "BaoGiaId": 30, "MaBaoGia": "BG00030", "CreatedAt": "2026-07-23T10:28:40", "MaHopDong": "HD00018", "TongDaThu": 8000000.0, "TrangThai": "DangThucHien", "UpdatedAt": "2026-07-23T10:28:40", "KhachHangId": 32, "LoaiHopDong": "ChinhThuc", "NgayKetThuc": "2027-07-23", "HopDongGocId": null, "MaHopDongGoc": null, "TenKhachHang": "aaaa", "HopDongLienKet": [], "HinhThucThanhToan": "TraGop", "NgayNhacGiaHanCuoi": null}', '{"Id": 18, "GiaTri": 8000000.0, "NgayKy": "2026-07-23", "ThoiHan": 12, "BaoGiaId": 30, "MaBaoGia": "BG00030", "CreatedAt": "2026-07-23T10:28:40", "MaHopDong": "HD00018", "TongDaThu": 8000000.0, "TrangThai": "ThanhLy", "UpdatedAt": "2026-07-23T10:35:01", "KhachHangId": 32, "LoaiHopDong": "ChinhThuc", "NgayKetThuc": "2027-07-23", "HopDongGocId": null, "MaHopDongGoc": null, "TenKhachHang": "aaaa", "HopDongLienKet": [], "HinhThucThanhToan": "TraGop", "NgayNhacGiaHanCuoi": null}', 3, '2026-07-23 10:35:01'),
+	(132, 'HD_BaoGia', 24, 'UPDATE', '{"TrangThai": "Nhap"}', '{"TrangThai": "DaGui"}', 2, '2026-07-23 10:35:28'),
+	(133, 'HD_BaoGia', 24, 'UPDATE', '{"TrangThai": "DaGui"}', '{"LyDo": "quá mắc", "TrangThai": "TuChoi"}', NULL, '2026-07-23 10:36:11');
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.TK_DanhGiaHaiLong
 CREATE TABLE IF NOT EXISTS `TK_DanhGiaHaiLong` (
@@ -1361,9 +1426,9 @@ CREATE TABLE IF NOT EXISTS `TK_Ticket` (
   CONSTRAINT `fk_ticket_sp` FOREIGN KEY (`SanPham_Id`) REFERENCES `BH_SanPham` (`Id`) ON DELETE SET NULL,
   CONSTRAINT `fk_ticket_tiepnhan` FOREIGN KEY (`NhanVienTiepNhan_Id`) REFERENCES `HT_User` (`Id`) ON DELETE SET NULL,
   CONSTRAINT `fk_ticket_xuly` FOREIGN KEY (`NhanVienXuLy_Id`) REFERENCES `HT_User` (`Id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.TK_Ticket: ~17 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.TK_Ticket: ~19 rows (xấp xỉ)
 INSERT INTO `TK_Ticket` (`Id`, `MaTicket`, `TieuDe`, `MoTa`, `FileDinhKem`, `LoaiTicket_Id`, `KhachHang_Id`, `HopDong_Id`, `SanPham_Id`, `MucDoUuTien`, `NguonTiepNhan`, `TrangThai`, `NhanVienTiepNhan_Id`, `NhanVienXuLy_Id`, `NgayHenXuLy`, `ThoiHanSLA`, `SoLanEscalate`, `NgayDong`, `LyDoDong`, `IsDeleted`, `CreatedAt`, `UpdatedAt`) VALUES
 	(1, 'TK2026-0001', 'Lỗi đăng nhập CRM Pro sau khi đổi mật khẩu', 'Tài khoản admin phía khách không đăng nhập được sau khi đổi mật khẩu, báo lỗi tài khoản bị khóa.', NULL, 3, 1, 1, 2, 'Cao', 'Phone', 'Dong', 4, 3, '2026-05-20 17:00:00', NULL, 0, '2026-05-20 10:30:00', 'Đã mở khóa tài khoản, khách xác nhận đăng nhập được.', 0, '2026-05-20 08:30:00', '2026-05-20 10:30:00'),
 	(2, 'TK2026-0002', 'Yêu cầu bảo hành license CRM Basic bị báo hết hạn sớm', 'License mua tháng 5/2026 báo hết hạn trước thời hạn cam kết. Đề nghị kiểm tra lại.', NULL, 1, 2, NULL, 1, 'TrungBinh', 'Email', 'DangXuLy', 4, 4, '2026-06-05 17:00:00', NULL, 0, NULL, NULL, 0, '2026-06-02 09:00:00', '2026-06-02 11:00:00'),
@@ -1380,8 +1445,10 @@ INSERT INTO `TK_Ticket` (`Id`, `MaTicket`, `TieuDe`, `MoTa`, `FileDinhKem`, `Loa
 	(13, 'TK2026-0013', 'Hỏi về gia hạn hợp đồng bảo trì', 'Khách hỏi thông tin và chi phí gia hạn hợp đồng bảo trì sắp hết hạn.', NULL, 1, 13, 4, 10, 'Thap', 'Email', 'DangXuLy', 7, 7, '2026-07-05 17:00:00', NULL, 0, NULL, NULL, 0, '2026-06-29 09:00:00', '2026-06-29 10:00:00'),
 	(14, 'TK2026-0014', 'Lỗi xuất file Excel báo cáo bị thiếu cột', 'File Excel xuất báo cáo doanh thu bị thiếu cột chiết khấu so với trước đây.', NULL, 3, 16, 5, 7, 'TrungBinh', 'Web', 'Moi', NULL, NULL, NULL, NULL, 0, NULL, NULL, 0, '2026-06-28 10:00:00', '2026-06-28 10:00:00'),
 	(15, 'TK2026-0015', 'Khiếu nại về việc chậm bàn giao license ERP', 'License ERP-PRO cam kết bàn giao trong 3 ngày nhưng chậm 1 tuần.', NULL, 2, 13, 4, 5, 'Cao', 'Phone', 'Dong', 3, 3, '2026-05-28 17:00:00', NULL, 0, '2026-05-28 15:00:00', 'Xác nhận chậm do lỗi cấp phép từ nhà cung cấp, đã bàn giao và tặng thêm 1 tháng hỗ trợ ưu tiên.', 0, '2026-05-27 09:00:00', '2026-05-28 15:00:00'),
-	(16, 'TK00016', 'Khách hàng xác nhận sử dụng voucher VC-20260715-131B8A', 'Khách hàng đã bấm link trong email xác nhận muốn sử dụng voucher VC-20260715-131B8A (giảm 3,00%, tối đa 5.000.000đ, hạn dùng đến 13/10/2026). Vui lòng liên hệ khách hàng để hỗ trợ áp dụng vào báo giá/hóa đơn gần nhất.', NULL, 4, 27, NULL, NULL, 'TrungBinh', 'Web', 'DangXuLy', NULL, NULL, '2026-07-15 08:43:00', NULL, 0, NULL, NULL, 0, '2026-07-15 01:35:35', '2026-07-15 01:44:16'),
-	(17, 'TK00017', 'Khách hàng xác nhận sử dụng voucher VC-20260721-235211', 'Khách hàng đã bấm link trong email xác nhận muốn sử dụng voucher VC-20260721-235211 (giảm 3,00%, tối đa 5.000.000đ, hạn dùng đến 19/10/2026). Vui lòng liên hệ khách hàng để hỗ trợ áp dụng vào báo giá/hóa đơn gần nhất.', NULL, 4, 29, NULL, NULL, 'TrungBinh', 'Web', 'DangXuLy', NULL, 3, '2026-07-21 08:19:00', NULL, 0, NULL, NULL, 0, '2026-07-21 01:18:19', '2026-07-21 01:20:08');
+	(16, 'TK00016', 'Khách hàng xác nhận sử dụng voucher VC-20260715-131B8A', 'Khách hàng đã bấm link trong email xác nhận muốn sử dụng voucher VC-20260715-131B8A (giảm 3,00%, tối đa 5.000.000đ, hạn dùng đến 13/10/2026). Vui lòng liên hệ khách hàng để hỗ trợ áp dụng vào báo giá/hóa đơn gần nhất.', NULL, 4, 27, NULL, NULL, 'KhanCap', 'Web', 'DangXuLy', NULL, NULL, '2026-07-15 08:43:00', NULL, 0, NULL, NULL, 0, '2026-07-15 01:35:35', '2026-07-23 07:35:58'),
+	(17, 'TK00017', 'Khách hàng xác nhận sử dụng voucher VC-20260721-235211', 'Khách hàng đã bấm link trong email xác nhận muốn sử dụng voucher VC-20260721-235211 (giảm 3,00%, tối đa 5.000.000đ, hạn dùng đến 19/10/2026). Vui lòng liên hệ khách hàng để hỗ trợ áp dụng vào báo giá/hóa đơn gần nhất.', NULL, 4, 29, NULL, NULL, 'KhanCap', 'Web', 'DangXuLy', NULL, 3, '2026-07-21 08:19:00', NULL, 0, NULL, NULL, 0, '2026-07-21 01:18:19', '2026-07-23 07:35:50'),
+	(18, 'TK00018', 'Nhắc thanh toán đợt 1 hợp đồng HD00017 sắp đến hạn', 'Đợt 1 (20.000đ) của hợp đồng HD00017 sắp đến hạn thanh toán (23/07/2026). Vui lòng chủ động liên hệ khách hàng để nhắc thu tiền.', NULL, 5, 32, 17, NULL, 'TrungBinh', 'Web', 'Moi', 3, NULL, '2026-07-24 10:47:36', NULL, 0, NULL, NULL, 0, NULL, NULL),
+	(19, 'TK00019', 'Nhắc thanh toán đợt 2 hợp đồng HD00017 sắp đến hạn', 'Đợt 2 (30.000đ) của hợp đồng HD00017 sắp đến hạn thanh toán (24/07/2026). Vui lòng chủ động liên hệ khách hàng để nhắc thu tiền.', NULL, 5, 32, 17, NULL, 'TrungBinh', 'Web', 'Moi', 3, NULL, '2026-07-24 10:47:41', NULL, 0, NULL, NULL, 0, NULL, NULL);
 
 -- Đang kết xuất đổ cấu trúc cho bảng CRM-LVTN.TK_Ticket_PhanHoi
 CREATE TABLE IF NOT EXISTS `TK_Ticket_PhanHoi` (
@@ -1401,7 +1468,7 @@ CREATE TABLE IF NOT EXISTS `TK_Ticket_PhanHoi` (
   CONSTRAINT `fk_ph_user` FOREIGN KEY (`NguoiPhanHoi_Id`) REFERENCES `HT_User` (`Id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.TK_Ticket_PhanHoi: ~21 rows (xấp xỉ)
+-- Đang kết xuất đổ dữ liệu cho bảng CRM-LVTN.TK_Ticket_PhanHoi: ~24 rows (xấp xỉ)
 INSERT INTO `TK_Ticket_PhanHoi` (`Id`, `Ticket_Id`, `NguoiPhanHoi_Id`, `LoaiPhanHoi`, `NoiDung`, `FileDinhKem`, `TrangThaiTruoc`, `TrangThaiSau`, `CreatedAt`) VALUES
 	(1, 1, 3, 'NoiBoXuLy', 'Đã kiểm tra, tài khoản bị khóa do đăng nhập sai quá 5 lần liên tiếp. Tiến hành mở khóa thủ công.', NULL, 'Moi', 'DangXuLy', '2026-05-20 09:15:00'),
 	(2, 1, 3, 'DongTicket', 'Đã mở khóa tài khoản và hướng dẫn khách đặt lại mật khẩu. Khách xác nhận đăng nhập bình thường.', NULL, 'DangXuLy', 'Dong', '2026-05-20 10:30:00'),
