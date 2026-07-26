@@ -7,6 +7,7 @@ import {
   ExternalLink,
   Users,
   FileText,
+  RefreshCw,
 } from "lucide-react";
 import contractApi from "../../api/contractApi";
 import useAuthStore from "../auth/authStore";
@@ -15,6 +16,7 @@ import Card, { Field } from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import EditContractModal from "./EditContractModal";
+import RenewContractModal from "./RenewContractModal";
 import MilestoneSection from "./MilestoneSection";
 import { ROLES, CONTRACT_STATUS } from "../../utils/constants";
 import { formatDate, formatDateTime } from "../../utils/formatters";
@@ -43,6 +45,7 @@ export default function ContractDetailPage() {
   const [error, setError] = useState("");
 
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showRenewModal, setShowRenewModal] = useState(false);
 
   const [lichThanhToans, setLichThanhToans] = useState([]);
   const [loadingLich, setLoadingLich] = useState(false);
@@ -135,6 +138,17 @@ export default function ContractDetailPage() {
         />
       )}
 
+      {showRenewModal && (
+        <RenewContractModal
+          contract={contract}
+          onClose={() => setShowRenewModal(false)}
+          onRenewed={(newContract) => {
+            setShowRenewModal(false);
+            navigate(`/contracts/${newContract.id}`);
+          }}
+        />
+      )}
+
       <PageHeader
         breadcrumb="Hợp đồng"
         title={contract.maHopDong}
@@ -147,6 +161,15 @@ export default function ContractDetailPage() {
         }
         actions={
           <>
+            {canManage && contract.trangThai !== "ThanhLy" && (
+              <Button
+                variant="secondary"
+                icon={RefreshCw}
+                onClick={() => setShowRenewModal(true)}
+              >
+                Gia hạn
+              </Button>
+            )}
             {canManage && !isFinal && (
               <Button
                 variant="secondary"
@@ -333,6 +356,50 @@ export default function ContractDetailPage() {
               <span className="font-mono text-sm">{contract.maHopDong}</span>
             </div>
           </Card>
+
+          {(contract.loaiHopDong !== "ChinhThuc" ||
+            contract.hopDongLienKet?.length > 0) && (
+            <Card title="Gia hạn / Bảo trì">
+              {contract.loaiHopDong !== "ChinhThuc" &&
+                contract.maHopDongGoc && (
+                  <button
+                    onClick={() =>
+                      navigate(`/contracts/${contract.hopDongGocId}`)
+                    }
+                    className="w-full flex items-center justify-between p-2.5 mb-2 bg-surface-alt rounded-lg hover:bg-ink-100 transition-colors text-left"
+                  >
+                    <div>
+                      <p className="text-xs text-ink-400">
+                        Gia hạn từ hợp đồng
+                      </p>
+                      <p className="text-sm font-mono text-ink-900">
+                        {contract.maHopDongGoc}
+                      </p>
+                    </div>
+                    <ExternalLink size={14} className="text-ink-400" />
+                  </button>
+                )}
+
+              {contract.hopDongLienKet?.map((lk) => (
+                <button
+                  key={lk.id}
+                  onClick={() => navigate(`/contracts/${lk.id}`)}
+                  className="w-full flex items-center justify-between p-2.5 mb-2 last:mb-0 bg-surface-alt rounded-lg hover:bg-ink-100 transition-colors text-left"
+                >
+                  <div>
+                    <p className="text-xs text-ink-400">Đã gia hạn thành</p>
+                    <p className="text-sm font-mono text-ink-900">
+                      {lk.maHopDong}
+                    </p>
+                  </div>
+                  <Badge
+                    label={CONTRACT_STATUS[lk.trangThai] ?? lk.trangThai}
+                    tone={STATUS_TONE[lk.trangThai]}
+                  />
+                </button>
+              ))}
+            </Card>
+          )}
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ const contractApi = {
   updateStatus: (id, trangThai) =>
     axiosClient.put(`/Contract/${id}/status`, { trangThai }),
   delete: (id) => axiosClient.delete(`/Contract/${id}`),
+  renew: (id, ngayKy) => axiosClient.post(`/Contract/${id}/renew`, { ngayKy }),
 
   // ── Mốc triển khai (Đào tạo / Bàn giao / Nghiệm thu) ──────────────────
   getMocTrienKhai: (id) => axiosClient.get(`/Contract/${id}/moc-trien-khai`),
