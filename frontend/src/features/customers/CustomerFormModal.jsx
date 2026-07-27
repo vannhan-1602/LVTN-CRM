@@ -7,6 +7,7 @@ import EmployeeSelect from "../../components/common/EmployeeSelect";
 import useDanhMucStore from "../../stores/danhMucStore";
 import useAuthStore from "../auth/authStore";
 import { ROLES } from "../../utils/constants";
+import { getApiErrorMessage } from "../../utils/formatters";
 
 const emptyForm = {
   tenKhachHang: "",
@@ -103,7 +104,7 @@ export default function CustomerFormModal({ customer, onClose, onSaved }) {
       else await customerApi.create(payload);
       onSaved();
     } catch (err) {
-      setError(err?.message || "Không thể lưu khách hàng");
+      setError(getApiErrorMessage(err, "Không thể lưu khách hàng"));
     } finally {
       setSubmitting(false);
     }

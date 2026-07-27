@@ -4,11 +4,11 @@ const contractApi = {
   getAll: (params) => axiosClient.get("/Contract", { params }),
   getById: (id) => axiosClient.get(`/Contract/${id}`),
   createFromQuote: (data) => axiosClient.post("/Contract/from-quote", data),
+  renew: (id, data) => axiosClient.post(`/Contract/${id}/renew`, data),
   getLichThanhToan: (id) => axiosClient.get(`/Contract/${id}/lich-thanh-toan`),
   updateStatus: (id, trangThai) =>
     axiosClient.put(`/Contract/${id}/status`, { trangThai }),
   delete: (id) => axiosClient.delete(`/Contract/${id}`),
-  renew: (id, ngayKy) => axiosClient.post(`/Contract/${id}/renew`, { ngayKy }),
 
   // ── Mốc triển khai (Đào tạo / Bàn giao / Nghiệm thu) ──────────────────
   getMocTrienKhai: (id) => axiosClient.get(`/Contract/${id}/moc-trien-khai`),

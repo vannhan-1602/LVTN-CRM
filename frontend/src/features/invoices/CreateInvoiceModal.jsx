@@ -5,7 +5,7 @@ import Button from "../../components/common/Button";
 import invoiceApi from "../../api/invoiceApi";
 import contractApi from "../../api/contractApi";
 import customerApi from "../../api/customerApi";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDate, getApiErrorMessage } from "../../utils/formatters";
 
 export default function CreateInvoiceModal({ onClose, onSaved }) {
   const {
@@ -120,7 +120,7 @@ export default function CreateInvoiceModal({ onClose, onSaved }) {
       });
       onSaved();
     } catch (err) {
-      setApiError(err?.message || "Tạo hóa đơn thất bại");
+      setApiError(getApiErrorMessage(err, "Tạo hóa đơn thất bại"));
     }
   };
 

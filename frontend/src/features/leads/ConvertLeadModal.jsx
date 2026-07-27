@@ -4,6 +4,7 @@ import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 import EmployeeSelect from "../../components/common/EmployeeSelect";
 import useDanhMucStore from "../../stores/danhMucStore";
+import { getApiErrorMessage } from "../../utils/formatters";
 
 const toInt = (v) => (v === "" || v == null ? null : Number(v));
 
@@ -47,7 +48,7 @@ export default function ConvertLeadModal({
       });
       onConverted();
     } catch (err) {
-      setError(err?.message || "Chuyển đổi thất bại");
+      setError(getApiErrorMessage(err, "Chuyển đổi thất bại"));
     } finally {
       setSubmitting(false);
     }

@@ -4,6 +4,7 @@ import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 import EmployeeSelect from "../../components/common/EmployeeSelect";
 import { LEAD_TINH_TRANG_OPTIONS } from "../../utils/constants";
+import { getApiErrorMessage } from "../../utils/formatters";
 
 const LEAD_NGUON_OPTIONS = [
   { value: "Manual", label: "Tạo thủ công" },
@@ -79,7 +80,7 @@ export default function LeadFormModal({
       else await leadApi.create(payload);
       onSaved();
     } catch (err) {
-      setError(err?.message || "Không thể lưu lead");
+      setError(getApiErrorMessage(err, "Không thể lưu lead"));
     } finally {
       setSubmitting(false);
     }

@@ -142,9 +142,9 @@ export default function ContractDetailPage() {
         <RenewContractModal
           contract={contract}
           onClose={() => setShowRenewModal(false)}
-          onRenewed={(newContract) => {
+          onSaved={() => {
             setShowRenewModal(false);
-            navigate(`/contracts/${newContract.id}`);
+            load();
           }}
         />
       )}
@@ -161,15 +161,6 @@ export default function ContractDetailPage() {
         }
         actions={
           <>
-            {canManage && contract.trangThai !== "ThanhLy" && (
-              <Button
-                variant="secondary"
-                icon={RefreshCw}
-                onClick={() => setShowRenewModal(true)}
-              >
-                Gia hạn
-              </Button>
-            )}
             {canManage && !isFinal && (
               <Button
                 variant="secondary"
@@ -177,6 +168,15 @@ export default function ContractDetailPage() {
                 onClick={() => setShowEditModal(true)}
               >
                 Sửa
+              </Button>
+            )}
+            {canManage && contract.trangThai !== "ThanhLy" && (
+              <Button
+                variant="secondary"
+                icon={RefreshCw}
+                onClick={() => setShowRenewModal(true)}
+              >
+                Gia hạn
               </Button>
             )}
             {canDelete && (
@@ -357,45 +357,28 @@ export default function ContractDetailPage() {
             </div>
           </Card>
 
-          {(contract.loaiHopDong !== "ChinhThuc" ||
-            contract.hopDongLienKet?.length > 0) && (
-            <Card title="Gia hạn / Bảo trì">
-              {contract.loaiHopDong !== "ChinhThuc" &&
-                contract.maHopDongGoc && (
-                  <button
-                    onClick={() =>
-                      navigate(`/contracts/${contract.hopDongGocId}`)
-                    }
-                    className="w-full flex items-center justify-between p-2.5 mb-2 bg-surface-alt rounded-lg hover:bg-ink-100 transition-colors text-left"
-                  >
-                    <div>
-                      <p className="text-xs text-ink-400">
-                        Gia hạn từ hợp đồng
-                      </p>
-                      <p className="text-sm font-mono text-ink-900">
-                        {contract.maHopDongGoc}
-                      </p>
-                    </div>
-                    <ExternalLink size={14} className="text-ink-400" />
-                  </button>
-                )}
-
-              {contract.hopDongLienKet?.map((lk) => (
+          {(contract.maHopDongGoc || contract.hopDongLienKet?.length > 0) && (
+            <Card title="Liên kết gia hạn">
+              {contract.maHopDongGoc && (
                 <button
-                  key={lk.id}
-                  onClick={() => navigate(`/contracts/${lk.id}`)}
-                  className="w-full flex items-center justify-between p-2.5 mb-2 last:mb-0 bg-surface-alt rounded-lg hover:bg-ink-100 transition-colors text-left"
+                  onClick={() => navigate(`/contracts/${contract.hopDongGocId}`)}
+                  className="w-full text-left p-2.5 rounded-lg hover:bg-ink-100 transition-colors text-xs mb-1.5"
                 >
-                  <div>
-                    <p className="text-xs text-ink-400">Đã gia hạn thành</p>
-                    <p className="text-sm font-mono text-ink-900">
-                      {lk.maHopDong}
-                    </p>
-                  </div>
-                  <Badge
-                    label={CONTRACT_STATUS[lk.trangThai] ?? lk.trangThai}
-                    tone={STATUS_TONE[lk.trangThai]}
-                  />
+                  <span className="text-ink-400">Gia hạn từ hợp đồng gốc: </span>
+                  <span className="font-mono text-ink-900">{contract.maHopDongGoc}</span>
+                </button>
+              )}
+              {contract.hopDongLienKet?.map((hd) => (
+                <button
+                  key={hd.id}
+                  onClick={() => navigate(`/contracts/${hd.id}`)}
+                  className="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-ink-100 transition-colors text-xs"
+                >
+                  <span>
+                    <span className="text-ink-400">Đã gia hạn thành: </span>
+                    <span className="font-mono text-ink-900">{hd.maHopDong}</span>
+                  </span>
+                  <Badge label={hd.trangThai} tone={STATUS_TONE[hd.trangThai]} />
                 </button>
               ))}
             </Card>

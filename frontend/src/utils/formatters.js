@@ -1,5 +1,17 @@
 import { API_ORIGIN } from "../api/axiosClient";
 
+// API trả lỗi validate (FluentValidation) dạng ApiResponse.Fail("One or more validation
+// failures have occurred.", errors: ["Email: Email này đã tồn tại..."]) — message chung
+// chung không có ý nghĩa với người dùng, thông tin thật nằm ở mảng `errors`. Còn lỗi
+// nghiệp vụ (BusinessRuleException/NotFoundException...) thì message đã là câu cụ thể rồi,
+// errors sẽ rỗng/không có — dùng message là đủ. Hàm này ưu tiên errors[0] nếu có.
+export function getApiErrorMessage(err, fallback = "Có lỗi xảy ra, vui lòng thử lại.") {
+  if (Array.isArray(err?.errors) && err.errors.length > 0) {
+    return err.errors.join(" ");
+  }
+  return err?.message || fallback;
+}
+
 export function formatDate(dateStr) {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("vi-VN", {
