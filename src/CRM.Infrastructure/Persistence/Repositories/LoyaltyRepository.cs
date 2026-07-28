@@ -323,6 +323,16 @@ public class LoyaltyRepository : ILoyaltyRepository
         return entity is null ? null : MapVoucherToDomain(entity);
     }
 
+    public async Task<Voucher?> GetVoucherByAppliedQuoteAsync(
+        ulong baoGiaId, CancellationToken ct = default)
+    {
+        var entity = await _context.KhVouchers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.AppliedTo_BaoGia_Id == baoGiaId, ct);
+
+        return entity is null ? null : MapVoucherToDomain(entity);
+    }
+
     public async Task<bool> ApDungVoucherAsync(
         ulong voucherId, ulong baoGiaId, uint nguoiApDungId,
         CancellationToken ct = default)
@@ -334,6 +344,20 @@ public class LoyaltyRepository : ILoyaltyRepository
                 .SetProperty(x => x.AppliedTo_BaoGia_Id, baoGiaId)
                 .SetProperty(x => x.NgaySuDung, DateTime.UtcNow)
                 .SetProperty(x => x.NguoiApDung_Id, nguoiApDungId)
+                .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+
+        return rowsAffected > 0;
+    }
+
+    public async Task<bool> NhaVoucherKhoiBaoGiaAsync(ulong baoGiaId, CancellationToken ct = default)
+    {
+        var rowsAffected = await _context.KhVouchers
+            .Where(x => x.AppliedTo_BaoGia_Id == baoGiaId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.IsUsed, false)
+                .SetProperty(x => x.AppliedTo_BaoGia_Id, (ulong?)null)
+                .SetProperty(x => x.NgaySuDung, (DateTime?)null)
+                .SetProperty(x => x.NguoiApDung_Id, (uint?)null)
                 .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
 
         return rowsAffected > 0;

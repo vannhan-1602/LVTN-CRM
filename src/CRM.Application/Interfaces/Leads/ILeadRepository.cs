@@ -19,6 +19,9 @@ public interface ILeadRepository
         string? tinhTrang = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Kiểm tra email đã tồn tại ở Lead khác chưa (loại trừ chính lead đang sửa qua excludeId).</summary>
+    Task<bool> EmailExistsAsync(string email, ulong? excludeId = null, CancellationToken cancellationToken = default);
+
     Task<Lead> AddAsync(Lead lead, CancellationToken cancellationToken = default);
     Task UpdateAsync(Lead lead, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(ulong id, CancellationToken cancellationToken = default);

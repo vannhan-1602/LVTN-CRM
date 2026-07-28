@@ -17,6 +17,12 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
         RuleFor(x => x.Email)
             .EmailAddress().WithMessage("Email không hợp lệ.")
             .MaximumLength(100)
+            .MustAsync(async (cmd, email, ct) =>
+            {
+                var matches = await customerRepository.FindDuplicatesAsync(email, null, null, cmd.Id, ct);
+                return matches.Count == 0;
+            })
+            .WithMessage("Email này đã tồn tại ở một khách hàng khác.")
             .When(x => !string.IsNullOrWhiteSpace(x.Email));
 
         RuleFor(x => x.SoDienThoai)

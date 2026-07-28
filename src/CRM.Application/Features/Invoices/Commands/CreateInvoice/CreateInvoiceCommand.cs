@@ -59,6 +59,11 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
 {
     private const string AuditTable = "KT_HoaDon";
 
+    /// <summary>Hạn thanh toán mặc định cho hóa đơn thanh toán 1 lần, tính từ ngày ký hợp đồng
+    /// (hoặc hôm nay nếu hợp đồng chưa có NgayKy) — vì HinhThucThanhToan=ThanhToanMotLan không có
+    /// lịch trả góp sẵn nên trước đây hóa đơn loại này không có hạn, job nhắc quá hạn bỏ qua.</summary>
+    private const int SoNgayThanhToanMacDinh = 30;
+
     private readonly IInvoiceRepository _invoiceRepo;
     private readonly ICustomerRepository _customerRepo;
     private readonly IContractRepository _contractRepo;
@@ -85,6 +90,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
     public async Task<InvoiceDto> Handle(CreateInvoiceCommand request, CancellationToken ct)
     {
         ulong resolvedKhachHangId;
+        ulong? resolvedLichThanhToanId = request.LichThanhToanId;
 
         // ── 1. Validate hợp đồng (nếu có) ───────────────────────────────
         if (request.HopDongId.HasValue)
@@ -134,6 +140,20 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                         $"Tổng tiền hóa đơn ({tongDaXuat + request.TongTien:N0} đ) vượt quá giá trị hợp đồng " +
                         $"{contract.MaHopDong} ({contract.GiaTri.Value:N0} đ). Đã xuất {tongDaXuat:N0} đ trước đó.");
             }
+
+            // ── Hợp đồng thanh toán 1 lần không có lịch trả góp sẵn ⇒ hóa đơn tạo ra sẽ không có
+            // hạn thanh toán, job nhắc quá hạn không quét được. Tự phát sinh 1 dòng HD_LichThanhToan
+            // (SoDot tăng dần theo số hóa đơn đã có của hợp đồng) để hóa đơn này có hạn cụ thể.
+            if (contract.HinhThucThanhToan == "ThanhToanMotLan" && !resolvedLichThanhToanId.HasValue)
+            {
+                var dotDaCo = await _contractRepo.GetLichThanhToanByHopDongAsync(request.HopDongId.Value, ct);
+                var soDotMoi = dotDaCo.Count + 1;
+                var hanThanhToan = (contract.NgayKy ?? DateOnly.FromDateTime(DateTime.UtcNow))
+                    .AddDays(SoNgayThanhToanMacDinh);
+
+                resolvedLichThanhToanId = await _contractRepo.AddSingleLichThanhToanAsync(
+                    request.HopDongId.Value, soDotMoi, request.TongTien, hanThanhToan, ct);
+            }
         }
         else
         {
@@ -155,7 +175,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         {
             MaHoaDon = maHoaDon,
             HopDongId = request.HopDongId,
-            LichThanhToanId = request.LichThanhToanId,
+            LichThanhToanId = resolvedLichThanhToanId,
             KhachHangId = resolvedKhachHangId,
             TongTien = request.TongTien,
             SoTienDaThu = 0m,

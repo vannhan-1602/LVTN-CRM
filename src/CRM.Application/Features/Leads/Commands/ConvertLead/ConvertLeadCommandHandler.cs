@@ -55,6 +55,18 @@ public class ConvertLeadCommandHandler : IRequestHandler<ConvertLeadCommand, Cus
         if (lead.TinhTrang == LeadTinhTrang.DaChuyenDoi)
             throw new BusinessRuleException("Lead này đã được chuyển đổi thành khách hàng.");
 
+        // Chặn convert nếu email của Lead đã trùng với 1 Customer đang tồn tại — tránh tạo
+        // 2 bản ghi KH_KhachHang cùng email (1 do convert, 1 do nhập tay/convert từ lead khác).
+        if (!string.IsNullOrWhiteSpace(lead.Email))
+        {
+            var duplicates = await _customerRepository.FindDuplicatesAsync(
+                lead.Email, null, null, null, cancellationToken);
+            if (duplicates.Count > 0)
+                throw new BusinessRuleException(
+                    $"Email '{lead.Email}' của Lead này đã thuộc về khách hàng '{duplicates[0].TenKhachHang}' " +
+                    $"({duplicates[0].MaKhachHang}). Vui lòng kiểm tra lại trước khi chuyển đổi.");
+        }
+
         var maKhachHang = await _customerRepository.GenerateMaKhachHangAsync(cancellationToken);
         var customer = new KhachHang
         {

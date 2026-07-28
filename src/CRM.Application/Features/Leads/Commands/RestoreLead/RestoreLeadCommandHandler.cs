@@ -28,6 +28,15 @@ namespace CRM.Application.Features.Leads.Commands.RestoreLead
 
         public async Task<bool> Handle(RestoreLeadCommand request, CancellationToken cancellationToken)
         {
+           
+            var lead = await _leadRepository.GetByIdAsync(request.Id, includeDeleted: true, cancellationToken)
+                ?? throw new NotFoundException(nameof(Lead), request.Id);
+
+            if (!string.IsNullOrWhiteSpace(lead.Email) &&
+                await _leadRepository.EmailExistsAsync(lead.Email, request.Id, cancellationToken))
+                throw new BusinessRuleException(
+                    $"Không thể khôi phục — email '{lead.Email}' hiện đã thuộc về một Lead khác đang hoạt động.");
+
             var restored = await _leadRepository.RestoreAsync(request.Id, cancellationToken);
             if (!restored) throw new NotFoundException(nameof(Lead), request.Id);
 

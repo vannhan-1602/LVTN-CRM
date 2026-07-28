@@ -42,6 +42,14 @@ public interface IContractRepository
     Task MarkLichThanhToanDaThanhToanAsync(ulong lichThanhToanId, CancellationToken ct = default);
 
     /// <summary>
+    /// Tạo 1 dòng HD_LichThanhToan đơn lẻ và trả về Id vừa tạo — dùng để tự phát sinh hạn thanh
+    /// toán cho hóa đơn của hợp đồng thanh toán 1 lần (vốn không có lịch trả góp sẵn), để job nhắc
+    /// quá hạn (PaymentReminderJobHostedService) quét được luôn cho cả 2 hình thức thanh toán.
+    /// </summary>
+    Task<ulong> AddSingleLichThanhToanAsync(
+        ulong hopDongId, int soDot, decimal soTien, DateOnly hanThanhToan, CancellationToken ct = default);
+
+    /// <summary>
     /// Khoá dòng hợp đồng (SELECT ... FOR UPDATE) trong transaction hiện tại của request — dùng để
     /// serialize các request tạo hóa đơn đồng thời cho CÙNG 1 hợp đồng. Nếu không khoá, 2 kế toán
     /// bấm "Tạo hóa đơn" cùng lúc có thể cùng đọc được "còn hạn mức" trước khi ai kịp ghi, dẫn tới

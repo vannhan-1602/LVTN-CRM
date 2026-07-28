@@ -25,8 +25,10 @@ namespace CRM.Infrastructure.Services;
 /// (ChuaDenHan → ChoThanhToan → QuaHan), nên email/ticket không bị gửi/tạo lặp lại
 /// mỗi ngày chạy job — chỉ đúng lúc đợt đó BĂNG QUA ngưỡng lần đầu.
 ///
-/// Không xử lý hóa đơn thanh toán 1 lần (KT_HoaDon) — bảng đó hiện chưa có cột
-/// hạn thanh toán riêng, chỉ hợp đồng trả góp (HD_LichThanhToan) mới có lịch cụ thể.
+/// Áp dụng cho cả hợp đồng trả góp lẫn thanh toán 1 lần: từ khi CreateInvoiceCommandHandler
+/// tự phát sinh 1 dòng HD_LichThanhToan cho mỗi hóa đơn của hợp đồng ThanhToanMotLan (hạn =
+/// NgayKy + 30 ngày), job này quét chung bảng HD_LichThanhToan nên không cần phân biệt loại
+/// hợp đồng — hóa đơn 1 lần cũng có hạn cụ thể và được nhắc/đánh dấu quá hạn như trả góp.
 /// </summary>
 public class PaymentReminderJobHostedService : BackgroundService
 {

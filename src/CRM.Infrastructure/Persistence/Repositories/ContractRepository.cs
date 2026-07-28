@@ -252,6 +252,22 @@ public class ContractRepository : IContractRepository
         await _context.HdLichThanhToans.AddRangeAsync(entities, ct);
     }
 
+    public async Task<ulong> AddSingleLichThanhToanAsync(
+        ulong hopDongId, int soDot, decimal soTien, DateOnly hanThanhToan, CancellationToken ct = default)
+    {
+        var entity = new HdLichThanhToanEntity
+        {
+            HopDong_Id = hopDongId,
+            SoDot = soDot,
+            SoTien = soTien,
+            HanThanhToan = hanThanhToan,
+            TrangThai = "ChuaDenHan"
+        };
+        _context.HdLichThanhToans.Add(entity);
+        await _context.SaveChangesAsync(ct);
+        return entity.Id;
+    }
+
     public async Task<List<LichThanhToanDto>> GetLichThanhToanByHopDongAsync(ulong hopDongId, CancellationToken ct = default) =>
         await _context.HdLichThanhToans
             .AsNoTracking()

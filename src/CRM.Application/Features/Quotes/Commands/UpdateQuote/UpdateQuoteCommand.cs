@@ -3,6 +3,7 @@ using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Quotes.DTOs;
 using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
+using CRM.Application.Interfaces.Loyalty;
 using CRM.Application.Interfaces.Products;
 using CRM.Application.Interfaces.Quotes;
 using CRM.Domain.Entities.Sales;
@@ -36,6 +37,7 @@ public class UpdateQuoteCommandHandler : IRequestHandler<UpdateQuoteCommand, Quo
     private const string AuditTable = "HD_BaoGia";
     private readonly IQuoteRepository _quoteRepository;
     private readonly IProductRepository _productRepository;
+    private readonly ILoyaltyRepository _loyaltyRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLogPublisher;
     private readonly ICurrentUserService _currentUser;
@@ -43,11 +45,13 @@ public class UpdateQuoteCommandHandler : IRequestHandler<UpdateQuoteCommand, Quo
 
     public UpdateQuoteCommandHandler(
         IQuoteRepository quoteRepository, IProductRepository productRepository,
-        IUnitOfWork unitOfWork, IAuditLogPublisher auditLogPublisher,
+        ILoyaltyRepository loyaltyRepository, IUnitOfWork unitOfWork,
+        IAuditLogPublisher auditLogPublisher,
         ICurrentUserService currentUser, ILogger<UpdateQuoteCommandHandler> logger)
     {
         _quoteRepository = quoteRepository;
         _productRepository = productRepository;
+        _loyaltyRepository = loyaltyRepository;
         _unitOfWork = unitOfWork;
         _auditLogPublisher = auditLogPublisher;
         _currentUser = currentUser;
@@ -85,6 +89,24 @@ public class UpdateQuoteCommandHandler : IRequestHandler<UpdateQuoteCommand, Quo
 
         quote.TongTien = tongTien;
         quote.UpdatedAt = DateTime.UtcNow;
+
+        // ── Nếu báo giá này đã có voucher áp dụng, phải tính lại số tiền giảm theo TongTien
+        // MỚI — nếu không, sửa dòng sản phẩm sẽ âm thầm làm mất chiết khấu dù voucher vẫn đang
+        // bị đánh dấu IsUsed/AppliedTo_BaoGia_Id trỏ vào báo giá này (không thể dùng lại được nữa
+        // nhưng khách lại không được hưởng giảm giá — mất tiền oan cho khách).
+        var appliedVoucher = await _loyaltyRepository.GetVoucherByAppliedQuoteAsync(request.Id, ct);
+        if (appliedVoucher is not null)
+        {
+            var giamTho = appliedVoucher.LoaiGiamGia == "PhanTram"
+                ? tongTien * appliedVoucher.GiaTriGiam / 100m
+                : appliedVoucher.GiaTriGiam;
+
+            if (appliedVoucher.LoaiGiamGia == "PhanTram" && appliedVoucher.GiaTriGiamToiDa.HasValue)
+                giamTho = Math.Min(giamTho, appliedVoucher.GiaTriGiamToiDa.Value);
+
+            var soTienGiam = Math.Min(giamTho, tongTien);
+            quote.TongTien = tongTien - soTienGiam;
+        }
 
         await _quoteRepository.UpdateAsync(quote, chiTietInputs, ct);
         await _unitOfWork.SaveChangesAsync(ct);

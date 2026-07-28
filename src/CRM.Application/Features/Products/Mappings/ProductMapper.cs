@@ -25,6 +25,7 @@ public static class ProductMapper
     {
         Id = l.Id,
         TenLoai = l.TenLoai,
-        MoTa = l.MoTa
+        MoTa = l.MoTa,
+        HinhThuc = l.HinhThuc
     };
 }

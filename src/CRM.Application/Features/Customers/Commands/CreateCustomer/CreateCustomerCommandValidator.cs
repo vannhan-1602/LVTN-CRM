@@ -14,6 +14,12 @@ public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCo
         RuleFor(x => x.Email)
             .EmailAddress().WithMessage("Email không hợp lệ.")
             .MaximumLength(100)
+            .MustAsync(async (email, ct) =>
+            {
+                var matches = await customerRepository.FindDuplicatesAsync(email, null, null, null, ct);
+                return matches.Count == 0;
+            })
+            .WithMessage("Email này đã tồn tại ở một khách hàng khác.")
             .When(x => !string.IsNullOrWhiteSpace(x.Email));
 
         RuleFor(x => x.SoDienThoai)

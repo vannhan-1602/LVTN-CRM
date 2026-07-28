@@ -23,17 +23,20 @@ public class DeleteQuoteCommandHandler : IRequestHandler<DeleteQuoteCommand, boo
 {
     private const string AuditTable = "HD_BaoGia";
     private readonly IQuoteRepository _quoteRepository;
+    private readonly Interfaces.Loyalty.ILoyaltyRepository _loyaltyRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLogPublisher;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<DeleteQuoteCommandHandler> _logger;
 
     public DeleteQuoteCommandHandler(
-        IQuoteRepository quoteRepository, IUnitOfWork unitOfWork,
+        IQuoteRepository quoteRepository, Interfaces.Loyalty.ILoyaltyRepository loyaltyRepository,
+        IUnitOfWork unitOfWork,
         IAuditLogPublisher auditLogPublisher, ICurrentUserService currentUser,
         ILogger<DeleteQuoteCommandHandler> logger)
     {
         _quoteRepository = quoteRepository;
+        _loyaltyRepository = loyaltyRepository;
         _unitOfWork = unitOfWork;
         _auditLogPublisher = auditLogPublisher;
         _currentUser = currentUser;
@@ -50,6 +53,10 @@ public class DeleteQuoteCommandHandler : IRequestHandler<DeleteQuoteCommand, boo
 
         if (quote.TrangThai != QuoteStatus.Nhap)
             throw new BusinessRuleException("Chỉ có thể xóa báo giá đang ở trạng thái Nháp.");
+
+        // Nhả lại voucher (nếu có) TRƯỚC khi xóa báo giá — nếu không, voucher bị đánh dấu
+        // IsUsed=true trỏ vào 1 báo giá đã xóa vĩnh viễn, khách mất voucher mà chưa từng dùng thật.
+        await _loyaltyRepository.NhaVoucherKhoiBaoGiaAsync(request.Id, ct);
 
         var deleted = await _quoteRepository.DeleteAsync(request.Id, ct);
         if (!deleted) throw new NotFoundException(nameof(BaoGia), request.Id);

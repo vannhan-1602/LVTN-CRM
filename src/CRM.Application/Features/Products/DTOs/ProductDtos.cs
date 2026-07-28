@@ -5,6 +5,11 @@ public class ProductDto
     public uint Id { get; set; }
     public uint? LoaiSanPhamId { get; set; }
     public string? TenLoai { get; set; }
+
+    /// <summary>VatLy | DichVu | License | Subscription — FE dùng field này để chọn đúng
+    /// biểu ngữ nghiệp vụ cho các thao tác kho (nhập/xuất/kiểm kê...), KHÔNG đổi giá trị
+    /// LoaiGiaoDich lưu DB, chỉ đổi nhãn hiển thị theo loại sản phẩm.</summary>
+    public string? HinhThuc { get; set; }
     public string MaSP { get; set; } = string.Empty;
     public string TenSP { get; set; } = string.Empty;
     public string? DonVi { get; set; }
@@ -21,6 +26,7 @@ public class ProductTypeDto
     public uint Id { get; set; }
     public string TenLoai { get; set; } = string.Empty;
     public string? MoTa { get; set; }
+    public string HinhThuc { get; set; } = "VatLy";
 }
 
 public class ProductImageDto

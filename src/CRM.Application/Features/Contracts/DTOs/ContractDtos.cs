@@ -44,6 +44,9 @@ public class ContractRenewalLinkDto
 public class CreateRenewalContractRequestDto
 {
     public DateOnly? NgayKy { get; set; }
+
+    /// <summary>Bắt buộc nếu hợp đồng cũ là TraGop — xem ghi chú ở CreateRenewalContractCommand.</summary>
+    public List<LichThanhToanInputDto>? LichThanhToans { get; set; }
 }
 
 // ── Mốc triển khai (Đào tạo / Bàn giao / Nghiệm thu) ─────────────────────────

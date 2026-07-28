@@ -20,6 +20,10 @@ public class LeadRepository : ILeadRepository
         return e is null ? null : MapToDomain(e);
     }
 
+    public Task<bool> EmailExistsAsync(string email, ulong? excludeId = null, CancellationToken ct = default) =>
+        _context.Set<KhLeadEntity>().AnyAsync(
+            x => !x.IsDeleted && x.Email == email && (!excludeId.HasValue || x.Id != excludeId.Value), ct);
+
     public async Task<PagedResult<Lead>> GetPagedAsync(
         int pageNumber, int pageSize, string? search, uint? ownerUserId,
         bool? isDeleted = null, string? tinhTrang = null, CancellationToken ct = default)

@@ -68,7 +68,8 @@ public class ContractController : ControllerBase
     [Authorize(Policy = Policies.SalesTeam)]
     public async Task<IActionResult> Renew(ulong id, [FromBody] CreateRenewalContractRequestDto request, CancellationToken ct)
     {
-        var result = await _mediator.Send(new CreateRenewalContractCommand(id, request.NgayKy), ct);
+        var result = await _mediator.Send(
+            new CreateRenewalContractCommand(id, request.NgayKy, request.LichThanhToans), ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id },
             ApiResponse<ContractDto>.Ok(result, "Tạo hợp đồng gia hạn thành công."));
     }

@@ -58,6 +58,10 @@ public interface ILoyaltyRepository
     /// <summary>Tra voucher theo mã (dùng khi nhân viên nhập mã voucher lúc lập báo giá).</summary>
     Task<Voucher?> GetVoucherByMaVoucherAsync(string maVoucher, CancellationToken ct = default);
 
+    /// <summary>Lấy voucher (nếu có) đã áp dụng vào 1 báo giá — dùng khi sửa báo giá (UpdateQuote)
+    /// để tính lại đúng số tiền giảm theo voucher đã áp, thay vì làm mất chiết khấu khi đổi dòng SP.</summary>
+    Task<Voucher?> GetVoucherByAppliedQuoteAsync(ulong baoGiaId, CancellationToken ct = default);
+
     /// <summary>Áp dụng voucher vào báo giá — đánh dấu IsUsed = true.</summary>
     /// <summary>
     /// Áp dụng voucher vào báo giá — đánh dấu IsUsed = true.
@@ -65,6 +69,10 @@ public interface ILoyaltyRepository
     /// cùng 1 voucher đồng thời thì chỉ 1 cái thắng — trả về false cho request thua.
     /// </summary>
     Task<bool> ApDungVoucherAsync(ulong voucherId, ulong baoGiaId, uint nguoiApDungId, CancellationToken ct = default);
+
+    /// <summary>Nhả lại voucher đã áp cho 1 báo giá (IsUsed=false, xóa AppliedTo/NguoiApDung/NgaySuDung)
+    /// — gọi khi báo giá Nháp đang giữ voucher đó bị xóa, để khách không mất voucher oan.</summary>
+    Task<bool> NhaVoucherKhoiBaoGiaAsync(ulong baoGiaId, CancellationToken ct = default);
 
     // ── Email Log ─────────────────────────────────────────────────────────────
 

@@ -27,7 +27,7 @@ public class ProductRepository : IProductRepository
             where sp.Id == id
             join loai in _context.Set<BhLoaiSanPhamEntity>() on sp.LoaiSanPham_Id equals loai.Id into loaiJoin
             from loai in loaiJoin.DefaultIfEmpty()
-            select new { SanPham = sp, TenLoai = loai != null ? loai.TenLoai : null }
+            select new { SanPham = sp, TenLoai = loai != null ? loai.TenLoai : null, HinhThuc = loai != null ? loai.HinhThuc : null }
         ).FirstOrDefaultAsync(ct);
 
         if (result is null) return null;
@@ -37,7 +37,7 @@ public class ProductRepository : IProductRepository
             .Select(h => h.UrlHinhAnh)
             .FirstOrDefaultAsync(ct);
 
-        return MapToDto(result.SanPham, result.TenLoai, anhDaiDien);
+        return MapToDto(result.SanPham, result.TenLoai, result.HinhThuc, anhDaiDien);
     }
 
     public async Task<PagedResult<ProductDto>> GetPagedAsync(
@@ -48,7 +48,7 @@ public class ProductRepository : IProductRepository
             from sp in _context.Set<BhSanPhamEntity>().AsNoTracking()
             join loai in _context.Set<BhLoaiSanPhamEntity>() on sp.LoaiSanPham_Id equals loai.Id into loaiJoin
             from loai in loaiJoin.DefaultIfEmpty()
-            select new { SanPham = sp, TenLoai = loai != null ? loai.TenLoai : null };
+            select new { SanPham = sp, TenLoai = loai != null ? loai.TenLoai : null, HinhThuc = loai != null ? loai.HinhThuc : null };
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -79,7 +79,7 @@ public class ProductRepository : IProductRepository
             .ToDictionaryAsync(h => h.SanPham_Id!.Value, h => h.UrlHinhAnh, ct);
 
         var dtos = items.Select(x => MapToDto(
-            x.SanPham, x.TenLoai,
+            x.SanPham, x.TenLoai, x.HinhThuc,
             anhMap.TryGetValue(x.SanPham.Id, out var url) ? url : null)).ToList();
 
         return new PagedResult<ProductDto>
@@ -141,7 +141,7 @@ public class ProductRepository : IProductRepository
         _context.Set<BhLoaiSanPhamEntity>()
             .AsNoTracking()
             .OrderBy(x => x.TenLoai)
-            .Select(x => new LoaiSanPham { Id = x.Id, TenLoai = x.TenLoai, MoTa = x.MoTa })
+            .Select(x => new LoaiSanPham { Id = x.Id, TenLoai = x.TenLoai, MoTa = x.MoTa, HinhThuc = x.HinhThuc })
             .ToListAsync(ct);
 
     public async Task<int> GetCurrentStockAsync(uint sanPhamId, CancellationToken ct = default)
@@ -266,11 +266,12 @@ public class ProductRepository : IProductRepository
         UpdatedAt = d.UpdatedAt
     };
 
-    private static ProductDto MapToDto(BhSanPhamEntity e, string? tenLoai, string? anhDaiDien) => new()
+    private static ProductDto MapToDto(BhSanPhamEntity e, string? tenLoai, string? hinhThuc, string? anhDaiDien) => new()
     {
         Id = e.Id,
         LoaiSanPhamId = e.LoaiSanPham_Id,
         TenLoai = tenLoai,
+        HinhThuc = hinhThuc,
         MaSP = e.MaSP,
         TenSP = e.TenSP,
         DonVi = e.DonVi,
