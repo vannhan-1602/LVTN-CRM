@@ -11,8 +11,8 @@ import EmptyState from "../../components/common/EmptyState";
 import ProductFormModal from "./ProductFormModal";
 import {
   ROLES,
-  STOCK_TRANSACTION_TYPE_OPTIONS,
-  STOCK_TRANSACTION_TYPE_LABEL,
+  getStockTransactionLabel,
+  getStockTransactionOptions,
 } from "../../utils/constants";
 import { formatDateTime, getImageUrl } from "../../utils/formatters";
 
@@ -24,7 +24,7 @@ const emptyStockForm = {
 };
 
 // ── Khối quản lý kho — gộp ngay trong trang chi tiết sản phẩm ───────────────
-function StockSection({ productId, canManage, onStockChanged }) {
+function StockSection({ productId, hinhThuc, canManage, onStockChanged }) {
   const [history, setHistory] = useState([]);
   const [tonHienTai, setTonHienTai] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -125,7 +125,7 @@ function StockSection({ productId, canManage, onStockChanged }) {
                 }
                 className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
               >
-                {STOCK_TRANSACTION_TYPE_OPTIONS.map((o) => (
+                {getStockTransactionOptions(hinhThuc).map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
@@ -196,8 +196,7 @@ function StockSection({ productId, canManage, onStockChanged }) {
             >
               <div>
                 <span className="font-medium text-ink-900">
-                  {STOCK_TRANSACTION_TYPE_LABEL[h.loaiGiaoDich] ??
-                    h.loaiGiaoDich}
+                  {getStockTransactionLabel(h.loaiGiaoDich, hinhThuc)}
                 </span>
                 <span
                   className={`ml-2 font-mono text-xs ${h.soLuongThayDoi > 0 ? "text-success-600" : "text-danger-600"}`}
@@ -511,6 +510,7 @@ export default function ProductDetailPage() {
 
           <StockSection
             productId={product.id}
+            hinhThuc={product.hinhThuc}
             canManage={canManage}
             onStockChanged={load}
           />
