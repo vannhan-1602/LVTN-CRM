@@ -25,6 +25,10 @@ public static class ContractStatus
     public const string TamDung = "TamDung";
     public const string ThanhLy = "ThanhLy";
 
+    /// <summary>Hợp đồng đã quá NgayKetThuc — CHỈ do ContractExpirationJobHostedService tự
+    /// chuyển, không cho set thủ công qua UpdateContractStatus nên KHÔNG đưa vào All.</summary>
+    public const string HetHan = "HetHan";
+
     public static readonly IReadOnlyList<string> All = [DangThucHien, TamDung, ThanhLy];
 }
 

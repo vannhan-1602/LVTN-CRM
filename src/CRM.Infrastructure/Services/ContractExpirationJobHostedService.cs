@@ -1,4 +1,5 @@
-﻿using CRM.Infrastructure.Persistence.Contexts;
+﻿using CRM.Domain.Enums;
+using CRM.Infrastructure.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -52,7 +53,7 @@ public class ContractExpirationJobHostedService : BackgroundService
     private async Task ChuyenHetHanAsync(CrmDbContext dbContext, DateOnly today, CancellationToken ct)
     {
         var expiredContracts = await dbContext.HdHopDongs
-            .Where(h => h.TrangThai == "DangThucHien"
+            .Where(h => h.TrangThai == ContractStatus.DangThucHien
                      && h.NgayKetThuc.HasValue
                      && h.NgayKetThuc.Value < today)
             .ToListAsync(ct);
@@ -61,7 +62,7 @@ public class ContractExpirationJobHostedService : BackgroundService
 
         foreach (var contract in expiredContracts)
         {
-            contract.TrangThai = "HetHan";
+            contract.TrangThai = ContractStatus.HetHan;
             contract.UpdatedAt = DateTime.UtcNow;
         }
         await dbContext.SaveChangesAsync(ct);

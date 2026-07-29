@@ -31,6 +31,7 @@ const STATUS_TONE = {
   DangThucHien: "success",
   TamDung: "warning",
   ThanhLy: "neutral",
+  HetHan: "danger",
 };
 
 function formatMoney(n) {

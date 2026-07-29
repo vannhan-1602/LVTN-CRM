@@ -35,12 +35,6 @@ export const TICKET_STATUS = {
 export const TICKET_STATUS_OPTIONS = Object.entries(TICKET_STATUS).map(
   ([value, label]) => ({ value, label }),
 );
-// Dùng riêng cho dropdown "Cập nhật xử lý" — CỐ Ý bỏ "Dong" ra khỏi đây. Đóng ticket qua
-// đường cập nhật trạng thái thường sẽ bỏ qua bước gửi khảo sát hài lòng (CSAT) và không
-// set ngày đóng — phải dùng nút "Đóng ticket" riêng (gọi CloseTicketCommand) để đóng.
-export const TICKET_STATUS_EDITABLE_OPTIONS = TICKET_STATUS_OPTIONS.filter(
-  (o) => o.value !== "Dong",
-);
 export const TICKET_STATUS_COLOR = {
   Moi: "bg-info-50 text-info-700",
   DangXuLy: "bg-warning-50 text-warning-700",
@@ -102,10 +96,14 @@ export const QUOTE_STATUS_COLOR = {
   ChapNhan: "bg-success-50 text-success-700",
 };
 
+// HetHan: hợp đồng KHÔNG được set trạng thái này qua form (chỉ
+// ContractExpirationJobHostedService tự chuyển khi quá NgayKetThuc) — nhưng vẫn
+// cần khai báo ở đây để hiển thị đúng nhãn/màu và lọc được trong danh sách.
 export const CONTRACT_STATUS = {
   DangThucHien: "Đang thực hiện",
   TamDung: "Tạm dừng",
   ThanhLy: "Đã thanh lý",
+  HetHan: "Hết hạn",
 };
 
 export const CONTRACT_STATUS_OPTIONS = Object.entries(CONTRACT_STATUS).map(
@@ -116,6 +114,7 @@ export const CONTRACT_STATUS_COLOR = {
   DangThucHien: "bg-success-50 text-success-700",
   TamDung: "bg-warning-50 text-warning-700",
   ThanhLy: "bg-ink-100 text-ink-500",
+  HetHan: "bg-danger-50 text-danger-600",
 };
 
 // HD_MocTrienKhai.LoaiMoc
