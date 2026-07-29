@@ -13,7 +13,7 @@ import EmptyState from "../../components/common/EmptyState";
 import {
   ROLES,
   TICKET_STATUS,
-  TICKET_STATUS_OPTIONS,
+  TICKET_STATUS_EDITABLE_OPTIONS,
   TICKET_STATUS_COLOR,
   TICKET_PRIORITY,
   TICKET_PRIORITY_OPTIONS,
@@ -229,7 +229,7 @@ export default function TicketDetailPage() {
                 <select value={editForm.trangThai} onChange={(e) => setEditForm((f) => ({ ...f, trangThai: e.target.value }))}
                   disabled={isClosed}
                   className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm disabled:bg-ink-100 disabled:text-ink-400">
-                  {TICKET_STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {TICKET_STATUS_EDITABLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div>

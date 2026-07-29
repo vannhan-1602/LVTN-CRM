@@ -35,6 +35,12 @@ export const TICKET_STATUS = {
 export const TICKET_STATUS_OPTIONS = Object.entries(TICKET_STATUS).map(
   ([value, label]) => ({ value, label }),
 );
+// Dùng riêng cho dropdown "Cập nhật xử lý" — CỐ Ý bỏ "Dong" ra khỏi đây. Đóng ticket qua
+// đường cập nhật trạng thái thường sẽ bỏ qua bước gửi khảo sát hài lòng (CSAT) và không
+// set ngày đóng — phải dùng nút "Đóng ticket" riêng (gọi CloseTicketCommand) để đóng.
+export const TICKET_STATUS_EDITABLE_OPTIONS = TICKET_STATUS_OPTIONS.filter(
+  (o) => o.value !== "Dong",
+);
 export const TICKET_STATUS_COLOR = {
   Moi: "bg-info-50 text-info-700",
   DangXuLy: "bg-warning-50 text-warning-700",
@@ -199,7 +205,11 @@ export function getStockTransactionLabel(loaiGiaoDich, hinhThuc) {
   const table =
     STOCK_TRANSACTION_LABELS_BY_HINHTHUC[hinhThuc] ??
     STOCK_TRANSACTION_LABELS_BY_HINHTHUC.VatLy;
-  return table[loaiGiaoDich] ?? STOCK_TRANSACTION_TYPE_LABEL[loaiGiaoDich] ?? loaiGiaoDich;
+  return (
+    table[loaiGiaoDich] ??
+    STOCK_TRANSACTION_TYPE_LABEL[loaiGiaoDich] ??
+    loaiGiaoDich
+  );
 }
 
 /** Danh sách option cho dropdown "Loại giao dịch", nhãn đổi theo HinhThuc, value giữ nguyên. */

@@ -26,6 +26,12 @@ namespace CRM.Application.Features.Tickets.Commands.UpdateTicket
             RuleFor(x => x.TrangThai)
                 .Must(v => Enum.TryParse<TicketStatus>(v, out _))
                 .WithMessage("Trạng thái không hợp lệ.")
+                .When(x => !string.IsNullOrWhiteSpace(x.TrangThai))
+                // Không cho đóng ticket qua đường cập nhật thường — nhánh này không gửi khảo
+                // sát hài lòng (CSAT) và cũng không set NgayDong. Đóng ticket bắt buộc phải
+                // đi qua CloseTicketCommand (nút "Đóng ticket" riêng) để không bỏ sót 2 việc đó.
+                .Must(v => !string.Equals(v, nameof(TicketStatus.Dong), StringComparison.OrdinalIgnoreCase))
+                .WithMessage("Vui lòng dùng chức năng \"Đóng ticket\" riêng để đóng — không đóng qua cập nhật trạng thái.")
                 .When(x => !string.IsNullOrWhiteSpace(x.TrangThai));
         }
     }
