@@ -12,7 +12,7 @@ import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import QuoteFormModal from "./QuoteFormModal";
 import { ROLES, QUOTE_STATUS, QUOTE_STATUS_COLOR } from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 function formatMoney(n) {
   return Number(n || 0).toLocaleString("vi-VN") + " đ";
@@ -72,7 +72,7 @@ export default function QuoteDetailPage() {
       });
       await load();
     } catch (err) {
-      setError(err?.message || "Thao tác thất bại");
+      setError(getApiErrorMessage(err, "Thao tác thất bại"));
     } finally {
       setBusy(false);
     }
@@ -85,7 +85,7 @@ export default function QuoteDetailPage() {
       await fn();
       await load();
     } catch (err) {
-      setError(err?.message || "Thao tác thất bại");
+      setError(getApiErrorMessage(err, "Thao tác thất bại"));
     } finally {
       setBusy(false);
     }
@@ -97,7 +97,7 @@ export default function QuoteDetailPage() {
       await quoteApi.delete(id);
       navigate("/quotes");
     } catch (err) {
-      setError(err?.message || "Không thể xóa");
+      setError(getApiErrorMessage(err, "Không thể xóa"));
     }
   };
 

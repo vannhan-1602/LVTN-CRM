@@ -25,7 +25,7 @@ import {
   CONTRACT_STATUS,
   CONTRACT_STATUS_OPTIONS,
 } from "../../utils/constants";
-import { formatDate } from "../../utils/formatters";
+import { formatDate, getApiErrorMessage } from "../../utils/formatters";
 
 const STATUS_TONE = {
   DangThucHien: "success",
@@ -75,7 +75,7 @@ export default function ContractListPage() {
       setTotalPages(res.data?.totalPages ?? 1);
       setTotalCount(res.data?.totalCount ?? 0);
     } catch (err) {
-      setError(err?.message || "Tải danh sách thất bại");
+      setError(getApiErrorMessage(err, "Tải danh sách thất bại"));
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ export default function ContractListPage() {
       setSuccess("Xóa hợp đồng thành công");
       await loadContracts();
     } catch (err) {
-      setError(err?.message || "Không thể xóa");
+      setError(getApiErrorMessage(err, "Không thể xóa"));
     }
   };
 

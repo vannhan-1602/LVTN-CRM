@@ -19,7 +19,7 @@ import EditContractModal from "./EditContractModal";
 import RenewContractModal from "./RenewContractModal";
 import MilestoneSection from "./MilestoneSection";
 import { ROLES, CONTRACT_STATUS } from "../../utils/constants";
-import { formatDate, formatDateTime } from "../../utils/formatters";
+import { formatDate, formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 const STATUS_TONE = {
   DangThucHien: "success",
@@ -57,7 +57,7 @@ export default function ContractDetailPage() {
       const res = await contractApi.getById(id);
       setContract(res.data ?? null);
     } catch (err) {
-      setError(err?.message || "Không thể tải thông tin hợp đồng");
+      setError(getApiErrorMessage(err, "Không thể tải thông tin hợp đồng"));
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ export default function ContractDetailPage() {
       await contractApi.delete(id);
       navigate("/contracts");
     } catch (err) {
-      setError(err?.message || "Không thể xóa hợp đồng");
+      setError(getApiErrorMessage(err, "Không thể xóa hợp đồng"));
     }
   };
 

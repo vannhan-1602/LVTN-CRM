@@ -29,6 +29,7 @@ import {
 import AiSalesAnalysisCard from "./AiSalesAnalysisCard";
 import DashboardAlertsCard from "./DashboardAlertsCard";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 function formatMoney(n) {
   if (!n && n !== 0) return "—";
   return Number(n).toLocaleString("vi-VN") + " đ";
@@ -109,7 +110,7 @@ export default function ManagerDashboard() {
         });
       } catch (err) {
         if (!cancelled)
-          setError(err?.message || "Không thể tải dữ liệu dashboard");
+          setError(getApiErrorMessage(err, "Không thể tải dữ liệu dashboard"));
       } finally {
         if (!cancelled) setLoading(false);
       }

@@ -14,6 +14,7 @@ import {
 import leadPublicApi from "../../api/leadPublicApi";
 import Button from "../../components/common/Button";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 export default function LandingPageDemo() {
   const [form, setForm] = useState({
     tenLead: "",
@@ -39,7 +40,7 @@ export default function LandingPageDemo() {
       setForm({ tenLead: "", tenCongTy: "", soDienThoai: "", email: "" });
     } catch (err) {
       setError(
-        err?.message || "Có lỗi xảy ra, vui lòng kiểm tra lại thông tin.",
+        getApiErrorMessage(err, "Có lỗi xảy ra, vui lòng kiểm tra lại thông tin."),
       );
     } finally {
       setSubmitting(false);

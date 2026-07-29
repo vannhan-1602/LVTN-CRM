@@ -14,7 +14,7 @@ import {
   getStockTransactionLabel,
   getStockTransactionOptions,
 } from "../../utils/constants";
-import { formatDateTime, getImageUrl } from "../../utils/formatters";
+import { formatDateTime, getImageUrl, getApiErrorMessage } from "../../utils/formatters";
 
 const emptyStockForm = {
   loaiGiaoDich: "NhapMua",
@@ -70,7 +70,7 @@ function StockSection({ productId, hinhThuc, canManage, onStockChanged }) {
       await load();
       onStockChanged?.();
     } catch (err) {
-      setError(err?.message || "Cập nhật tồn kho thất bại");
+      setError(getApiErrorMessage(err, "Cập nhật tồn kho thất bại"));
     } finally {
       setSubmitting(false);
     }
@@ -261,7 +261,7 @@ function ImagesSection({ productId, canManage }) {
       await productApi.uploadImage(productId, file, images.length === 0);
       await load();
     } catch (err) {
-      setError(err?.message || "Tải ảnh lên thất bại");
+      setError(getApiErrorMessage(err, "Tải ảnh lên thất bại"));
     } finally {
       setUploading(false);
     }
@@ -272,7 +272,7 @@ function ImagesSection({ productId, canManage }) {
       await productApi.setMainImage(productId, imageId);
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể đặt làm ảnh đại diện");
+      setError(getApiErrorMessage(err, "Không thể đặt làm ảnh đại diện"));
     }
   };
 
@@ -282,7 +282,7 @@ function ImagesSection({ productId, canManage }) {
       await productApi.deleteImage(productId, imageId);
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể xóa ảnh");
+      setError(getApiErrorMessage(err, "Không thể xóa ảnh"));
     }
   };
 
@@ -380,7 +380,7 @@ export default function ProductDetailPage() {
       const res = await productApi.getById(id);
       setProduct(res.data ?? null);
     } catch (err) {
-      setError(err?.message || "Không thể tải thông tin sản phẩm");
+      setError(getApiErrorMessage(err, "Không thể tải thông tin sản phẩm"));
     } finally {
       setLoading(false);
     }
@@ -407,7 +407,7 @@ export default function ProductDetailPage() {
       await productApi.delete(id);
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể khóa sản phẩm");
+      setError(getApiErrorMessage(err, "Không thể khóa sản phẩm"));
     }
   };
 

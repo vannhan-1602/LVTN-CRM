@@ -4,6 +4,7 @@ import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 import EmployeeSelect from "../../components/common/EmployeeSelect";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 // Modal Tạo/Sửa cơ hội bán hàng. Có prop `item` => chế độ Sửa.
 // `nhanVienList`: danh sách nhân viên (kèm role) cho dropdown phụ trách.
 // `canAssign`: chỉ Manager mới được chọn/đổi người phụ trách; Sale luôn tự gán cho mình ở backend.
@@ -44,7 +45,7 @@ export default function OpportunityFormModal({ item, customers, leads, nhanVienL
       if (isEdit) await opportunityApi.update(item.id, payload);
       else await opportunityApi.create(payload);
       onSaved();
-    } catch (err) { setError(err?.message || "Không thể lưu"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Không thể lưu")); }
     finally { setSubmitting(false); }
   };
 

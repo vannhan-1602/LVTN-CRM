@@ -6,7 +6,7 @@ import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
 import Badge from "../../components/common/Badge";
 import Modal from "../../components/common/Modal";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 const TABLE_LABEL = {
   KH_KhachHang: "Khách hàng",
@@ -91,7 +91,7 @@ export default function AuditLogPage() {
       setTotalPages(res.data?.totalPages ?? 1);
       setTotalCount(res.data?.totalCount ?? 0);
     } catch (err) {
-      setError(err?.message || "Tải nhật ký thất bại");
+      setError(getApiErrorMessage(err, "Tải nhật ký thất bại"));
     } finally {
       setLoading(false);
     }

@@ -24,7 +24,7 @@ import {
   LEAD_TINH_TRANG_LABEL,
   LEAD_TINH_TRANG_COLOR,
 } from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 export default function LeadDetailPage() {
   const { id } = useParams();
@@ -55,7 +55,7 @@ export default function LeadDetailPage() {
       const res = await leadApi.getById(id);
       setLead(res.data ?? null);
     } catch (err) {
-      setError(err?.message || "Không thể tải thông tin lead");
+      setError(getApiErrorMessage(err, "Không thể tải thông tin lead"));
     } finally {
       setLoading(false);
     }
@@ -81,7 +81,7 @@ export default function LeadDetailPage() {
       await leadApi.delete(id);
       navigate("/leads");
     } catch (err) {
-      setError(err?.message || "Không thể xóa lead");
+      setError(getApiErrorMessage(err, "Không thể xóa lead"));
     }
   };
 
@@ -91,7 +91,7 @@ export default function LeadDetailPage() {
       setActionMsg("Đã chuyển sang Đang chăm sóc");
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể cập nhật trạng thái");
+      setError(getApiErrorMessage(err, "Không thể cập nhật trạng thái"));
     }
   };
 
@@ -102,7 +102,7 @@ export default function LeadDetailPage() {
       setActionMsg("Đã ngừng chăm sóc lead");
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể cập nhật trạng thái");
+      setError(getApiErrorMessage(err, "Không thể cập nhật trạng thái"));
     }
   };
 
@@ -122,7 +122,7 @@ export default function LeadDetailPage() {
       });
       navigate("/customers");
     } catch (err) {
-      setError(err?.message || "Chuyển đổi thất bại");
+      setError(getApiErrorMessage(err, "Chuyển đổi thất bại"));
     }
   };
 

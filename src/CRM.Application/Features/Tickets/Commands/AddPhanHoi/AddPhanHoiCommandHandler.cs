@@ -63,6 +63,9 @@ public class AddPhanHoiCommandHandler : IRequestHandler<AddPhanHoiCommand, Ticke
                     ticket.TrangThai = TicketStatus.DangXuLy;
                 break;
             case TicketPhanHoiLoai.DongTicket:
+                // Không còn tới được nhánh này qua API (AddPhanHoiCommandValidator chặn giá
+                // trị DongTicket) — giữ lại chỉ để phòng hờ, đóng ticket thật sự phải đi qua
+                // CloseTicketCommand để không bỏ sót bước gửi khảo sát hài lòng (CSAT).
                 ticket.TrangThai = TicketStatus.Dong;
                 ticket.NgayDong = DateTime.UtcNow;
                 break;

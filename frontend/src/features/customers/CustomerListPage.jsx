@@ -24,6 +24,7 @@ import CustomerFormModal from "./CustomerFormModal";
 import { ROLES } from "../../utils/constants";
 import useDanhMucStore from "../../stores/danhMucStore";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 export default function CustomerListPage() {
   const { user } = useAuthStore();
   const {
@@ -87,7 +88,7 @@ export default function CustomerListPage() {
       setTotalPages(res.data?.totalPages ?? 1);
       setTotalCount(res.data?.totalCount ?? 0);
     } catch (err) {
-      setError(err?.message || "Tải danh sách thất bại");
+      setError(getApiErrorMessage(err, "Tải danh sách thất bại"));
     } finally {
       setLoading(false);
     }
@@ -105,7 +106,7 @@ export default function CustomerListPage() {
       setSuccess("Xóa khách hàng thành công");
       await loadCustomers();
     } catch (err) {
-      setError(err?.message || "Không thể xóa khách hàng");
+      setError(getApiErrorMessage(err, "Không thể xóa khách hàng"));
     }
   };
 
@@ -116,7 +117,7 @@ export default function CustomerListPage() {
       setSuccess("Khôi phục khách hàng thành công");
       await loadCustomers();
     } catch (err) {
-      setError(err?.message || "Không thể khôi phục khách hàng");
+      setError(getApiErrorMessage(err, "Không thể khôi phục khách hàng"));
     }
   };
 

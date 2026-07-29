@@ -70,7 +70,8 @@ export const TICKET_PHAN_HOI_LOAI_OPTIONS = [
   { value: "NoiBoXuLy", label: "Nội bộ xử lý" },
   { value: "PhanHoiKhachHang", label: "Đã trả lời khách hàng" },
   { value: "YeuCauBoSung", label: "Yêu cầu bổ sung" },
-  { value: "DongTicket", label: "Đóng ticket" },
+  // Không đưa "DongTicket" vào đây — đóng ticket qua đường phản hồi sẽ bỏ qua
+  // bước gửi khảo sát hài lòng (CSAT). Dùng nút "Đóng ticket" riêng thay vào đó.
 ];
 
 export const TICKET_PHAN_HOI_LABEL = Object.fromEntries(
@@ -198,11 +199,7 @@ export function getStockTransactionLabel(loaiGiaoDich, hinhThuc) {
   const table =
     STOCK_TRANSACTION_LABELS_BY_HINHTHUC[hinhThuc] ??
     STOCK_TRANSACTION_LABELS_BY_HINHTHUC.VatLy;
-  return (
-    table[loaiGiaoDich] ??
-    STOCK_TRANSACTION_TYPE_LABEL[loaiGiaoDich] ??
-    loaiGiaoDich
-  );
+  return table[loaiGiaoDich] ?? STOCK_TRANSACTION_TYPE_LABEL[loaiGiaoDich] ?? loaiGiaoDich;
 }
 
 /** Danh sách option cho dropdown "Loại giao dịch", nhãn đổi theo HinhThuc, value giữ nguyên. */

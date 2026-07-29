@@ -32,7 +32,7 @@ import {
   TICKET_PRIORITY_OPTIONS,
   TICKET_PRIORITY_COLOR,
 } from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 export default function TicketListPage() {
   const { user } = useAuthStore();
@@ -129,7 +129,7 @@ export default function TicketListPage() {
       setSuccess("Xóa ticket thành công");
       await loadTickets();
     } catch (err) {
-      setError(err?.message || "Không thể xóa");
+      setError(getApiErrorMessage(err, "Không thể xóa"));
     }
   };
 

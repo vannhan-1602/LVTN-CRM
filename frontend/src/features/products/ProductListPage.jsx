@@ -21,7 +21,7 @@ import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import ProductFormModal from "./ProductFormModal";
 import { ROLES } from "../../utils/constants";
-import { getImageUrl } from "../../utils/formatters";
+import { getImageUrl, getApiErrorMessage } from "../../utils/formatters";
 
 export default function ProductListPage() {
   const { user } = useAuthStore();
@@ -70,7 +70,7 @@ export default function ProductListPage() {
       setTotalPages(res.data?.totalPages ?? 1);
       setTotalCount(res.data?.totalCount ?? 0);
     } catch (err) {
-      setError(err?.message || "Tải danh sách thất bại");
+      setError(getApiErrorMessage(err, "Tải danh sách thất bại"));
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export default function ProductListPage() {
       setSuccess("Đã khóa kinh doanh sản phẩm");
       await loadProducts();
     } catch (err) {
-      setError(err?.message || "Không thể khóa sản phẩm");
+      setError(getApiErrorMessage(err, "Không thể khóa sản phẩm"));
     }
   };
 
@@ -126,7 +126,7 @@ export default function ProductListPage() {
       setSuccess("Đã mở lại kinh doanh sản phẩm");
       await loadProducts();
     } catch (err) {
-      setError(err?.message || "Không thể mở lại sản phẩm");
+      setError(getApiErrorMessage(err, "Không thể mở lại sản phẩm"));
     }
   };
 

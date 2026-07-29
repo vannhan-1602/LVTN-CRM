@@ -3,6 +3,7 @@ import userManagementApi from "../../api/userManagementApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 const emptyForm = {
   username: "", password: "", roleId: "", hoTen: "", email: "",
   soDienThoai: "", phongBanId: "", chucVuId: "",
@@ -51,7 +52,7 @@ export default function UserFormModal({ user, lookups, onClose, onSaved }) {
         });
       }
       onSaved();
-    } catch (err) { setError(err?.message || "Không thể lưu tài khoản"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Không thể lưu tài khoản")); }
     finally { setSubmitting(false); }
   };
 

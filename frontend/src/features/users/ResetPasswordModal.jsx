@@ -3,6 +3,7 @@ import userManagementApi from "../../api/userManagementApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 export default function ResetPasswordModal({ user, onClose, onDone }) {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -13,7 +14,7 @@ export default function ResetPasswordModal({ user, onClose, onDone }) {
     if (password.length < 6) { setError("Mật khẩu tối thiểu 6 ký tự"); return; }
     setSubmitting(true); setError("");
     try { await userManagementApi.resetPassword(user.id, password); onDone(); }
-    catch (err) { setError(err?.message || "Đặt lại mật khẩu thất bại"); }
+    catch (err) { setError(getApiErrorMessage(err, "Đặt lại mật khẩu thất bại")); }
     finally { setSubmitting(false); }
   };
 

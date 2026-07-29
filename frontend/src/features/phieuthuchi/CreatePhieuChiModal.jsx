@@ -4,6 +4,7 @@ import customerApi from "../../api/customerApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 // Tạo phiếu chi — không bắt buộc gắn hóa đơn, chỉ cần chọn khách hàng.
 // Dùng cho các khoản chi phát sinh với khách (VD: tiếp khách, quà tặng...)
 // mà công ty vẫn cần ghi nhận vào công nợ/kế toán.
@@ -45,7 +46,7 @@ export default function CreatePhieuChiModal({ onClose, onSaved }) {
       });
       onSaved();
     } catch (err) {
-      setError(err?.message || "Không thể tạo phiếu chi");
+      setError(getApiErrorMessage(err, "Không thể tạo phiếu chi"));
     } finally {
       setSubmitting(false);
     }

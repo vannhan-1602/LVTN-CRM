@@ -29,7 +29,7 @@ import {
   LEAD_TINH_TRANG_LABEL,
   LEAD_TINH_TRANG_COLOR,
 } from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 export default function LeadListPage() {
   const { user } = useAuthStore();
@@ -86,7 +86,7 @@ export default function LeadListPage() {
       setTotalPages(res.data?.totalPages ?? 1);
       setTotalCount(res.data?.totalCount ?? 0);
     } catch (err) {
-      setError(err?.message || "Tải danh sách thất bại");
+      setError(getApiErrorMessage(err, "Tải danh sách thất bại"));
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,7 @@ export default function LeadListPage() {
       setSuccess("Xóa lead thành công");
       await loadLeads();
     } catch (err) {
-      setError(err?.message || "Không thể xóa lead");
+      setError(getApiErrorMessage(err, "Không thể xóa lead"));
     }
   };
 
@@ -126,7 +126,7 @@ export default function LeadListPage() {
       setSuccess("Khôi phục lead thành công");
       await loadLeads();
     } catch (err) {
-      setError(err?.message || "Không thể khôi phục lead");
+      setError(getApiErrorMessage(err, "Không thể khôi phục lead"));
     }
   };
 
@@ -137,7 +137,7 @@ export default function LeadListPage() {
       setSuccess("Đã chuyển sang Đang chăm sóc");
       await loadLeads();
     } catch (err) {
-      setError(err?.message || "Không thể cập nhật trạng thái");
+      setError(getApiErrorMessage(err, "Không thể cập nhật trạng thái"));
     }
   };
 
@@ -149,7 +149,7 @@ export default function LeadListPage() {
       setSuccess("Đã ngừng chăm sóc lead");
       await loadLeads();
     } catch (err) {
-      setError(err?.message || "Không thể cập nhật trạng thái");
+      setError(getApiErrorMessage(err, "Không thể cập nhật trạng thái"));
     }
   };
 
@@ -167,7 +167,7 @@ export default function LeadListPage() {
       setSuccess("Chuyển đổi thành khách hàng thành công!");
       await loadLeads();
     } catch (err) {
-      setError(err?.message || "Chuyển đổi thất bại");
+      setError(getApiErrorMessage(err, "Chuyển đổi thất bại"));
     }
   };
 

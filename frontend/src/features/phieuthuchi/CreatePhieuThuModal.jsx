@@ -2,7 +2,7 @@ import { useState } from "react";
 import phieuThuChiApi from "../../api/phieuThuChiApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
-import { formatCurrency } from "../../utils/formatters";
+import { formatCurrency, getApiErrorMessage } from "../../utils/formatters";
 
 export default function CreatePhieuThuModal({
   hoaDonId,
@@ -41,7 +41,7 @@ export default function CreatePhieuThuModal({
       });
       onSaved();
     } catch (err) {
-      setError(err?.message || "Không thể tạo phiếu thu");
+      setError(getApiErrorMessage(err, "Không thể tạo phiếu thu"));
     } finally {
       setSubmitting(false);
     }

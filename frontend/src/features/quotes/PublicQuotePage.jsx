@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { CheckCircle2, XCircle, FileText } from "lucide-react";
 import quotePublicApi from "../../api/quotePublicApi";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 function formatMoney(n) {
   return Number(n || 0).toLocaleString("vi-VN") + " đ";
 }
@@ -31,7 +32,7 @@ export default function PublicQuotePage() {
       const res = await quotePublicApi.getByToken(token);
       setQuote(res.data ?? null);
     } catch (err) {
-      setError(err?.message || "Không tìm thấy báo giá hoặc liên kết đã hết hạn.");
+      setError(getApiErrorMessage(err, "Không tìm thấy báo giá hoặc liên kết đã hết hạn."));
     } finally {
       setLoading(false);
     }
@@ -50,7 +51,7 @@ export default function PublicQuotePage() {
       setDoneMessage(res.message || "Bạn đã chấp nhận báo giá. Cảm ơn quý khách!");
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể chấp nhận báo giá.");
+      setError(getApiErrorMessage(err, "Không thể chấp nhận báo giá."));
     } finally {
       setBusy(false);
     }
@@ -65,7 +66,7 @@ export default function PublicQuotePage() {
       setShowRejectForm(false);
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể từ chối báo giá.");
+      setError(getApiErrorMessage(err, "Không thể từ chối báo giá."));
     } finally {
       setBusy(false);
     }

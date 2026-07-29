@@ -4,7 +4,7 @@ import { Wallet } from "lucide-react";
 import phieuThuChiApi from "../../api/phieuThuChiApi";
 import Card from "../../components/common/Card";
 import EmptyState from "../../components/common/EmptyState";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDate, getApiErrorMessage } from "../../utils/formatters";
 
 // Chi phí phát sinh cho khách hàng (ăn uống, đàm phán...) — KHÔNG tính vào
 // tiến độ thanh toán hóa đơn hay hợp đồng. Chỉ Manager/Accountant được xem
@@ -28,7 +28,7 @@ export default function CustomerExpenseSection({ khachHangId }) {
         });
         if (!cancelled) setItems(res.data?.items ?? []);
       } catch (err) {
-        if (!cancelled) setError(err?.message || "Không tải được chi phí");
+        if (!cancelled) setError(getApiErrorMessage(err, "Không tải được chi phí"));
       } finally {
         if (!cancelled) setLoading(false);
       }

@@ -4,6 +4,7 @@ import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 import { CONTRACT_STATUS_OPTIONS } from "../../utils/constants";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 // Modal sửa hợp đồng — hiện đè lên trang chi tiết, không chuyển trang.
 // Hiện tại chỉ hỗ trợ đổi trạng thái (API backend chỉ có endpoint PUT /Contract/{id}/status).
 export default function EditContractModal({ contract, onClose, onSaved }) {
@@ -19,7 +20,7 @@ export default function EditContractModal({ contract, onClose, onSaved }) {
       await contractApi.updateStatus(contract.id, trangThai);
       onSaved();
     } catch (err) {
-      setError(err?.message || "Không thể cập nhật trạng thái");
+      setError(getApiErrorMessage(err, "Không thể cập nhật trạng thái"));
     } finally {
       setSubmitting(false);
     }

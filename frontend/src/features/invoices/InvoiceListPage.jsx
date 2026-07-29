@@ -12,7 +12,7 @@ import Button from "../../components/common/Button";
 import RowMenu from "../../components/common/RowMenu";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import { ROLES } from "../../utils/constants";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDate, getApiErrorMessage } from "../../utils/formatters";
 
 const STATUS_LABEL = {
   ChuaThanhToan: "Chưa thanh toán",
@@ -56,7 +56,7 @@ export default function InvoiceListPage() {
       setTotalPages(res.data?.totalPages ?? 1);
       setTotalCount(res.data?.totalCount ?? 0);
     } catch (err) {
-      setError(err?.message || "Tải danh sách thất bại");
+      setError(getApiErrorMessage(err, "Tải danh sách thất bại"));
     } finally { setLoading(false); }
   };
 

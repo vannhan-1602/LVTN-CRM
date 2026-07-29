@@ -21,7 +21,7 @@ import {
   TICKET_PHAN_HOI_LOAI_OPTIONS,
   TICKET_PHAN_HOI_LABEL,
 } from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 export default function TicketDetailPage() {
   const { id } = useParams();
@@ -58,7 +58,7 @@ export default function TicketDetailPage() {
         ngayHenXuLy: res.data.ngayHenXuLy ? res.data.ngayHenXuLy.slice(0, 16) : "",
       });
       setAssignNV(res.data.nhanVienXuLyId ? String(res.data.nhanVienXuLyId) : "");
-    } catch (err) { setError(err?.message || "Không thể tải ticket"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Không thể tải ticket")); }
     finally { setLoading(false); }
   };
 
@@ -86,7 +86,7 @@ export default function TicketDetailPage() {
         ngayHenXuLy: editForm.ngayHenXuLy || null,
       });
       await load();
-    } catch (err) { setError(err?.message || "Cập nhật ticket thất bại"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Cập nhật ticket thất bại")); }
     finally { setSavingEdit(false); }
   };
 
@@ -96,7 +96,7 @@ export default function TicketDetailPage() {
     try {
       await ticketApi.assign(id, { nhanVienXuLyId: assignNV ? Number(assignNV) : null });
       await load();
-    } catch (err) { setError(err?.message || "Gán nhân viên thất bại"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Gán nhân viên thất bại")); }
     finally { setSavingAssign(false); }
   };
 
@@ -108,7 +108,7 @@ export default function TicketDetailPage() {
       await ticketApi.addPhanHoi(id, phanHoiForm);
       setPhanHoiForm({ loaiPhanHoi: "NoiBoXuLy", noiDung: "" });
       await load();
-    } catch (err) { setError(err?.message || "Thêm phản hồi thất bại"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Thêm phản hồi thất bại")); }
     finally { setSubmittingPhanHoi(false); }
   };
 
@@ -116,13 +116,13 @@ export default function TicketDetailPage() {
     const ly = window.prompt("Lý do đóng ticket (có thể để trống):");
     if (ly === null) return;
     try { await ticketApi.close(id, { lyDoDong: ly }); await load(); }
-    catch (err) { setError(err?.message || "Không thể đóng ticket"); }
+    catch (err) { setError(getApiErrorMessage(err, "Không thể đóng ticket")); }
   };
 
   const handleDelete = async () => {
     if (!window.confirm("Xóa ticket này?")) return;
     try { await ticketApi.delete(id); navigate("/tickets"); }
-    catch (err) { setError(err?.message || "Không thể xóa"); }
+    catch (err) { setError(getApiErrorMessage(err, "Không thể xóa")); }
   };
 
   if (loading) return <div className="text-sm text-ink-400 py-10 text-center">Đang tải...</div>;

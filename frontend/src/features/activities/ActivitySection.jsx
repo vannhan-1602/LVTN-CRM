@@ -13,7 +13,7 @@ import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import EmptyState from "../../components/common/EmptyState";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 const LOAI_HOAT_DONG_OPTIONS = [
   { value: "Call", label: "Cuộc gọi", icon: Phone, tone: "info" },
@@ -117,7 +117,7 @@ export default function ActivitySection({ khachHangId, leadId, canEdit }) {
       await load();
       resetForm();
     } catch (err) {
-      setError(err?.message || "Không thể lưu hoạt động");
+      setError(getApiErrorMessage(err, "Không thể lưu hoạt động"));
     } finally {
       setSubmitting(false);
     }
@@ -129,7 +129,7 @@ export default function ActivitySection({ khachHangId, leadId, canEdit }) {
       await activityApi.delete(id);
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể xóa");
+      setError(getApiErrorMessage(err, "Không thể xóa"));
     }
   };
 

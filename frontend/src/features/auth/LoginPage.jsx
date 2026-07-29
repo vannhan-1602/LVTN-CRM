@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import authApi from "../../api/authApi";
 import useAuthStore from "./authStore";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +28,7 @@ export default function LoginPage() {
       login(res.data); // lưu token + user vào zustand + localStorage
       navigate("/");
     } catch (err) {
-      setError(err?.message || "Tên đăng nhập hoặc mật khẩu không đúng");
+      setError(getApiErrorMessage(err, "Tên đăng nhập hoặc mật khẩu không đúng"));
     } finally {
       setLoading(false);
     }

@@ -9,6 +9,7 @@ import {
 } from "../../utils/constants";
 import useDanhMucStore from "../../stores/danhMucStore";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 const emptyForm = {
   tieuDe: "",
   moTa: "",
@@ -56,7 +57,7 @@ export default function CreateTicketModal({
       });
       onSaved();
     } catch (err) {
-      setError(err?.message || "Không thể tạo ticket");
+      setError(getApiErrorMessage(err, "Không thể tạo ticket"));
     } finally {
       setSubmitting(false);
     }

@@ -4,6 +4,7 @@ import productApi from "../../api/productApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 // Modal Thêm/Sửa sản phẩm. Có prop `product` => chế độ Sửa (không cho đổi Mã SP, Tồn ban đầu).
 export default function ProductFormModal({ product, types = [], onClose, onSaved }) {
   const isEdit = Boolean(product);
@@ -64,7 +65,7 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
         }
       }
       onSaved();
-    } catch (err) { setError(err?.message || "Không thể lưu sản phẩm"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Không thể lưu sản phẩm")); }
     finally { setSubmitting(false); }
   };
 

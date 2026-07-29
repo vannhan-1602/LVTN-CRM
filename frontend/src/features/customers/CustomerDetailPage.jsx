@@ -15,7 +15,7 @@ import ActivitySection from "../activities/ActivitySection";
 import CustomerLoyaltySection from "./CustomerLoyaltySection";
 import CustomerExpenseSection from "./CustomerExpenseSection";
 import { ROLES } from "../../utils/constants";
-import { formatDateTime, badgeToneForId } from "../../utils/formatters";
+import { formatDateTime, badgeToneForId, getApiErrorMessage } from "../../utils/formatters";
 
 const LOAI_DIA_CHI_OPTIONS = [
   { value: "Office", label: "Văn phòng" },
@@ -117,7 +117,7 @@ function AddressSection({ customerId, canEdit }) {
       await load();
       resetForm();
     } catch (err) {
-      setError(err?.message || "Không thể lưu địa chỉ");
+      setError(getApiErrorMessage(err, "Không thể lưu địa chỉ"));
     } finally {
       setSubmitting(false);
     }
@@ -129,7 +129,7 @@ function AddressSection({ customerId, canEdit }) {
       await addressApi.delete(id);
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể xóa");
+      setError(getApiErrorMessage(err, "Không thể xóa"));
     }
   };
 
@@ -372,7 +372,7 @@ export default function CustomerDetailPage() {
       const res = await customerApi.getById(id);
       setCustomer(res.data ?? null);
     } catch (err) {
-      setError(err?.message || "Không thể tải thông tin khách hàng");
+      setError(getApiErrorMessage(err, "Không thể tải thông tin khách hàng"));
     } finally {
       setLoading(false);
     }
@@ -389,7 +389,7 @@ export default function CustomerDetailPage() {
       await customerApi.delete(id);
       navigate("/customers");
     } catch (err) {
-      setError(err?.message || "Không thể xóa khách hàng");
+      setError(getApiErrorMessage(err, "Không thể xóa khách hàng"));
     }
   };
 

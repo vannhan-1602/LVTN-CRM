@@ -28,7 +28,7 @@ import {
   QUOTE_STATUS_OPTIONS,
   QUOTE_STATUS_COLOR,
 } from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 function formatMoney(n) {
   return Number(n || 0).toLocaleString("vi-VN") + " đ";
@@ -82,7 +82,7 @@ export default function QuoteListPage() {
       setTotalPages(res.data?.totalPages ?? 1);
       setTotalCount(res.data?.totalCount ?? 0);
     } catch (err) {
-      setError(err?.message || "Tải danh sách thất bại");
+      setError(getApiErrorMessage(err, "Tải danh sách thất bại"));
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,7 @@ export default function QuoteListPage() {
       setSuccess("Xóa báo giá thành công");
       await loadQuotes();
     } catch (err) {
-      setError(err?.message || "Không thể xóa");
+      setError(getApiErrorMessage(err, "Không thể xóa"));
     }
   };
 

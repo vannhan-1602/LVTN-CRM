@@ -11,7 +11,7 @@ import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import CreatePhieuChiModal from "./CreatePhieuChiModal";
 import { ROLES } from "../../utils/constants";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDate, getApiErrorMessage } from "../../utils/formatters";
 
 const LOAI_LABEL = { Thu: "Phiếu thu", Chi: "Phiếu chi" };
 const LOAI_COLOR = {
@@ -50,7 +50,7 @@ export default function PhieuThuChiListPage() {
       setTotalPages(data.totalPages ?? 1);
       setTotalCount(data.totalCount ?? 0);
     } catch (err) {
-      setError(err?.message || "Tải danh sách thất bại");
+      setError(getApiErrorMessage(err, "Tải danh sách thất bại"));
     } finally {
       setLoading(false);
     }

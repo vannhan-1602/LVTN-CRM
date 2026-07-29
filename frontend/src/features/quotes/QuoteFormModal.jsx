@@ -4,7 +4,7 @@ import quoteApi from "../../api/quoteApi";
 import customerApi from "../../api/customerApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
-import { formatDate } from "../../utils/formatters";
+import { formatDate, getApiErrorMessage } from "../../utils/formatters";
 
 const LY_DO_VOUCHER_LABEL = {
   ThangHang: "Thăng hạng",
@@ -122,7 +122,7 @@ export default function QuoteFormModal({
         });
       onSaved();
     } catch (err) {
-      setError(err?.message || "Không thể lưu báo giá");
+      setError(getApiErrorMessage(err, "Không thể lưu báo giá"));
     } finally {
       setSubmitting(false);
     }

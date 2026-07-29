@@ -9,7 +9,7 @@ import Button from "../../components/common/Button";
 import UserFormModal from "./UserFormModal";
 import ResetPasswordModal from "./ResetPasswordModal";
 import { USER_ROLE_COLOR, USER_STATUS_LABEL, USER_STATUS_COLOR } from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 export default function UserDetailPage() {
   const { id } = useParams();
@@ -28,7 +28,7 @@ export default function UserDetailPage() {
       const [userRes, lookupsRes] = await Promise.all([userManagementApi.getById(id), userManagementApi.getLookups()]);
       setUser(userRes.data ?? null);
       setLookups(lookupsRes.data ?? { roles: [], phongBans: [], chucVus: [] });
-    } catch (err) { setError(err?.message || "Không thể tải thông tin tài khoản"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Không thể tải thông tin tài khoản")); }
     finally { setLoading(false); }
   };
 
@@ -39,13 +39,13 @@ export default function UserDetailPage() {
     const verb = next === "Locked" ? "khóa" : "mở khóa";
     if (!window.confirm(`Bạn có chắc muốn ${verb} tài khoản "${user.username}"?`)) return;
     try { await userManagementApi.toggleStatus(id, next); await load(); }
-    catch (err) { setError(err?.message || "Không thể đổi trạng thái"); }
+    catch (err) { setError(getApiErrorMessage(err, "Không thể đổi trạng thái")); }
   };
 
   const handleDelete = async () => {
     if (!window.confirm(`Xóa vĩnh viễn tài khoản "${user.username}"? Hành động này không thể hoàn tác.`)) return;
     try { await userManagementApi.delete(id); navigate("/users"); }
-    catch (err) { setError(err?.message || "Không thể xóa tài khoản"); }
+    catch (err) { setError(getApiErrorMessage(err, "Không thể xóa tài khoản")); }
   };
 
   if (loading) return <div className="text-sm text-ink-400 py-10 text-center">Đang tải...</div>;

@@ -12,7 +12,7 @@ import Button from "../../components/common/Button";
 import OpportunityFormModal from "./OpportunityFormModal";
 import ChangeStageModal from "./ChangeStageModal";
 import { ROLES, GIAI_DOAN_LABEL, GIAI_DOAN_COLOR, NEXT_STAGE } from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 function formatMoney(n) {
   if (!n && n !== 0) return "—";
@@ -38,7 +38,7 @@ export default function OpportunityDetailPage() {
     try {
       const res = await opportunityApi.getById(id);
       setItem(res.data ?? null);
-    } catch (err) { setError(err?.message || "Không thể tải thông tin cơ hội"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Không thể tải thông tin cơ hội")); }
     finally { setLoading(false); }
   };
 
@@ -51,7 +51,7 @@ export default function OpportunityDetailPage() {
   const handleDelete = async () => {
     if (!window.confirm(`Xóa cơ hội "${item.tenThuongVu}"?`)) return;
     try { await opportunityApi.delete(id); navigate("/opportunities"); }
-    catch (err) { setError(err?.message || "Không thể xóa"); }
+    catch (err) { setError(getApiErrorMessage(err, "Không thể xóa")); }
   };
 
   if (loading) return <div className="text-sm text-ink-400 py-10 text-center">Đang tải...</div>;

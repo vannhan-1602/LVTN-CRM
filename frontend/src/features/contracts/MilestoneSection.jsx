@@ -21,7 +21,7 @@ import {
   MOC_TRANG_THAI_LABEL,
   MOC_TRANG_THAI_COLOR,
 } from "../../utils/constants";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
 const LOAI_MOC_META = {
   DaoTao: { label: "Đào tạo", icon: GraduationCap, tone: "info" },
@@ -174,7 +174,7 @@ export default function MilestoneSection({
       await load();
       resetForm();
     } catch (err) {
-      setError(err?.message || "Không thể lưu mốc triển khai");
+      setError(getApiErrorMessage(err, "Không thể lưu mốc triển khai"));
     } finally {
       setSubmitting(false);
     }
@@ -189,7 +189,7 @@ export default function MilestoneSection({
       await contractApi.deleteMocTrienKhai(id);
       await load();
     } catch (err) {
-      setError(err?.message || "Không thể xóa mốc triển khai");
+      setError(getApiErrorMessage(err, "Không thể xóa mốc triển khai"));
     }
   };
 

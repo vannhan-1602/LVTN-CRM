@@ -7,6 +7,7 @@ import StatCard from "../../components/common/StatCard";
 import Button from "../../components/common/Button";
 import DashboardAlertsCard from "./DashboardAlertsCard";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -30,7 +31,7 @@ export default function AdminDashboard() {
         });
       } catch (err) {
         if (!cancelled)
-          setError(err?.message || "Không thể tải dữ liệu dashboard");
+          setError(getApiErrorMessage(err, "Không thể tải dữ liệu dashboard"));
       } finally {
         if (!cancelled) setLoading(false);
       }

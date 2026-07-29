@@ -5,6 +5,7 @@ import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 import { Plus, X } from "lucide-react";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 function formatMoney(n) {
   return n == null ? "" : Number(n).toLocaleString("vi-VN") + " đ";
 }
@@ -104,7 +105,7 @@ export default function CreateContractModal({ onClose, onSaved }) {
       });
       onSaved();
     } catch (err) {
-      setError(err?.message || "Không thể tạo hợp đồng");
+      setError(getApiErrorMessage(err, "Không thể tạo hợp đồng"));
     } finally {
       setSubmitting(false);
     }

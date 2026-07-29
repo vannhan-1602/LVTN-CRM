@@ -5,6 +5,7 @@ import Button from "../../components/common/Button";
 import authApi from "../../api/authApi";
 import useAuthStore from "./authStore";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 const emptyForm = { currentPassword: "", newPassword: "", confirmNewPassword: "" };
 
 export default function ChangePasswordModal({ onClose }) {
@@ -47,7 +48,7 @@ export default function ChangePasswordModal({ onClose }) {
         state: { message: "Đổi mật khẩu thành công. Vui lòng đăng nhập lại." },
       });
     } catch (err) {
-      setError(err?.message || "Đổi mật khẩu thất bại.");
+      setError(getApiErrorMessage(err, "Đổi mật khẩu thất bại."));
     } finally {
       setSubmitting(false);
     }

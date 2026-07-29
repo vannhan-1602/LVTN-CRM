@@ -5,6 +5,7 @@ import Button from "../../components/common/Button";
 import Badge from "../../components/common/Badge";
 import { GIAI_DOAN_LABEL, GIAI_DOAN_COLOR } from "../../utils/constants";
 
+import { getApiErrorMessage } from "../../utils/formatters";
 export default function ChangeStageModal({ item, targetStage, onClose, onSaved }) {
   const [ghiChu, setGhiChu] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -18,7 +19,7 @@ export default function ChangeStageModal({ item, targetStage, onClose, onSaved }
     try {
       await opportunityApi.changeStage(item.id, targetStage, ghiChu || null);
       onSaved();
-    } catch (err) { setError(err?.message || "Không thể cập nhật giai đoạn"); }
+    } catch (err) { setError(getApiErrorMessage(err, "Không thể cập nhật giai đoạn")); }
     finally { setSubmitting(false); }
   };
 
