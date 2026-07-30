@@ -91,7 +91,7 @@ public class AddressRepository : IAddressRepository
         var e = await _ctx.KhDiaChis.FindAsync(new object[] { id }, ct)
             ?? throw new CRM.Application.Common.Exceptions.NotFoundException("DiaChi", id);
 
-        if (isDefault && !e.IsDefault)
+        if (isDefault && (!e.IsDefault || e.LoaiDiaChi != loaiDiaChi))
             await ClearDefaultAsync(e.KhachHang_Id, loaiDiaChi, ct);
 
         e.DiaChiChiTiet = diaChiChiTiet;

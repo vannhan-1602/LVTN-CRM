@@ -1,7 +1,9 @@
-﻿using CRM.Application.Common.Exceptions;
+﻿using CRM.Application.Common.Constants;
+using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Tickets.DTOs;
 using CRM.Application.Features.Tickets.Mappings;
 using CRM.Application.Interfaces.Audit;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Tickets;
 using CRM.Domain.Entities.Tickets;
 using CRM.Domain.Enums;
@@ -17,17 +19,20 @@ namespace CRM.Application.Features.Tickets.Commands.UpdateTicket
         private readonly ITicketRepository _ticketRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogPublisher _auditLogPublisher;
+        private readonly ICurrentUserService _currentUser;
         private readonly ILogger<UpdateTicketCommandHandler> _logger;
 
         public UpdateTicketCommandHandler(
             ITicketRepository ticketRepository,
             IUnitOfWork unitOfWork,
             IAuditLogPublisher auditLogPublisher,
+            ICurrentUserService currentUser,
             ILogger<UpdateTicketCommandHandler> logger)
         {
             _ticketRepository = ticketRepository;
             _unitOfWork = unitOfWork;
             _auditLogPublisher = auditLogPublisher;
+            _currentUser = currentUser;
             _logger = logger;
         }
 
@@ -35,6 +40,10 @@ namespace CRM.Application.Features.Tickets.Commands.UpdateTicket
         {
             var ticket = await _ticketRepository.GetByIdAsync(request.Id, cancellationToken)
                 ?? throw new NotFoundException(nameof(Ticket), request.Id);
+
+            // Chặn Sale sửa Ticket không phải mình xử lý (giống CloseTicket/AddPhanHoi).
+            if (_currentUser.Role == Roles.Sale && ticket.NhanVienXuLyId != _currentUser.UserId)
+                throw new ForbiddenException("Bạn không có quyền thao tác trên ticket của nhân viên khác.");
 
             if (ticket.TrangThai == TicketStatus.Dong)
                 throw new BusinessRuleException("Ticket đã đóng, không thể cập nhật.");

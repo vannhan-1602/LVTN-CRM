@@ -45,8 +45,9 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
             var khachHang = await _customerRepository.GetByIdAsync(request.KhachHangId, cancellationToken)
                 ?? throw new NotFoundException(nameof(CRM.Domain.Entities.Customers.KhachHang), request.KhachHangId);
 
-            // Sale chỉ được tạo Ticket cho Customer mình phụ trách 
-            if (_currentUser.Role == Roles.Sale && khachHang.NhanVienPhuTrachId != _currentUser.NhanSuId)
+            // Sale chỉ được tạo Ticket cho Customer mình phụ trách
+            // (KH_KhachHang.NhanVienPhuTrach_Id tham chiếu HT_User.Id -> phải so với UserId, không phải NhanSuId)
+            if (_currentUser.Role == Roles.Sale && khachHang.NhanVienPhuTrachId != _currentUser.UserId)
                 throw new ForbiddenException("Bạn chỉ có thể tạo ticket cho khách hàng mình phụ trách.");
 
             if (request.LoaiTicketId.HasValue &&
@@ -66,10 +67,10 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
             // Sale tạo ticket -> LUÔN là người tiếp nhận và người xử lý mặc định
             // Manager được toàn quyền chỉ định theo request.
             var nhanVienTiepNhanId = _currentUser.Role == Roles.Sale
-                ? _currentUser.NhanSuId
+                ? _currentUser.UserId
                 : request.NhanVienTiepNhanId;
             var nhanVienXuLyId = _currentUser.Role == Roles.Sale
-                ? _currentUser.NhanSuId
+                ? _currentUser.UserId
                 : request.NhanVienXuLyId;
 
             var ticket = new Ticket

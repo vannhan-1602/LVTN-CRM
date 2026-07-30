@@ -3,6 +3,8 @@ using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Opportunities.DTOs;
 using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
+using CRM.Application.Interfaces.Customers;
+using CRM.Application.Interfaces.Leads;
 using CRM.Application.Interfaces.Opportunities;
 using CRM.Domain.Entities.Sales;
 using CRM.Domain.Enums;
@@ -16,15 +18,21 @@ public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunity
 {
     private const string AuditTable = "BH_CoHoiBanHang";
     private readonly IOpportunityRepository _repo;
+    private readonly ICustomerRepository _customerRepository;
+    private readonly ILeadRepository _leadRepository;
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
     private readonly IAuditLogPublisher _audit;
     private readonly ILogger<UpdateOpportunityCommandHandler> _logger;
 
-    public UpdateOpportunityCommandHandler(IOpportunityRepository repo, IUnitOfWork uow,
+    public UpdateOpportunityCommandHandler(IOpportunityRepository repo,
+        ICustomerRepository customerRepository, ILeadRepository leadRepository, IUnitOfWork uow,
         ICurrentUserService currentUser, IAuditLogPublisher audit,
         ILogger<UpdateOpportunityCommandHandler> logger)
-    { _repo = repo; _uow = uow; _currentUser = currentUser; _audit = audit; _logger = logger; }
+    {
+        _repo = repo; _customerRepository = customerRepository; _leadRepository = leadRepository;
+        _uow = uow; _currentUser = currentUser; _audit = audit; _logger = logger;
+    }
 
     public async Task<OpportunityDto> Handle(UpdateOpportunityCommand req, CancellationToken ct)
     {
@@ -38,6 +46,22 @@ public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunity
         if (existing.GiaiDoan == CoHoiGiaiDoan.ThanhCong.ToString() || existing.GiaiDoan == CoHoiGiaiDoan.ThatBai.ToString())
             throw new BusinessRuleException(
                 $"Cơ hội đã ở trạng thái '{existing.GiaiDoan}', không thể chỉnh sửa.");
+
+        // Khách hàng/Lead phải tồn tại; Sale chỉ được gắn cơ hội vào KH/Lead mình phụ trách.
+        if (req.KhachHangId.HasValue)
+        {
+            var khachHang = await _customerRepository.GetByIdAsync(req.KhachHangId.Value, ct)
+                ?? throw new NotFoundException("Khách hàng", req.KhachHangId.Value);
+            if (_currentUser.Role == Roles.Sale && khachHang.NhanVienPhuTrachId != _currentUser.UserId)
+                throw new ForbiddenException("Bạn không có quyền gắn cơ hội vào khách hàng của nhân viên khác.");
+        }
+        if (req.LeadId.HasValue)
+        {
+            var lead = await _leadRepository.GetByIdAsync(req.LeadId.Value, cancellationToken: ct)
+                ?? throw new NotFoundException("Lead", req.LeadId.Value);
+            if (_currentUser.Role == Roles.Sale && lead.NhanVienPhuTrachId != _currentUser.UserId)
+                throw new ForbiddenException("Bạn không có quyền gắn cơ hội vào lead của nhân viên khác.");
+        }
 
         var oldDto = await _repo.GetByIdEnrichedAsync(req.Id, ct);
 

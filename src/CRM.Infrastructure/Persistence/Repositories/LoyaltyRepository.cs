@@ -136,13 +136,24 @@ public class LoyaltyRepository : ILoyaltyRepository
 
         if (daThayDoi)
         {
+            // So sánh đúng bản chất: ThuTu (thứ tự xếp hạng) với ThuTu, không phải với Id.
+            // Id và ThuTu hiện trùng nhau do dữ liệu seed, nhưng không được đảm bảo bởi ràng buộc nào.
+            byte hangCuThuTu = 0;
+            if (hangCuId != 0)
+            {
+                var hangCu = await _context.KhXepHangs
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == hangCuId, ct);
+                hangCuThuTu = hangCu?.ThuTu ?? 0;
+            }
+
             kh.HangKhachHang_Id = hangMoi.Id;
             _context.KhLichSuHangs.Add(new KhLichSuHangEntity
             {
                 KhachHang_Id = khachHangId,
                 HangCu_Id = hangCuId == 0 ? null : hangCuId,
                 HangMoi_Id = hangMoi.Id,
-                LyDo = hangMoi.ThuTu > (hangCuId == 0 ? 0 : hangCuId)
+                LyDo = hangMoi.ThuTu > hangCuThuTu
                                    ? "TuDongDuDieuKien" : "TuDongXuongHang",
                 GhiChu = $"Điểm 12T: {tongDiem}, Số lần thu: {soLanThu}",
                 CreatedAt = DateTime.UtcNow,

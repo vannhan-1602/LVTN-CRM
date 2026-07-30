@@ -139,12 +139,14 @@ public class LoyaltyService
         ushort hangMoiId,
         CancellationToken ct)
     {
-        bool laThangHang = hangMoiId > (hangCuId ?? 0);
-
         // Lấy tên hạng cũ và mới, mốc điểm từ DB
         var dsHang = await _repo.GetXepHangInfoAsync(new[] { hangCuId ?? 0, hangMoiId }, ct);
         var hangCuInfo = dsHang.FirstOrDefault(h => h.Id == (hangCuId ?? 0));
         var hangMoiInfo = dsHang.FirstOrDefault(h => h.Id == hangMoiId);
+
+        // So sánh đúng bản chất bằng ThuTu (thứ tự xếp hạng), không phải Id — Id chỉ là khóa
+        // chính, không đảm bảo phản ánh đúng thứ tự thăng/giáng hạng.
+        bool laThangHang = (hangMoiInfo?.ThuTu ?? 0) > (hangCuInfo?.ThuTu ?? 0);
 
         string tenHangCu = hangCuInfo?.TenHang ?? "Chưa xếp hạng";
         string tenHangMoi = hangMoiInfo?.TenHang ?? $"Hạng #{hangMoiId}";
