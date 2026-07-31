@@ -274,6 +274,29 @@ internal static class EmailTemplateHelper
             </p>
             """);
 
+    public static string NhacGiaHanLicense(
+        string tenKhachHang, string maLicenseKey, string tenSanPham, DateOnly ngayHetHan, int soNgayConLai) =>
+        WrapLayout(tenKhachHang, $"📅 License {maLicenseKey} sắp hết hạn", $"""
+            <p style="color:#334155;line-height:1.6;">
+              License phần mềm <strong>{tenSanPham}</strong> (mã <strong>{maLicenseKey}</strong>) của quý khách
+              sẽ hết hạn trong <strong style="color:{WARNING_COLOR};">{soNgayConLai} ngày</strong> nữa.
+              Quý khách vui lòng liên hệ để được tư vấn gia hạn, đảm bảo phần mềm không bị gián đoạn hoạt động.
+            </p>
+            <table style="width:100%;background:#FFF7ED;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #FED7AA;">
+              <tr><td style="color:#64748B;font-size:13px;">Sản phẩm</td>
+                  <td align="right" style="font-weight:700;color:#0F172A;">{tenSanPham}</td></tr>
+              <tr><td style="color:#64748B;font-size:13px;">Mã License</td>
+                  <td align="right" style="font-weight:700;color:#0F172A;">{maLicenseKey}</td></tr>
+              <tr><td style="color:#64748B;font-size:13px;">Ngày hết hạn</td>
+                  <td align="right" style="font-weight:700;color:#0F172A;">{ngayHetHan:dd/MM/yyyy}</td></tr>
+              <tr><td style="color:#64748B;font-size:13px;">Còn lại</td>
+                  <td align="right" style="font-weight:700;color:{WARNING_COLOR};">{soNgayConLai} ngày</td></tr>
+            </table>
+            <p style="color:#64748B;font-size:13px;">
+              Nhân viên phụ trách sẽ sớm liên hệ với quý khách để trao đổi về việc gia hạn.
+            </p>
+            """);
+
     // ── Cảnh báo SLA (nội bộ, gửi nhân viên xử lý — không có khối "Kính gửi" khách hàng) ──
     public static string CanhBaoSla(
         string tenNhanVien, string maTicket, string tieuDeTicket, DateTime thoiHanSLA, uint soLanEscalate) => $"""

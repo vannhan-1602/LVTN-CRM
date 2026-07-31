@@ -1,16 +1,20 @@
 using CRM.Application.Common.Constants;
 using CRM.Application.Common.Models;
 using CRM.Application.Features.Contracts.Commands.CreateContractFromQuote;
+using CRM.Application.Features.Contracts.Commands.CreateLicense;
 using CRM.Application.Features.Contracts.Commands.CreateMilestone;
 using CRM.Application.Features.Contracts.Commands.CreateRenewalContract;
 using CRM.Application.Features.Contracts.Commands.DeleteContract;
 using CRM.Application.Features.Contracts.Commands.DeleteMilestone;
+using CRM.Application.Features.Contracts.Commands.RenewLicense;
+using CRM.Application.Features.Contracts.Commands.ToggleLicenseLock;
 using CRM.Application.Features.Contracts.Commands.UpdateContractStatus;
 using CRM.Application.Features.Contracts.Commands.UpdateMilestone;
 using CRM.Application.Features.Contracts.DTOs;
 using CRM.Application.Features.Contracts.Queries.GetAllContracts;
 using CRM.Application.Features.Contracts.Queries.GetContractById;
 using CRM.Application.Features.Contracts.Queries.GetLichThanhToanByHopDong;
+using CRM.Application.Features.Contracts.Queries.GetLicensesByContract;
 using CRM.Application.Features.Contracts.Queries.GetMilestonesByContract;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -135,5 +139,43 @@ public class ContractController : ControllerBase
     {
         await _mediator.Send(new DeleteMilestoneCommand(mocId), ct);
         return Ok(ApiResponse.Ok("Xóa mốc triển khai thành công."));
+    }
+
+    // ── License phần mềm ──────────────────────────────────────────────────────
+    // Ràng buộc nghiệp vụ: chỉ cấp/gia hạn/khóa bởi Manager (giống mốc triển khai) — Sale chỉ xem.
+    // Xem README ở CreateLicenseCommand/RenewLicenseCommand để biết chi tiết ràng buộc.
+
+    [HttpGet("{id:long}/license")]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
+    public async Task<IActionResult> GetLicenses(ulong id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetLicensesByContractQuery(id), ct);
+        return Ok(ApiResponse<List<LicenseDto>>.Ok(result));
+    }
+
+    [HttpPost("{id:long}/license")]
+    [Authorize(Policy = Policies.ManagerOnly)]
+    public async Task<IActionResult> CreateLicense(ulong id, [FromBody] CreateLicenseRequestDto request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new CreateLicenseCommand(
+            id, request.SanPhamId, request.SoLuongUser, request.PhienBan, request.MoiTruongTrienKhai), ct);
+        return Ok(ApiResponse<LicenseDto>.Ok(result, "Cấp License thành công."));
+    }
+
+    [HttpPost("license/{licenseId:long}/renew")]
+    [Authorize(Policy = Policies.ManagerOnly)]
+    public async Task<IActionResult> RenewLicense(ulong licenseId, [FromBody] RenewLicenseRequestDto request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new RenewLicenseCommand(licenseId, request.HopDongGiaHanId), ct);
+        return Ok(ApiResponse<LicenseDto>.Ok(result, "Gia hạn License thành công."));
+    }
+
+    [HttpPut("license/{licenseId:long}/lock")]
+    [Authorize(Policy = Policies.ManagerOnly)]
+    public async Task<IActionResult> ToggleLicenseLock(ulong licenseId, [FromBody] ToggleLicenseLockRequestDto request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new ToggleLicenseLockCommand(licenseId, request.Khoa), ct);
+        var msg = request.Khoa ? "Đã khóa License." : "Đã mở khóa License.";
+        return Ok(ApiResponse<LicenseDto>.Ok(result, msg));
     }
 }

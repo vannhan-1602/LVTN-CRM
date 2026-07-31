@@ -8,5 +8,9 @@ namespace CRM.Application.Features.Tickets.Queries.GetTicketById
     public class TicketDetailDto : TicketDto
     {
         public List<TicketPhanHoiDto> PhanHois { get; set; } = [];
+
+        /// <summary>Kết quả khảo sát hài lòng (CSAT) của khách sau khi ticket đóng — null nếu ticket
+        /// chưa từng đóng / chưa gửi khảo sát, hoặc DiemDanhGia null nếu khách chưa bấm đánh giá.</summary>
+        public CsatDto? Csat { get; set; }
     }
 }

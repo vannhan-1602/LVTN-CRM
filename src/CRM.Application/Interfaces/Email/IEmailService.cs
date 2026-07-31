@@ -85,6 +85,12 @@ public interface IEmailService
         string maHopDong, DateOnly ngayKetThuc, int soNgayConLai,
         CancellationToken ct = default);
 
+    // Nhắc gia hạn License — gửi khi License còn 30/7 ngày là hết hạn.
+    Task GuiEmailNhacGiaHanLicenseAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maLicenseKey, string tenSanPham, DateOnly ngayHetHan, int soNgayConLai,
+        CancellationToken ct = default);
+
     // Cảnh báo SLA — gửi cho nhân viên xử lý khi ticket quá hạn xử lý (ThoiHanSLA).
     Task GuiEmailCanhBaoSlaAsync(
         string tenNhanVien, string email,

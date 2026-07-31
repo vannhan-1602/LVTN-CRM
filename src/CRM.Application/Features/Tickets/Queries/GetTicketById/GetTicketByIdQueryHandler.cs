@@ -4,6 +4,7 @@ using CRM.Application.Features.Tickets.Mappings;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Tickets;
 using CRM.Domain.Entities.Tickets;
+using CRM.Domain.Enums;
 using MediatR;
 
 namespace CRM.Application.Features.Tickets.Queries.GetTicketById;
@@ -11,11 +12,14 @@ namespace CRM.Application.Features.Tickets.Queries.GetTicketById;
 public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, TicketDetailDto>
 {
     private readonly ITicketRepository _ticketRepository;
+    private readonly ICsatRepository _csatRepository;
     private readonly ICurrentUserService _currentUser;
 
-    public GetTicketByIdQueryHandler(ITicketRepository ticketRepository, ICurrentUserService currentUser)
+    public GetTicketByIdQueryHandler(ITicketRepository ticketRepository,
+        ICsatRepository csatRepository, ICurrentUserService currentUser)
     {
         _ticketRepository = ticketRepository;
+        _csatRepository = csatRepository;
         _currentUser = currentUser;
     }
 
@@ -29,6 +33,12 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
             throw new ForbiddenException("Bạn không có quyền xem dữ liệu của nhân viên khác.");
 
         var phanHois = await _ticketRepository.GetPhanHoisAsync(request.Id, cancellationToken);
+
+        // Yêu cầu CSAT chỉ được tạo khi đóng ticket (CloseTicketCommandHandler) -> chỉ cần
+        // tra khi ticket đã đóng, tránh 1 query thừa cho ticket còn đang xử lý.
+        var csat = ticket.TrangThai == TicketStatus.Dong
+            ? await _csatRepository.GetByTicketIdAsync(request.Id, cancellationToken)
+            : null;
 
         var dto = TicketMapper.ToDto(ticket);
         return new TicketDetailDto
@@ -52,6 +62,7 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
             LyDoDong = dto.LyDoDong,
             CreatedAt = dto.CreatedAt,
             UpdatedAt = dto.UpdatedAt,
+            Csat = csat,
             PhanHois = phanHois
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(TicketMapper.ToDto)

@@ -78,6 +78,7 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IContractRepository, ContractRepository>();
         services.AddScoped<IContractMilestoneRepository, ContractMilestoneRepository>();
+        services.AddScoped<ILicenseRepository, LicenseRepository>();
         services.AddScoped<ICsatRepository, CsatRepository>();
         services.AddScoped<IOpportunityRepository, OpportunityRepository>();
         services.AddScoped<IActivityRepository, ActivityRepository>();
@@ -102,6 +103,7 @@ public static class DependencyInjection
         services.AddHostedService<PaymentReminderJobHostedService>();
         services.AddHostedService<ContractRenewalReminderJobHostedService>();
         services.AddHostedService<TicketSlaEscalationJobHostedService>();
+        services.AddHostedService<LicenseLifecycleJobHostedService>();
 
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
             ?? throw new InvalidOperationException("JwtSettings configuration is missing.");

@@ -13,6 +13,10 @@ public interface ICsatRepository
 
     Task<CsatDto?> GetByTokenAsync(string token, CancellationToken ct = default);
 
+    /// <summary>Lấy kết quả CSAT theo TicketId — dùng cho màn hình chi tiết ticket nội bộ (nhân viên xem lại
+    /// đánh giá của khách), khác với GetByTokenAsync vốn phục vụ trang public cho khách.</summary>
+    Task<CsatDto?> GetByTicketIdAsync(ulong ticketId, CancellationToken ct = default);
+
     /// <summary>Ghi nhận đánh giá của khách qua token. Trả về null nếu token không tồn tại hoặc đã đánh giá rồi.</summary>
     Task<CsatDto?> SubmitAsync(string token, byte diemDanhGia, string? nhanXet, CancellationToken ct = default);
 }

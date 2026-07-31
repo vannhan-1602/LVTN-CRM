@@ -122,3 +122,46 @@ public class UpdateContractStatusRequestDto
 {
     public string TrangThai { get; set; } = string.Empty;
 }
+
+// ── License (giấy phép phần mềm) ──────────────────────────────────────────────
+
+public class LicenseDto
+{
+    public ulong Id { get; set; }
+    public ulong HopDongId { get; set; }
+    public uint SanPhamId { get; set; }
+    public string? TenSanPham { get; set; }
+    public int SoLuongUser { get; set; } = 1;
+    public string? PhienBan { get; set; }
+    public string? MaLicenseKey { get; set; }
+
+    /// <summary>Cloud | OnPremise</summary>
+    public string MoiTruongTrienKhai { get; set; } = "Cloud";
+    public DateOnly? NgayKichHoat { get; set; }
+    public DateOnly? NgayHetHan { get; set; }
+
+    /// <summary>DangHoatDong | TamKhoa | HetHan</summary>
+    public string TrangThai { get; set; } = "DangHoatDong";
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class CreateLicenseRequestDto
+{
+    public uint SanPhamId { get; set; }
+    public int SoLuongUser { get; set; } = 1;
+    public string? PhienBan { get; set; }
+    public string MoiTruongTrienKhai { get; set; } = "Cloud";
+}
+
+public class ToggleLicenseLockRequestDto
+{
+    /// <summary>true = khóa (TamKhoa), false = mở khóa (DangHoatDong)</summary>
+    public bool Khoa { get; set; }
+}
+
+public class RenewLicenseRequestDto
+{
+    /// <summary>Id của hợp đồng LoaiHopDong=GiaHan dùng làm căn cứ tính NgayHetHan mới.</summary>
+    public ulong HopDongGiaHanId { get; set; }
+}

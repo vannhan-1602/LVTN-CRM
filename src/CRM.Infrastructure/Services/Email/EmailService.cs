@@ -208,6 +208,21 @@ public class EmailService : IEmailService
         await GuiAsync(khachHangId, email, tieuDe, html, "NhacGiaHanHopDong", null, ct);
     }
 
+    // Nhắc gia hạn License. LƯU Ý: KH_EmailLog.LoaiEmail là cột ENUM cố định trong DB, không có
+    // giá trị riêng cho License và không được phép đổi DB — nên tái dùng "NhacGiaHanHopDong"
+    // (loại gần nghĩa nhất) để ghi log, thay vì thêm 1 giá trị enum mới.
+    public async Task GuiEmailNhacGiaHanLicenseAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maLicenseKey, string tenSanPham, DateOnly ngayHetHan, int soNgayConLai,
+        CancellationToken ct = default)
+    {
+        var tieuDe = $"[CRM] 📅 License {maLicenseKey} sắp hết hạn ({soNgayConLai} ngày)";
+        var html = EmailTemplateHelper.NhacGiaHanLicense(
+            tenKhachHang, maLicenseKey, tenSanPham, ngayHetHan, soNgayConLai);
+
+        await GuiAsync(khachHangId, email, tieuDe, html, "NhacGiaHanHopDong", null, ct);
+    }
+
     // CẢNH BÁO SLA (nội bộ — gửi nhân viên xử lý, KHÔNG ghi vào KH_EmailLog vì
     // bảng đó có KhachHang_Id NOT NULL, không phù hợp để log email gửi nhân viên).
     public async Task GuiEmailCanhBaoSlaAsync(

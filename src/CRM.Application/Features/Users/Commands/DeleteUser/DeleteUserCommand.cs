@@ -6,6 +6,7 @@ using CRM.Application.Interfaces.Users;
 using CRM.Domain.Interfaces.Repositories;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace CRM.Application.Features.Users.Commands.DeleteUser;
@@ -66,7 +67,22 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>
         var deleted = await _repository.DeleteAsync(request.Id, ct);
         if (!deleted) throw new NotFoundException("User", request.Id);
 
-        await _unitOfWork.SaveChangesAsync(ct);
+        // Xóa cứng HT_User có thể đụng FK RESTRICT ở nhiều bảng nghiệp vụ (Khách hàng,
+        // Lead, Cơ hội, Hợp đồng, Mốc triển khai, Phiếu thu/chi, Thẻ kho...) nếu tài khoản
+        // này đã từng tạo/phụ trách dữ liệu thật. Bắt lỗi ở đây để trả thông báo rõ ràng
+        // thay vì để lộ ra 1 lỗi SQL thô — trường hợp này nên dùng ToggleUserStatus (Locked)
+        // để vô hiệu hóa tài khoản thay vì xóa.
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            throw new BusinessRuleException(
+                "Không thể xóa tài khoản này vì đã có dữ liệu nghiệp vụ gắn với tài khoản " +
+                "(khách hàng, lead, hợp đồng, phiếu thu/chi...). Vui lòng khóa tài khoản " +
+                "(chuyển trạng thái sang 'Locked') thay vì xóa.");
+        }
 
         try
         {

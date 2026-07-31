@@ -55,6 +55,24 @@ public class CsatRepository : ICsatRepository
         return row;
     }
 
+    public async Task<CsatDto?> GetByTicketIdAsync(ulong ticketId, CancellationToken ct = default)
+    {
+        var row = await (
+            from d in _context.TkDanhGiaHaiLongs.AsNoTracking()
+            join t in _context.TkTickets.AsNoTracking() on d.Ticket_Id equals t.Id
+            where d.Ticket_Id == ticketId
+            select new CsatDto
+            {
+                TicketId = d.Ticket_Id,
+                MaTicket = t.MaTicket,
+                TieuDeTicket = t.TieuDe,
+                DiemDanhGia = d.DiemDanhGia,
+                NhanXet = d.NhanXet,
+                NgayDanhGia = d.NgayDanhGia
+            }).FirstOrDefaultAsync(ct);
+        return row;
+    }
+
     public async Task<CsatDto?> SubmitAsync(string token, byte diemDanhGia, string? nhanXet, CancellationToken ct = default)
     {
         var entity = await _context.TkDanhGiaHaiLongs.FirstOrDefaultAsync(x => x.Token == token, ct);
