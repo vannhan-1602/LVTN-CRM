@@ -18,6 +18,7 @@ import Button from "../../components/common/Button";
 import EditContractModal from "./EditContractModal";
 import RenewContractModal from "./RenewContractModal";
 import MilestoneSection from "./MilestoneSection";
+import LicenseSection from "./LicenseSection";
 import { ROLES, CONTRACT_STATUS } from "../../utils/constants";
 import { formatDate, formatDateTime, getApiErrorMessage } from "../../utils/formatters";
 
@@ -289,6 +290,14 @@ export default function ContractDetailPage() {
             canEdit={canManage}
             isManager={user?.role === ROLES.Manager}
             currentUserId={user?.userId}
+            isFinal={isFinal}
+          />
+
+          <LicenseSection
+            hopDongId={contract.id}
+            loaiHopDong={contract.loaiHopDong}
+            hopDongGocId={contract.hopDongGocId}
+            isManager={user?.role === ROLES.Manager}
             isFinal={isFinal}
           />
 

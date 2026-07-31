@@ -13,7 +13,7 @@ import EmptyState from "../../components/common/EmptyState";
 import {
   ROLES,
   TICKET_STATUS,
-  TICKET_STATUS_EDITABLE_OPTIONS,
+  TICKET_STATUS_OPTIONS,
   TICKET_STATUS_COLOR,
   TICKET_PRIORITY,
   TICKET_PRIORITY_OPTIONS,
@@ -229,7 +229,7 @@ export default function TicketDetailPage() {
                 <select value={editForm.trangThai} onChange={(e) => setEditForm((f) => ({ ...f, trangThai: e.target.value }))}
                   disabled={isClosed}
                   className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm disabled:bg-ink-100 disabled:text-ink-400">
-                  {TICKET_STATUS_EDITABLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {TICKET_STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
               <div>
@@ -265,6 +265,44 @@ export default function TicketDetailPage() {
                 </Button>
               </form>
             </Card>
+          )}
+          {isClosed && ticket.csat && (
+            <div className="bg-purple-50 border border-purple-200 rounded-card p-5">
+              <h3 className="text-sm font-semibold text-purple-900 mb-4">
+                Khảo sát hài lòng (CSAT)
+              </h3>
+              {ticket.csat.daDanhGia ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <span
+                        key={n}
+                        className={n <= ticket.csat.diemDanhGia ? "text-purple-600 text-lg leading-none" : "text-purple-200 text-lg leading-none"}
+                      >
+                        ★
+                      </span>
+                    ))}
+                    <span className="ml-1.5 text-sm font-medium text-purple-700">
+                      {ticket.csat.diemDanhGia}/5
+                    </span>
+                  </div>
+                  {ticket.csat.nhanXet && (
+                    <p className="text-sm text-purple-900 bg-white/60 rounded-lg p-2.5">
+                      "{ticket.csat.nhanXet}"
+                    </p>
+                  )}
+                  {ticket.csat.ngayDanhGia && (
+                    <p className="text-xs text-purple-500">
+                      Khách đánh giá lúc {formatDateTime(ticket.csat.ngayDanhGia)}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-purple-700">
+                  Đã gửi khảo sát cho khách, chưa nhận được đánh giá.
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

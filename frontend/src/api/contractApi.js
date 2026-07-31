@@ -18,6 +18,14 @@ const contractApi = {
     axiosClient.put(`/Contract/moc-trien-khai/${mocId}`, data),
   deleteMocTrienKhai: (mocId) =>
     axiosClient.delete(`/Contract/moc-trien-khai/${mocId}`),
+
+  // ── License phần mềm ────────────────────────────────────────────────
+  getLicenses: (id) => axiosClient.get(`/Contract/${id}/license`),
+  createLicense: (id, data) => axiosClient.post(`/Contract/${id}/license`, data),
+  renewLicense: (licenseId, data) =>
+    axiosClient.post(`/Contract/license/${licenseId}/renew`, data),
+  toggleLicenseLock: (licenseId, khoa) =>
+    axiosClient.put(`/Contract/license/${licenseId}/lock`, { khoa }),
 };
 
 export default contractApi;
