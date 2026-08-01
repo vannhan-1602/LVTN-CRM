@@ -52,11 +52,13 @@ public class RenewLicenseCommandHandler : IRequestHandler<RenewLicenseCommand, L
             throw new BusinessRuleException(
                 "License này không thuộc hợp đồng gốc của hợp đồng gia hạn đã chọn.");
 
-        if (!hopDongGiaHan.NgayKy.HasValue || !hopDongGiaHan.ThoiHan.HasValue)
+        if (!hopDongGiaHan.NgayKetThuc.HasValue)
             throw new BusinessRuleException(
                 $"Hợp đồng gia hạn {hopDongGiaHan.MaHopDong} chưa có Ngày ký hoặc Thời hạn, không thể tính ngày hết hạn License mới.");
 
-        var ngayHetHanMoi = hopDongGiaHan.NgayKy.Value.AddMonths(hopDongGiaHan.ThoiHan.Value);
+        // Dùng trực tiếp NgayKetThuc đã có sẵn trên hợp đồng gia hạn (thay vì tự tính lại
+        // NgayKy + ThoiHan) — 1 nguồn duy nhất, khớp với cách CreateLicenseCommand đang làm.
+        var ngayHetHanMoi = hopDongGiaHan.NgayKetThuc.Value;
 
         return await _licenseRepository.RenewAsync(request.LicenseId, ngayHetHanMoi, ct)
             ?? throw new NotFoundException("HD_License", request.LicenseId);

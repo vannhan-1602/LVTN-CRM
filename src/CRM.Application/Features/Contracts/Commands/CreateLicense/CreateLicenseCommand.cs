@@ -78,7 +78,12 @@ public class CreateLicenseCommandHandler : IRequestHandler<CreateLicenseCommand,
                 "Chưa thể cấp License: hợp đồng chưa có mốc Bàn giao được khách xác nhận.");
 
         var ngayKichHoat = DateOnly.FromDateTime(DateTime.UtcNow);
-        var ngayHetHan = hopDong.ThoiHan.HasValue ? ngayKichHoat.AddMonths(hopDong.ThoiHan.Value) : (DateOnly?)null;
+        // QUAN TRỌNG: License phải hết hạn CÙNG LÚC với hợp đồng (HopDong.NgayKetThuc = NgayKy +
+        // ThoiHan, đã tính sẵn khi tạo hợp đồng) — KHÔNG được tính lại "NgayKichHoat + ThoiHan",
+        // vì License thường được cấp trễ hơn NgayKy (sau khi đã Bàn giao xong), nên tính từ
+        // NgayKichHoat sẽ cho ra ngày hết hạn License TRỄ HƠN ngày hết hạn hợp đồng — vô lý vì
+        // license không thể còn hiệu lực sau khi hợp đồng đã kết thúc/thanh lý.
+        var ngayHetHan = hopDong.NgayKetThuc;
 
         return await _licenseRepository.AddAsync(
             request.HopDongId, request.SanPhamId, request.SoLuongUser, request.PhienBan?.Trim(),
