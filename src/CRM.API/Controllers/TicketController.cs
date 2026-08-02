@@ -40,10 +40,11 @@ namespace CRM.API.Controllers
             [FromQuery] string? mucDoUuTien = null,
             [FromQuery] ulong? khachHangId = null,
             [FromQuery] uint? nhanVienXuLyId = null,
+            [FromQuery] bool? chuaGan = null,
             CancellationToken ct = default)
         {
             var result = await _mediator.Send(new GetAllTicketsQuery(
-                pageNumber, pageSize, search, trangThai, mucDoUuTien, khachHangId, nhanVienXuLyId), ct);
+                pageNumber, pageSize, search, trangThai, mucDoUuTien, khachHangId, nhanVienXuLyId, chuaGan), ct);
             return Ok(ApiResponse<PagedResult<TicketDto>>.Ok(result));
         }
 

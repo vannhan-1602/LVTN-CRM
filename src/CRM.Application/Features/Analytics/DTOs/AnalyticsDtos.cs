@@ -37,6 +37,16 @@ public class ChiSummaryDto
 {
     public decimal TongChiThangNay { get; set; }
     public int SoPhieuChiThangNay { get; set; }
+
+    /// <summary>Tổng chi trong khoảng thời gian đang lọc (TuNgay..DenNgay). Nếu không truyền
+    /// bộ lọc thì đây là tổng chi TOÀN THỜI GIAN — dùng cho khung "Top khách hàng phát sinh chi phí".</summary>
+    public decimal TongChiTheoBoLoc { get; set; }
+    public int SoPhieuChiTheoBoLoc { get; set; }
+    public DateTime? TuNgay { get; set; }
+    public DateTime? DenNgay { get; set; }
+
+    /// <summary>Top khách hàng phát sinh chi phí nhiều nhất — tính theo CÙNG khoảng thời gian
+    /// đang lọc ở trên (toàn thời gian nếu không lọc).</summary>
     public List<ChiTheoKhachHangDto> TopKhachHangPhatSinhChi { get; set; } = new();
 }
 

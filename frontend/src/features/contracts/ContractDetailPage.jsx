@@ -10,6 +10,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import contractApi from "../../api/contractApi";
+import quoteApi from "../../api/quoteApi";
 import useAuthStore from "../auth/authStore";
 import PageHeader from "../../components/common/PageHeader";
 import Card, { Field } from "../../components/common/Card";
@@ -51,6 +52,9 @@ export default function ContractDetailPage() {
   const [lichThanhToans, setLichThanhToans] = useState([]);
   const [loadingLich, setLoadingLich] = useState(false);
 
+  const [quoteChiTiet, setQuoteChiTiet] = useState([]);
+  const [loadingQuoteChiTiet, setLoadingQuoteChiTiet] = useState(false);
+
   const load = async () => {
     setLoading(true);
     setError("");
@@ -76,9 +80,29 @@ export default function ContractDetailPage() {
     }
   };
 
+  // Hợp đồng không tự lưu danh sách sản phẩm — lấy từ báo giá gốc (BaoGiaId) để nhân viên
+  // biết trong hợp đồng thật sự có sản phẩm/dịch vụ gì (License hay chỉ là dịch vụ).
+  const loadQuoteChiTiet = async (baoGiaId) => {
+    setLoadingQuoteChiTiet(true);
+    try {
+      const res = await quoteApi.getById(baoGiaId);
+      setQuoteChiTiet(res.data?.chiTiet ?? []);
+    } catch {
+      setQuoteChiTiet([]);
+    } finally {
+      setLoadingQuoteChiTiet(false);
+    }
+  };
+
   useEffect(() => {
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (contract?.baoGiaId) {
+      loadQuoteChiTiet(contract.baoGiaId);
+    }
+  }, [contract?.baoGiaId]);
 
   useEffect(() => {
     if (contract?.hinhThucThanhToan === "TraGop") {
@@ -241,7 +265,46 @@ export default function ContractDetailPage() {
             </div>
           </Card>
 
-          {contract.hinhThucThanhToan === "TraGop" && (
+          <Card title={`Sản phẩm trong hợp đồng${quoteChiTiet.length ? ` (${quoteChiTiet.length})` : ""}`}>
+            {loadingQuoteChiTiet ? (
+              <p className="text-sm text-ink-400 text-center py-3">Đang tải...</p>
+            ) : quoteChiTiet.length === 0 ? (
+              <p className="text-sm text-ink-400">
+                Không tìm thấy dòng sản phẩm nào từ báo giá gốc.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {quoteChiTiet.map((sp) => (
+                  <div
+                    key={sp.id}
+                    className="flex items-center justify-between border border-ink-100 rounded-lg p-3"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-ink-900">{sp.tenSP}</span>
+                        {sp.hinhThuc === "License" && (
+                          <Badge label="License" tone="info" />
+                        )}
+                        {sp.hinhThuc === "Subscription" && (
+                          <Badge label="Subscription" tone="info" />
+                        )}
+                        {sp.hinhThuc === "DichVu" && (
+                          <Badge label="Dịch vụ" tone="neutral" />
+                        )}
+                      </div>
+                      <p className="text-xs text-ink-400">
+                        {sp.maSP} · SL {sp.soLuong}
+                        {sp.donVi ? ` ${sp.donVi}` : ""} × {formatMoney(sp.donGia)}
+                      </p>
+                    </div>
+                    <span className="text-sm font-medium text-ink-900">
+                      {formatMoney(sp.thanhTien)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
             <Card title="Lịch trả góp">
               {loadingLich ? (
                 <p className="text-sm text-ink-400">Đang tải lịch trả góp...</p>
@@ -283,7 +346,6 @@ export default function ContractDetailPage() {
                 </table>
               )}
             </Card>
-          )}
 
           <MilestoneSection
             hopDongId={contract.id}
@@ -299,6 +361,7 @@ export default function ContractDetailPage() {
             hopDongGocId={contract.hopDongGocId}
             isManager={user?.role === ROLES.Manager}
             isFinal={isFinal}
+            sanPhamTrongHopDong={quoteChiTiet}
           />
 
           {contract.maBaoGia && (

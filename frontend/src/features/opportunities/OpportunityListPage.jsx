@@ -359,6 +359,7 @@ export default function OpportunityListPage() {
           leads={leads}
           nhanVienList={nhanVienList}
           canAssign={user?.role === ROLES.Manager}
+          presetKhachHangId={khachHangIdFilter}
           onClose={() => setCreateModal(false)}
           onSaved={onSaved}
         />

@@ -4,7 +4,7 @@ const analyticsApi = {
   getAiSalesAnalysis: (soThang = 6) =>
     axiosClient.get("/analytics/ai-sales-analysis", { params: { soThang } }),
   getDashboardTrends: () => axiosClient.get("/analytics/dashboard-trends"),
-  getChiSummary: () => axiosClient.get("/analytics/chi-summary"),
+  getChiSummary: (params) => axiosClient.get("/analytics/chi-summary", { params }),
 };
 
 export default analyticsApi;

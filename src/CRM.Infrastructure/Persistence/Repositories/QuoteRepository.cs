@@ -182,6 +182,8 @@ public class QuoteRepository : IQuoteRepository
             where ct1.BaoGia_Id == baoGiaId
             join sp in _context.Set<BhSanPhamEntity>() on ct1.SanPham_Id equals sp.Id into spJoin
             from sp in spJoin.DefaultIfEmpty()
+            join loai in _context.Set<BhLoaiSanPhamEntity>() on sp.LoaiSanPham_Id equals loai.Id into loaiJoin
+            from loai in loaiJoin.DefaultIfEmpty()
             select new QuoteDetailItemDto
             {
                 Id = ct1.Id,
@@ -189,6 +191,7 @@ public class QuoteRepository : IQuoteRepository
                 TenSP = sp != null ? sp.TenSP : null,
                 MaSP = sp != null ? sp.MaSP : null,
                 DonVi = sp != null ? sp.DonVi : null,
+                HinhThuc = loai != null ? loai.HinhThuc : null,
                 SoLuong = ct1.SoLuong,
                 DonGia = ct1.DonGia
             };

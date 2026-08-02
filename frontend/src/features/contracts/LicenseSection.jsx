@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { KeyRound, Plus, Lock, Unlock, RefreshCw, ListChecks } from "lucide-react";
 import contractApi from "../../api/contractApi";
-import productApi from "../../api/productApi";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
@@ -36,6 +35,10 @@ const emptyForm = {
  *  - hopDongId, loaiHopDong, hopDongGocId, trangThai: thông tin hợp đồng đang xem
  *  - isManager: true nếu role hiện tại là Manager
  *  - isFinal: hợp đồng đã Thanh lý/Hết hạn — khóa cấp mới License
+ *  - sanPhamTrongHopDong: danh sách dòng sản phẩm của CHÍNH hợp đồng này (lấy từ báo giá gốc,
+ *    ContractDetailPage đã load sẵn) — dùng để (1) quyết định có hiện Card này không, và
+ *    (2) giới hạn dropdown "Chọn sản phẩm" chỉ còn đúng những sản phẩm dạng License nằm
+ *    TRONG hợp đồng, thay vì liệt kê toàn bộ catalog sản phẩm của hệ thống.
  */
 export default function LicenseSection({
   hopDongId,
@@ -43,14 +46,25 @@ export default function LicenseSection({
   hopDongGocId,
   isManager,
   isFinal,
+  sanPhamTrongHopDong = [],
 }) {
   const isGiaHan = loaiHopDong === "GiaHan";
   // ChinhThuc: xem/cấp license của chính hợp đồng này.
   // GiaHan: xem license của hợp đồng GỐC để chọn gia hạn (license không tự chuyển hợp đồng).
   const licenseSourceHopDongId = isGiaHan ? hopDongGocId : hopDongId;
 
+  // Sản phẩm dạng License nằm trong hợp đồng này (loại bỏ trùng SanPhamId nếu báo giá có
+  // nhiều dòng cùng 1 sản phẩm) — khớp đúng ràng buộc HinhThuc="License" ở CreateLicenseCommand.
+  const products = Array.from(
+    new Map(
+      sanPhamTrongHopDong
+        .filter((sp) => sp.hinhThuc === "License")
+        .map((sp) => [sp.sanPhamId, sp]),
+    ).values(),
+  );
+  const hasLicenseProduct = products.length > 0;
+
   const [licenses, setLicenses] = useState([]);
-  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -75,25 +89,10 @@ export default function LicenseSection({
     }
   };
 
-  const loadProducts = async () => {
-    try {
-      const res = await productApi.getAll({ pageNumber: 1, pageSize: 200, dangKinhDoanh: true });
-      const all = res.data?.items ?? res.data ?? [];
-      setProducts(all.filter((p) => p.hinhThuc === "License"));
-    } catch {
-      /* không load được danh sách sản phẩm, form sẽ tự báo lỗi khi submit */
-    }
-  };
-
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [licenseSourceHopDongId]);
-
-  useEffect(() => {
-    if (isManager && !isGiaHan) loadProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isManager, isGiaHan]);
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -155,7 +154,12 @@ export default function LicenseSection({
   // Hợp đồng Bảo trì: không có thao tác License nào liên quan.
   if (loaiHopDong === "BaoTri") return null;
 
-  const canCreate = isManager && !isGiaHan && !isFinal;
+  // Chỉ hiện Card này khi: hợp đồng (ChinhThuc) có sản phẩm dạng License, HOẶC đã có License
+  // được cấp/thuộc hợp đồng gốc (trường hợp GiaHan). Còn lại (hợp đồng thuần dịch vụ, chưa từng
+  // có License) thì ẩn hẳn — tránh hiện khung rỗng gây hiểu nhầm hợp đồng có phần mềm.
+  if (!loading && licenses.length === 0 && !(hasLicenseProduct && !isGiaHan)) return null;
+
+  const canCreate = isManager && !isGiaHan && !isFinal && hasLicenseProduct;
 
   return (
     <Card
@@ -189,14 +193,14 @@ export default function LicenseSection({
             >
               <option value="">-- Chọn sản phẩm --</option>
               {products.map((p) => (
-                <option key={p.id} value={p.id}>
+                <option key={p.sanPhamId} value={p.sanPhamId}>
                   {p.tenSP} ({p.maSP})
                 </option>
               ))}
             </select>
             {products.length === 0 && (
               <p className="text-xs text-warning-600 mt-1">
-                Không tìm thấy sản phẩm loại License đang kinh doanh.
+                Hợp đồng này không có sản phẩm loại License.
               </p>
             )}
           </div>

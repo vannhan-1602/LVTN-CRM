@@ -147,12 +147,14 @@ public class OpportunityRepository : IOpportunityRepository
         from lead in lJ.DefaultIfEmpty()
         join u in _ctx.HtUsers on o.NhanVienPhuTrach_Id equals (int?)u.Id into uJ
         from u in uJ.DefaultIfEmpty()
+        join ns in _ctx.HtThongTinNhanSu on u.NhanSuId equals (uint?)ns.Id into nsJ
+        from ns in nsJ.DefaultIfEmpty()
         select new OpportunityRow
         {
             O = o,
             TenKhachHang = kh != null ? kh.TenKhachHang : null,
             TenLead = lead != null ? lead.TenLead : null,
-            TenNhanVien = u != null ? u.Username : null
+            TenNhanVien = ns != null ? ns.HoTen : (u != null ? u.Username : null)
         };
 
     private class OpportunityRow

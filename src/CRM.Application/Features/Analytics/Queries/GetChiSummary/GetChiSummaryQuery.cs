@@ -4,7 +4,7 @@ using MediatR;
 
 namespace CRM.Application.Features.Analytics.Queries.GetChiSummary;
 
-public record GetChiSummaryQuery : IRequest<ChiSummaryDto>;
+public record GetChiSummaryQuery(DateTime? TuNgay = null, DateTime? DenNgay = null) : IRequest<ChiSummaryDto>;
 
 public class GetChiSummaryQueryHandler : IRequestHandler<GetChiSummaryQuery, ChiSummaryDto>
 {
@@ -13,5 +13,5 @@ public class GetChiSummaryQueryHandler : IRequestHandler<GetChiSummaryQuery, Chi
         _analyticsRepository = analyticsRepository;
 
     public Task<ChiSummaryDto> Handle(GetChiSummaryQuery request, CancellationToken ct) =>
-        _analyticsRepository.GetChiSummaryAsync(ct);
+        _analyticsRepository.GetChiSummaryAsync(request.TuNgay, request.DenNgay, ct);
 }

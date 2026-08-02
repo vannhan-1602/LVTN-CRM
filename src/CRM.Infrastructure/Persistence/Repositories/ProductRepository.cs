@@ -159,13 +159,7 @@ public class ProductRepository : IProductRepository
         string? maChungTu, string? ghiChu, uint? nguoiThucHienId,
         CancellationToken ct = default)
     {
-        // Cập nhật tồn kho bằng 1 câu UPDATE cộng dồn atomic (SET SoLuongTon = SoLuongTon + @delta),
-        // kèm điều kiện SoLuongTon + @delta >= 0 ngay trong WHERE.
-        // Nhờ đó DB tự khoá dòng (row lock) khi thực thi UPDATE, hai giao dịch xuất/nhập kho đồng
-        // thời trên cùng 1 sản phẩm sẽ tuần tự hoá ở mức DB thay vì đọc-sửa-ghi ở tầng ứng dụng
-        // (kiểu cũ có thể làm mất phần trừ của giao dịch trước → tồn kho âm thực tế dù có check).
-        // Toàn bộ handler chạy trong 1 transaction (TransactionBehavior), nên row lock của UPDATE
-        // này được giữ tới khi commit, đảm bảo SELECT + INSERT bên dưới nhất quán với giá trị vừa ghi.
+
         var rowsAffected = await _context.Set<BhSanPhamEntity>()
             .Where(x => x.Id == sanPhamId && x.SoLuongTon + soLuongThayDoi >= 0)
             .ExecuteUpdateAsync(s => s
@@ -215,10 +209,13 @@ public class ProductRepository : IProductRepository
         var query =
             from gd in _context.Set<KhoTheKhoEntity>().AsNoTracking()
             where gd.SanPham_Id == sanPhamId
-            join ns in _context.HtThongTinNhanSu on (uint?)gd.NguoiThucHien_Id equals (uint?)ns.Id into nsJoin
+            // gd.NguoiThucHien_Id là HT_User.Id (fk_thekho_user), KHÔNG PHẢI HT_ThongTinNhanSu.Id.
+            join u in _context.HtUsers on (uint?)gd.NguoiThucHien_Id equals (uint?)u.Id into uJoin
+            from u in uJoin.DefaultIfEmpty()
+            join ns in _context.HtThongTinNhanSu on u.NhanSuId equals (uint?)ns.Id into nsJoin
             from ns in nsJoin.DefaultIfEmpty()
             orderby gd.NgayGiaoDich descending
-            select new { Transaction = gd, TenNguoiThucHien = ns != null ? ns.HoTen : null };
+            select new { Transaction = gd, TenNguoiThucHien = ns != null ? ns.HoTen : (u != null ? u.Username : null) };
 
         var results = await query.ToListAsync(ct);
         return results.Select(x => MapTransactionToDto(x.Transaction, x.TenNguoiThucHien)).ToList();

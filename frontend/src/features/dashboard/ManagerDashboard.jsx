@@ -41,6 +41,33 @@ export default function ManagerDashboard() {
   const [error, setError] = useState("");
   const [data, setData] = useState(null);
 
+  // Khung "Top khách hàng phát sinh chi phí" có bộ lọc thời gian riêng, tách khỏi phần load
+  // chính của dashboard để đổi bộ lọc không phải gọi lại toàn bộ API khác.
+  const [chiFilter, setChiFilter] = useState({ tuNgay: "", denNgay: "" });
+  const [chiSummary, setChiSummary] = useState(null);
+  const [loadingChi, setLoadingChi] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingChi(true);
+      try {
+        const res = await analyticsApi.getChiSummary({
+          tuNgay: chiFilter.tuNgay || undefined,
+          denNgay: chiFilter.denNgay || undefined,
+        });
+        if (!cancelled) setChiSummary(res.data ?? null);
+      } catch {
+        if (!cancelled) setChiSummary(null);
+      } finally {
+        if (!cancelled) setLoadingChi(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [chiFilter.tuNgay, chiFilter.denNgay]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -58,7 +85,6 @@ export default function ManagerDashboard() {
           ticketsOpen,
           ticketsUrgent,
           trends,
-          chiSummary,
         ] = await Promise.all([
           opportunityApi.getSummary(),
           customerApi.getAll({ pageNumber: 1, pageSize: 1 }),
@@ -79,7 +105,6 @@ export default function ManagerDashboard() {
           // Không để lỗi API trends làm hỏng cả dashboard — nếu lỗi thì coi như không có trend,
           // stat card vẫn hiện số liệu chính bình thường, chỉ thiếu mũi tên xu hướng.
           analyticsApi.getDashboardTrends().catch(() => null),
-          analyticsApi.getChiSummary().catch(() => null),
         ]);
 
         if (cancelled) return;
@@ -105,8 +130,6 @@ export default function ManagerDashboard() {
           trendTicket: t
             ? t.ticketMoiThangNay - t.ticketMoiThangTruoc
             : undefined,
-          tongChiThangNay: chiSummary?.data?.tongChiThangNay ?? 0,
-          topKhachHangChi: chiSummary?.data?.topKhachHangPhatSinhChi ?? [],
         });
       } catch (err) {
         if (!cancelled)
@@ -182,7 +205,7 @@ export default function ManagerDashboard() {
         />
         <StatCard
           label="Tổng chi tháng này"
-          value={formatMoney(data.tongChiThangNay)}
+          value={formatMoney(chiSummary?.tongChiThangNay)}
           tone="warning"
           icon={Wallet}
         />
@@ -249,22 +272,75 @@ export default function ManagerDashboard() {
             </div>
           </Card>
 
-          {data.topKhachHangChi.length > 0 && (
-            <Card
-              title="Top khách hàng phát sinh chi phí"
-              action={
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  icon={ArrowRight}
-                  onClick={() => navigate("/phieu-thu-chi")}
+          <Card
+            title="Top khách hàng phát sinh chi phí"
+            action={
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={ArrowRight}
+                onClick={() => navigate("/phieu-thu-chi")}
+              >
+                Xem tất cả
+              </Button>
+            }
+          >
+            <div className="flex flex-wrap items-end gap-2 mb-4">
+              <div>
+                <label className="block text-xs text-ink-400 mb-1">Từ ngày</label>
+                <input
+                  type="date"
+                  value={chiFilter.tuNgay}
+                  onChange={(e) =>
+                    setChiFilter((f) => ({ ...f, tuNgay: e.target.value }))
+                  }
+                  className="border border-ink-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-ink-400 mb-1">Đến ngày</label>
+                <input
+                  type="date"
+                  value={chiFilter.denNgay}
+                  onChange={(e) =>
+                    setChiFilter((f) => ({ ...f, denNgay: e.target.value }))
+                  }
+                  className="border border-ink-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+                />
+              </div>
+              {(chiFilter.tuNgay || chiFilter.denNgay) && (
+                <button
+                  onClick={() => setChiFilter({ tuNgay: "", denNgay: "" })}
+                  className="text-xs font-medium text-ink-500 hover:underline pb-1.5"
                 >
-                  Xem tất cả
-                </Button>
-              }
-            >
+                  Bỏ lọc
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between bg-surface-alt rounded-lg px-3.5 py-2.5 mb-3">
+              <span className="text-xs text-ink-500">
+                Tổng cộng đã chi{" "}
+                {chiFilter.tuNgay || chiFilter.denNgay
+                  ? "trong khoảng đã lọc"
+                  : "(toàn thời gian)"}
+              </span>
+              <span className="text-sm font-semibold text-danger-600">
+                {loadingChi
+                  ? "Đang tính..."
+                  : formatMoney(chiSummary?.tongChiTheoBoLoc)}
+              </span>
+            </div>
+
+            {loadingChi ? (
+              <p className="text-sm text-ink-400 text-center py-3">Đang tải...</p>
+            ) : (chiSummary?.topKhachHangPhatSinhChi?.length ?? 0) === 0 ? (
+              <p className="text-sm text-ink-400 text-center py-3">
+                Không có phiếu chi nào trong khoảng thời gian này.
+              </p>
+            ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {data.topKhachHangChi.map((kh) => (
+                {chiSummary.topKhachHangPhatSinhChi.map((kh) => (
                   <button
                     key={kh.khachHangId}
                     onClick={() => navigate(`/customers/${kh.khachHangId}`)}
@@ -284,8 +360,8 @@ export default function ManagerDashboard() {
                   </button>
                 ))}
               </div>
-            </Card>
-          )}
+            )}
+          </Card>
         </div>
 
         {/* Lối tắt + cảnh báo */}

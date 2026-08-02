@@ -28,8 +28,12 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
         var ticket = await _ticketRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Ticket), request.Id);
 
-        // Chặn Sale xem Ticket không phải mình xử lý.
-        if (_currentUser.Role == Roles.Sale && ticket.NhanVienXuLyId != _currentUser.UserId)
+        // Sale được xem ticket của chính mình hoặc ticket chưa ai nhận (để có thể tự nhận xử lý) —
+        // khớp với quy tắc quyền hạn ở AssignTicketCommandHandler. Không được xem ticket của
+        // đồng nghiệp khác.
+        if (_currentUser.Role == Roles.Sale &&
+            ticket.NhanVienXuLyId != _currentUser.UserId &&
+            ticket.NhanVienXuLyId != null)
             throw new ForbiddenException("Bạn không có quyền xem dữ liệu của nhân viên khác.");
 
         var phanHois = await _ticketRepository.GetPhanHoisAsync(request.Id, cancellationToken);

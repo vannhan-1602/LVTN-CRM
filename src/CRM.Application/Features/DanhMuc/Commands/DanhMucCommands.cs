@@ -13,11 +13,23 @@ public record CreateLoaiKhachHangCommand(UpsertLoaiKhachHangDto Dto) : IRequest<
 public record UpdateLoaiKhachHangCommand(ushort Id, UpsertLoaiKhachHangDto Dto) : IRequest<LoaiKhachHangDto>;
 public record DeleteLoaiKhachHangCommand(ushort Id) : IRequest;
 
-public class UpsertLoaiKhachHangValidator : AbstractValidator<UpsertLoaiKhachHangDto>
+// Validator PHẢI target đúng Command type — ValidationBehavior<TRequest,TResponse> chỉ
+// resolve IValidator<TRequest> (TRequest = Command), không resolve IValidator<Dto lồng bên
+// trong>. Validator target DTO sẽ được đăng ký vào DI nhưng KHÔNG BAO GIỜ được pipeline gọi.
+public class CreateLoaiKhachHangCommandValidator : AbstractValidator<CreateLoaiKhachHangCommand>
 {
-    public UpsertLoaiKhachHangValidator()
+    public CreateLoaiKhachHangCommandValidator()
     {
-        RuleFor(x => x.TenLoai).NotEmpty().MaximumLength(50)
+        RuleFor(x => x.Dto.TenLoai).NotEmpty().MaximumLength(50)
+            .WithMessage("Tên loại khách hàng không được để trống và tối đa 50 ký tự.");
+    }
+}
+public class UpdateLoaiKhachHangCommandValidator : AbstractValidator<UpdateLoaiKhachHangCommand>
+{
+    public UpdateLoaiKhachHangCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan((ushort)0);
+        RuleFor(x => x.Dto.TenLoai).NotEmpty().MaximumLength(50)
             .WithMessage("Tên loại khách hàng không được để trống và tối đa 50 ký tự.");
     }
 }
@@ -51,11 +63,20 @@ public record CreateTinhTrangCommand(UpsertTinhTrangKhachHangDto Dto) : IRequest
 public record UpdateTinhTrangCommand(ushort Id, UpsertTinhTrangKhachHangDto Dto) : IRequest<TinhTrangKhachHangDto>;
 public record DeleteTinhTrangCommand(ushort Id) : IRequest;
 
-public class UpsertTinhTrangValidator : AbstractValidator<UpsertTinhTrangKhachHangDto>
+public class CreateTinhTrangCommandValidator : AbstractValidator<CreateTinhTrangCommand>
 {
-    public UpsertTinhTrangValidator()
+    public CreateTinhTrangCommandValidator()
     {
-        RuleFor(x => x.TenTinhTrang).NotEmpty().MaximumLength(50)
+        RuleFor(x => x.Dto.TenTinhTrang).NotEmpty().MaximumLength(50)
+            .WithMessage("Tên tình trạng không được để trống và tối đa 50 ký tự.");
+    }
+}
+public class UpdateTinhTrangCommandValidator : AbstractValidator<UpdateTinhTrangCommand>
+{
+    public UpdateTinhTrangCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan((ushort)0);
+        RuleFor(x => x.Dto.TenTinhTrang).NotEmpty().MaximumLength(50)
             .WithMessage("Tên tình trạng không được để trống và tối đa 50 ký tự.");
     }
 }
@@ -89,11 +110,20 @@ public record CreateLoaiTicketCommand(UpsertLoaiTicketDto Dto) : IRequest<LoaiTi
 public record UpdateLoaiTicketCommand(ushort Id, UpsertLoaiTicketDto Dto) : IRequest<LoaiTicketDto>;
 public record DeleteLoaiTicketCommand(ushort Id) : IRequest;
 
-public class UpsertLoaiTicketValidator : AbstractValidator<UpsertLoaiTicketDto>
+public class CreateLoaiTicketCommandValidator : AbstractValidator<CreateLoaiTicketCommand>
 {
-    public UpsertLoaiTicketValidator()
+    public CreateLoaiTicketCommandValidator()
     {
-        RuleFor(x => x.TenLoai).NotEmpty().MaximumLength(100)
+        RuleFor(x => x.Dto.TenLoai).NotEmpty().MaximumLength(100)
+            .WithMessage("Tên loại ticket không được để trống và tối đa 100 ký tự.");
+    }
+}
+public class UpdateLoaiTicketCommandValidator : AbstractValidator<UpdateLoaiTicketCommand>
+{
+    public UpdateLoaiTicketCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan((ushort)0);
+        RuleFor(x => x.Dto.TenLoai).NotEmpty().MaximumLength(100)
             .WithMessage("Tên loại ticket không được để trống và tối đa 100 ký tự.");
     }
 }
@@ -127,11 +157,20 @@ public record CreateLoaiSanPhamCommand(UpsertLoaiSanPhamDto Dto) : IRequest<Loai
 public record UpdateLoaiSanPhamCommand(uint Id, UpsertLoaiSanPhamDto Dto) : IRequest<LoaiSanPhamDto>;
 public record DeleteLoaiSanPhamCommand(uint Id) : IRequest;
 
-public class UpsertLoaiSanPhamValidator : AbstractValidator<UpsertLoaiSanPhamDto>
+public class CreateLoaiSanPhamCommandValidator : AbstractValidator<CreateLoaiSanPhamCommand>
 {
-    public UpsertLoaiSanPhamValidator()
+    public CreateLoaiSanPhamCommandValidator()
     {
-        RuleFor(x => x.TenLoai).NotEmpty().MaximumLength(100)
+        RuleFor(x => x.Dto.TenLoai).NotEmpty().MaximumLength(100)
+            .WithMessage("Tên loại sản phẩm không được để trống và tối đa 100 ký tự.");
+    }
+}
+public class UpdateLoaiSanPhamCommandValidator : AbstractValidator<UpdateLoaiSanPhamCommand>
+{
+    public UpdateLoaiSanPhamCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan(0U);
+        RuleFor(x => x.Dto.TenLoai).NotEmpty().MaximumLength(100)
             .WithMessage("Tên loại sản phẩm không được để trống và tối đa 100 ký tự.");
     }
 }
@@ -163,15 +202,16 @@ public class DeleteLoaiSanPhamHandler : IRequestHandler<DeleteLoaiSanPhamCommand
 // ════════════════════════════════════════════════════════════════════════════
 public record UpdateXepHangCommand(ushort Id, UpdateXepHangDto Dto) : IRequest<XepHangDto>;
 
-public class UpdateXepHangDtoValidator : AbstractValidator<UpdateXepHangDto>
+public class UpdateXepHangCommandValidator : AbstractValidator<UpdateXepHangCommand>
 {
-    public UpdateXepHangDtoValidator()
+    public UpdateXepHangCommandValidator()
     {
-        RuleFor(x => x.DiemToiThieu).GreaterThanOrEqualTo(0)
+        RuleFor(x => x.Id).GreaterThan((ushort)0);
+        RuleFor(x => x.Dto.DiemToiThieu).GreaterThanOrEqualTo(0)
             .WithMessage("Mốc điểm không được âm.");
-        RuleFor(x => x.SoLanThuToiThieu).GreaterThanOrEqualTo(0)
+        RuleFor(x => x.Dto.SoLanThuToiThieu).GreaterThanOrEqualTo(0)
             .WithMessage("Số lần thu không được âm.");
-        RuleFor(x => x.PhanTramGiamVoucher).InclusiveBetween(0, 100)
+        RuleFor(x => x.Dto.PhanTramGiamVoucher).InclusiveBetween(0, 100)
             .WithMessage("Phần trăm giảm voucher phải từ 0 đến 100.");
     }
 }
@@ -191,18 +231,35 @@ public record CreateNgayLeCommand(UpsertNgayLeDto Dto) : IRequest<NgayLeDto>;
 public record UpdateNgayLeCommand(ushort Id, UpsertNgayLeDto Dto) : IRequest<NgayLeDto>;
 public record DeleteNgayLeCommand(ushort Id) : IRequest;
 
-public class UpsertNgayLeValidator : AbstractValidator<UpsertNgayLeDto>
+public class CreateNgayLeCommandValidator : AbstractValidator<CreateNgayLeCommand>
 {
-    public UpsertNgayLeValidator()
+    public CreateNgayLeCommandValidator()
     {
-        RuleFor(x => x.TenNgayLe).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Thang).InclusiveBetween((byte)1, (byte)12)
+        RuleFor(x => x.Dto.TenNgayLe).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Dto.Thang).InclusiveBetween((byte)1, (byte)12)
             .WithMessage("Tháng phải từ 1 đến 12.");
-        RuleFor(x => x.Ngay).InclusiveBetween((byte)1, (byte)31)
+        RuleFor(x => x.Dto.Ngay).InclusiveBetween((byte)1, (byte)31)
             .WithMessage("Ngày phải từ 1 đến 31.");
-        RuleFor(x => x.SoNgayGuiTruoc).InclusiveBetween((byte)1, (byte)30)
+        RuleFor(x => x.Dto.SoNgayGuiTruoc).InclusiveBetween((byte)1, (byte)30)
             .WithMessage("Số ngày gửi trước phải từ 1 đến 30.");
-        RuleFor(x => x.ApDungChoLoaiKH)
+        RuleFor(x => x.Dto.ApDungChoLoaiKH)
+            .Must(v => new[] { "B2C", "B2B", "TatCa" }.Contains(v))
+            .WithMessage("ApDungChoLoaiKH chỉ nhận: B2C, B2B, TatCa.");
+    }
+}
+public class UpdateNgayLeCommandValidator : AbstractValidator<UpdateNgayLeCommand>
+{
+    public UpdateNgayLeCommandValidator()
+    {
+        RuleFor(x => x.Id).GreaterThan((ushort)0);
+        RuleFor(x => x.Dto.TenNgayLe).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Dto.Thang).InclusiveBetween((byte)1, (byte)12)
+            .WithMessage("Tháng phải từ 1 đến 12.");
+        RuleFor(x => x.Dto.Ngay).InclusiveBetween((byte)1, (byte)31)
+            .WithMessage("Ngày phải từ 1 đến 31.");
+        RuleFor(x => x.Dto.SoNgayGuiTruoc).InclusiveBetween((byte)1, (byte)30)
+            .WithMessage("Số ngày gửi trước phải từ 1 đến 30.");
+        RuleFor(x => x.Dto.ApDungChoLoaiKH)
             .Must(v => new[] { "B2C", "B2B", "TatCa" }.Contains(v))
             .WithMessage("ApDungChoLoaiKH chỉ nhận: B2C, B2B, TatCa.");
     }

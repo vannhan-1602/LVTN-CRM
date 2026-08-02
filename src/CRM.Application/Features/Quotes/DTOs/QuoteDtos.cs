@@ -28,6 +28,10 @@ public class QuoteDetailItemDto
     public string? TenSP { get; set; }
     public string? MaSP { get; set; }
     public string? DonVi { get; set; }
+
+    /// <summary>VatLy | DichVu | License | Subscription — cho biết dòng sản phẩm này thuộc loại nào,
+    /// dùng để hiển thị (VD: đánh dấu dòng nào là License khi xem hợp đồng).</summary>
+    public string? HinhThuc { get; set; }
     public int SoLuong { get; set; }
     public decimal DonGia { get; set; }
     public decimal ThanhTien => SoLuong * DonGia;

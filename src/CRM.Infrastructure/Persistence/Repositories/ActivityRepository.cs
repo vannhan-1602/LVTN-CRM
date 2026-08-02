@@ -97,11 +97,13 @@ public class ActivityRepository : IActivityRepository
         from kh in khJ.DefaultIfEmpty()
         join u in _ctx.HtUsers on a.NhanVien_Id equals (uint?)u.Id into uJ
         from u in uJ.DefaultIfEmpty()
+        join ns in _ctx.HtThongTinNhanSu on u.NhanSuId equals (uint?)ns.Id into nsJ
+        from ns in nsJ.DefaultIfEmpty()
         select new ActivityRow
         {
             A = a,
             TenKhachHang = kh != null ? kh.TenKhachHang : null,
-            TenNhanVien = u != null ? u.Username : null
+            TenNhanVien = ns != null ? ns.HoTen : (u != null ? u.Username : null)
         };
 
     private class ActivityRow

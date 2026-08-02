@@ -15,6 +15,7 @@ namespace CRM.Application.Interfaces.Tickets
             string? mucDoUuTien,
             ulong? khachHangId,
             uint? nhanVienXuLyId,
+            bool? chuaGan = null,
             CancellationToken cancellationToken = default);
 
         Task<Ticket> AddAsync(Ticket ticket, CancellationToken cancellationToken = default);

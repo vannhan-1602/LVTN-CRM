@@ -36,7 +36,11 @@ public class CustomerRepository : ICustomerRepository
             from loai in loaiJoin.DefaultIfEmpty()
             join tinh in _context.KhTinhTrangKhachHangs on kh.TinhTrangId equals tinh.Id into tinhJoin
             from tinh in tinhJoin.DefaultIfEmpty()
-            join ns in _context.HtThongTinNhanSu on (uint?)kh.NhanVienPhuTrachId equals (uint?)ns.Id into nsJoin
+                // kh.NhanVienPhuTrachId là HT_User.Id (fk_kh_nv), KHÔNG PHẢI HT_ThongTinNhanSu.Id —
+                // phải join qua HT_User trước rồi mới sang HT_ThongTinNhanSu qua NhanSuId.
+            join u in _context.HtUsers on (uint?)kh.NhanVienPhuTrachId equals (uint?)u.Id into uJoin
+            from u in uJoin.DefaultIfEmpty()
+            join ns in _context.HtThongTinNhanSu on u.NhanSuId equals (uint?)ns.Id into nsJoin
             from ns in nsJoin.DefaultIfEmpty()
             join hang in _context.Set<KhXepHangEntity>() on kh.HangKhachHang_Id equals hang.Id into hangJoin
             from hang in hangJoin.DefaultIfEmpty()
@@ -45,7 +49,7 @@ public class CustomerRepository : ICustomerRepository
                 KhachHang = kh,
                 TenLoai = loai != null ? loai.TenLoai : null,
                 TenTinhTrang = tinh != null ? tinh.TenTinhTrang : null,
-                TenNhanVien = ns != null ? ns.HoTen : null,
+                TenNhanVien = ns != null ? ns.HoTen : (u != null ? u.Username : null),
                 TenHang = hang != null ? hang.TenHang : null
             }
         ).FirstOrDefaultAsync(cancellationToken);
@@ -73,7 +77,9 @@ public class CustomerRepository : ICustomerRepository
             from loai in loaiJoin.DefaultIfEmpty()
             join tinh in _context.KhTinhTrangKhachHangs on kh.TinhTrangId equals tinh.Id into tinhJoin
             from tinh in tinhJoin.DefaultIfEmpty()
-            join ns in _context.HtThongTinNhanSu on (uint?)kh.NhanVienPhuTrachId equals (uint?)ns.Id into nsJoin
+            join u in _context.HtUsers on (uint?)kh.NhanVienPhuTrachId equals (uint?)u.Id into uJoin
+            from u in uJoin.DefaultIfEmpty()
+            join ns in _context.HtThongTinNhanSu on u.NhanSuId equals (uint?)ns.Id into nsJoin
             from ns in nsJoin.DefaultIfEmpty()
             join hang in _context.Set<KhXepHangEntity>() on kh.HangKhachHang_Id equals hang.Id into hangJoin
             from hang in hangJoin.DefaultIfEmpty()
@@ -82,7 +88,7 @@ public class CustomerRepository : ICustomerRepository
                 KhachHang = kh,
                 TenLoai = loai != null ? loai.TenLoai : null,
                 TenTinhTrang = tinh != null ? tinh.TenTinhTrang : null,
-                TenNhanVien = ns != null ? ns.HoTen : null,
+                TenNhanVien = ns != null ? ns.HoTen : (u != null ? u.Username : null),
                 TenHang = hang != null ? hang.TenHang : null
             };
 
@@ -250,9 +256,9 @@ public class CustomerRepository : ICustomerRepository
         SoDienThoai = e.SoDienThoai,
         MaSoThue = e.MaSoThue,
         NhanVienPhuTrachId = e.NhanVienPhuTrachId,
-        NgaySinh           = e.NgaySinh,
-        NgayThanhLap       = e.NgayThanhLap,
-        HangKhachHangId    = e.HangKhachHang_Id,
+        NgaySinh = e.NgaySinh,
+        NgayThanhLap = e.NgayThanhLap,
+        HangKhachHangId = e.HangKhachHang_Id,
         IsDeleted = e.IsDeleted,
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt

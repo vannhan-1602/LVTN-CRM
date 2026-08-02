@@ -61,6 +61,11 @@ export default function TicketListPage() {
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
 
+  // viewMode: "cuaToi" (mặc định, Sale chỉ thấy ticket mình xử lý — Manager thấy tất cả),
+  // "chuaGan" (hàng chờ ticket chưa gán, mọi Sale đều thấy như nhau, ai nhận trước được trước).
+  const isSale = user?.role === ROLES.Sale;
+  const [viewMode, setViewMode] = useState("cuaToi");
+
   const {
     data,
     isLoading: loading,
@@ -72,6 +77,7 @@ export default function TicketListPage() {
       filterStatus,
       filterPriority,
       khachHangIdFilter,
+      viewMode,
     ],
     queryFn: async () => {
       const res = await ticketApi.getAll({
@@ -81,6 +87,7 @@ export default function TicketListPage() {
         trangThai: filterStatus || undefined,
         mucDoUuTien: filterPriority || undefined,
         khachHangId: khachHangIdFilter || undefined,
+        chuaGan: viewMode === "chuaGan" ? true : undefined,
       });
       return res.data ?? {};
     },
@@ -133,6 +140,16 @@ export default function TicketListPage() {
     }
   };
 
+  const handleClaim = async (id) => {
+    try {
+      await ticketApi.assign(id, { nhanVienXuLyId: user?.userId });
+      setSuccess("Đã nhận xử lý ticket");
+      await loadTickets();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Không thể nhận ticket này"));
+    }
+  };
+
   return (
     <div className="space-y-5">
       {showCreateModal && (
@@ -157,6 +174,35 @@ export default function TicketListPage() {
           </Button>
         }
       />
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            setViewMode("cuaToi");
+            setPageNumber(1);
+          }}
+          className={`text-sm font-medium px-3.5 py-2 rounded-lg border transition-colors ${
+            viewMode === "cuaToi"
+              ? "bg-accent-50 border-accent-200 text-accent-700"
+              : "border-ink-200 text-ink-500 hover:bg-surface-alt"
+          }`}
+        >
+          {isSale ? "Ticket của tôi" : "Tất cả ticket"}
+        </button>
+        <button
+          onClick={() => {
+            setViewMode("chuaGan");
+            setPageNumber(1);
+          }}
+          className={`text-sm font-medium px-3.5 py-2 rounded-lg border transition-colors ${
+            viewMode === "chuaGan"
+              ? "bg-accent-50 border-accent-200 text-accent-700"
+              : "border-ink-200 text-ink-500 hover:bg-surface-alt"
+          }`}
+        >
+          Ticket chưa gán
+        </button>
+      </div>
 
       {khachHangIdFilter && (
         <div className="bg-info-50 border border-info-100 text-info-700 text-sm rounded-lg px-4 py-2.5 flex items-center justify-between">
@@ -348,6 +394,15 @@ export default function TicketListPage() {
                     >
                       <RowMenu
                         items={[
+                          ...(!item.nhanVienXuLyId
+                            ? [
+                                {
+                                  label: "Nhận xử lý",
+                                  icon: CheckCircle2,
+                                  onClick: () => handleClaim(item.id),
+                                },
+                              ]
+                            : []),
                           {
                             label: "Xem / Xử lý",
                             icon: Eye,

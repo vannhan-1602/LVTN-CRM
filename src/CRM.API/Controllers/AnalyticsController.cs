@@ -38,12 +38,14 @@ public class AnalyticsController : ControllerBase
         return Ok(ApiResponse<DashboardTrendsDto>.Ok(result));
     }
 
-    /// Tổng chi phí (Phiếu Chi) tháng này + top khách hàng phát sinh chi phí nhiều nhất.
+    /// Tổng chi phí (Phiếu Chi) tháng này + tổng/top khách hàng phát sinh chi phí nhiều nhất
+    /// trong khoảng thời gian lọc (tuNgay/denNgay — bỏ trống = toàn thời gian).
     /// Không liên quan tới công nợ/tiến độ thanh toán — chỉ Manager xem được trên Dashboard.
     [HttpGet("chi-summary")]
-    public async Task<IActionResult> GetChiSummary(CancellationToken ct)
+    public async Task<IActionResult> GetChiSummary(
+        [FromQuery] DateTime? tuNgay, [FromQuery] DateTime? denNgay, CancellationToken ct)
     {
-        var result = await _mediator.Send(new GetChiSummaryQuery(), ct);
+        var result = await _mediator.Send(new GetChiSummaryQuery(tuNgay, denNgay), ct);
         return Ok(ApiResponse<ChiSummaryDto>.Ok(result));
     }
 }

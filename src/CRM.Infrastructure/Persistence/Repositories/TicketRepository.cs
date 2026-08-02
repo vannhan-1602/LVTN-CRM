@@ -23,7 +23,7 @@ namespace CRM.Infrastructure.Persistence.Repositories
         public async Task<PagedResult<Ticket>> GetPagedAsync(
             int pageNumber, int pageSize, string? search, string? trangThai,
             string? mucDoUuTien, ulong? khachHangId, uint? nhanVienXuLyId,
-            CancellationToken ct = default)
+            bool? chuaGan = null, CancellationToken ct = default)
         {
             var query = _context.Set<TkTicketEntity>()
                 .AsNoTracking()
@@ -43,7 +43,11 @@ namespace CRM.Infrastructure.Persistence.Repositories
             if (khachHangId.HasValue)
                 query = query.Where(x => x.KhachHang_Id == khachHangId.Value);
 
-            if (nhanVienXuLyId.HasValue)
+            // ChuaGan=true: chỉ lấy ticket chưa có ai nhận (hàng chờ để Sale tự nhận) — ưu tiên
+            // hơn nhanVienXuLyId vì 2 filter này loại trừ nhau về mặt nghiệp vụ.
+            if (chuaGan == true)
+                query = query.Where(x => x.NhanVienXuLy_Id == null);
+            else if (nhanVienXuLyId.HasValue)
                 query = query.Where(x => x.NhanVienXuLy_Id == nhanVienXuLyId.Value);
 
             var total = await query.CountAsync(ct);

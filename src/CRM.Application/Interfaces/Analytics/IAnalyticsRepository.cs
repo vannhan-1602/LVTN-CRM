@@ -16,7 +16,8 @@ public interface IAnalyticsRepository
     /// dùng cho mũi tên xu hướng (tăng/giảm) trên 4 stat card đầu Dashboard.</summary>
     Task<DashboardTrendsDto> GetDashboardTrendsAsync(CancellationToken ct = default);
 
-    /// <summary>Tổng chi phí (Phiếu Chi) tháng này + top khách hàng phát sinh chi phí nhiều nhất
-    /// (toàn thời gian). Không liên quan tới công nợ/tiến độ thanh toán.</summary>
-    Task<ChiSummaryDto> GetChiSummaryAsync(CancellationToken ct = default);
+    /// <summary>Tổng chi phí (Phiếu Chi) tháng này + tổng/top khách hàng phát sinh chi phí nhiều nhất
+    /// trong khoảng thời gian lọc (tuNgay/denNgay — bỏ trống = toàn thời gian). Không liên quan
+    /// tới công nợ/tiến độ thanh toán.</summary>
+    Task<ChiSummaryDto> GetChiSummaryAsync(DateTime? tuNgay, DateTime? denNgay, CancellationToken ct = default);
 }

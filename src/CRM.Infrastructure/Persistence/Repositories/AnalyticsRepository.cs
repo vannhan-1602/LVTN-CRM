@@ -122,19 +122,31 @@ public class AnalyticsRepository : IAnalyticsRepository
         };
     }
 
-    public async Task<ChiSummaryDto> GetChiSummaryAsync(CancellationToken ct = default)
+    public async Task<ChiSummaryDto> GetChiSummaryAsync(DateTime? tuNgay, DateTime? denNgay, CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;
         var dauThangNay = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        var chiQuery = _context.KtPhieuThuChis.AsNoTracking()
+        var chiQueryGoc = _context.KtPhieuThuChis.AsNoTracking()
             .Where(x => x.LoaiPhieu == PaymentVoucherType.Chi);
 
-        var chiThangNay = await chiQuery
+        var chiThangNay = await chiQueryGoc
             .Where(x => x.NgayTao != null && x.NgayTao >= dauThangNay)
             .ToListAsync(ct);
 
-        // Top khách hàng phát sinh chi phí nhiều nhất (toàn thời gian, chỉ tính phiếu có gắn khách hàng)
+        // Áp bộ lọc thời gian (nếu có) cho tổng + top khách hàng — không truyền gì thì mặc định
+        // toàn thời gian, giữ đúng hành vi cũ.
+        var chiQuery = chiQueryGoc;
+        if (tuNgay.HasValue)
+            chiQuery = chiQuery.Where(x => x.NgayTao != null && x.NgayTao >= tuNgay.Value);
+        if (denNgay.HasValue)
+            chiQuery = chiQuery.Where(x => x.NgayTao != null && x.NgayTao <= denNgay.Value);
+
+        var tongTheoBoLoc = await chiQuery.SumAsync(x => (decimal?)x.SoTien, ct) ?? 0m;
+        var soPhieuTheoBoLoc = await chiQuery.CountAsync(ct);
+
+        // Top khách hàng phát sinh chi phí nhiều nhất trong CÙNG khoảng thời gian đang lọc
+        // (chỉ tính phiếu có gắn khách hàng)
         var topKhachHang = await chiQuery
             .Where(x => x.KhachHang_Id != null)
             .GroupBy(x => x.KhachHang_Id!.Value)
@@ -155,6 +167,10 @@ public class AnalyticsRepository : IAnalyticsRepository
         {
             TongChiThangNay = chiThangNay.Sum(x => x.SoTien),
             SoPhieuChiThangNay = chiThangNay.Count,
+            TongChiTheoBoLoc = tongTheoBoLoc,
+            SoPhieuChiTheoBoLoc = soPhieuTheoBoLoc,
+            TuNgay = tuNgay,
+            DenNgay = denNgay,
             TopKhachHangPhatSinhChi = topKhachHang
         };
     }

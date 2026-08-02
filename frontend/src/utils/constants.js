@@ -222,6 +222,35 @@ export function getStockTransactionOptions(hinhThuc) {
   }));
 }
 
+// ── Nhãn field ở form Thêm/Sửa sản phẩm, theo HinhThuc ──────────────────────
+// Cùng triết lý với STOCK_TRANSACTION_LABELS_BY_HINHTHUC ở trên: dữ liệu lưu (DonVi,
+// SoLuongTon) dùng CHUNG 1 cơ chế cho mọi loại sản phẩm — chỉ đổi NHÃN/placeholder
+// hiển thị cho đúng ngữ nghĩa nghiệp vụ (VatLy = tồn kho vật lý thật; License/
+// Subscription/DichVu = số lượng khả dụng có thể cấp phát, không phải hàng tồn kho).
+export const PRODUCT_FIELD_LABELS_BY_HINHTHUC = {
+  VatLy: {
+    donViPlaceholder: "cái, hộp, thùng...",
+    tonBanDauLabel: "Tồn ban đầu",
+  },
+  License: {
+    donViPlaceholder: "giấy phép, gói...",
+    tonBanDauLabel: "Số lượng License khả dụng ban đầu",
+  },
+  Subscription: {
+    donViPlaceholder: "tháng, năm, gói...",
+    tonBanDauLabel: "Số lượng khả dụng ban đầu",
+  },
+  DichVu: {
+    donViPlaceholder: "giờ, lượt, gói...",
+    tonBanDauLabel: "Số lượng khả dụng ban đầu",
+  },
+};
+
+/** Nhãn/placeholder cho form sản phẩm, theo HinhThuc — mặc định VatLy nếu chưa chọn Loại. */
+export function getProductFieldLabels(hinhThuc) {
+  return PRODUCT_FIELD_LABELS_BY_HINHTHUC[hinhThuc] ?? PRODUCT_FIELD_LABELS_BY_HINHTHUC.VatLy;
+}
+
 // CH_CoHoiBanHang.GiaiDoan
 export const GIAI_DOAN_LIST = [
   "KhaoSat",

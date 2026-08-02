@@ -11,5 +11,6 @@ namespace CRM.Application.Features.Tickets.Queries.GetAllTickets
         string? TrangThai,
         string? MucDoUuTien,
         ulong? KhachHangId,
-        uint? NhanVienXuLyId) : IRequest<PagedResult<TicketDto>>;
+        uint? NhanVienXuLyId,
+        bool? ChuaGan = null) : IRequest<PagedResult<TicketDto>>;
 }

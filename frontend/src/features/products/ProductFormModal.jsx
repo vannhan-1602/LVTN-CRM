@@ -5,8 +5,14 @@ import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 
 import { getApiErrorMessage } from "../../utils/formatters";
+import { getProductFieldLabels } from "../../utils/constants";
 // Modal Thêm/Sửa sản phẩm. Có prop `product` => chế độ Sửa (không cho đổi Mã SP, Tồn ban đầu).
-export default function ProductFormModal({ product, types = [], onClose, onSaved }) {
+export default function ProductFormModal({
+  product,
+  types = [],
+  onClose,
+  onSaved,
+}) {
   const isEdit = Boolean(product);
   const [form, setForm] = useState(
     isEdit
@@ -18,12 +24,26 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
           giaBan: product.giaBan ?? "",
           soLuongTonBanDau: "0",
         }
-      : { loaiSanPhamId: "", maSP: "", tenSP: "", donVi: "", giaBan: "", soLuongTonBanDau: "0" },
+      : {
+          loaiSanPhamId: "",
+          maSP: "",
+          tenSP: "",
+          donVi: "",
+          giaBan: "",
+          soLuongTonBanDau: "0",
+        },
   );
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Nhãn/placeholder "Đơn vị", "Tồn ban đầu" đổi theo HinhThuc của Loại sản phẩm đang chọn
+  // (License/Subscription/DichVu không phải hàng tồn kho vật lý, xem constants.js).
+  const selectedType = types.find(
+    (t) => String(t.id) === String(form.loaiSanPhamId),
+  );
+  const fieldLabels = getProductFieldLabels(selectedType?.hinhThuc);
 
   const handlePickImage = (e) => {
     const file = e.target.files?.[0];
@@ -35,8 +55,12 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.maSP.trim() || !form.tenSP.trim()) { setError("Mã và tên sản phẩm là bắt buộc"); return; }
-    setSubmitting(true); setError("");
+    if (!form.maSP.trim() || !form.tenSP.trim()) {
+      setError("Mã và tên sản phẩm là bắt buộc");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
     try {
       if (isEdit) {
         await productApi.update(product.id, {
@@ -65,60 +89,109 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
         }
       }
       onSaved();
-    } catch (err) { setError(getApiErrorMessage(err, "Không thể lưu sản phẩm")); }
-    finally { setSubmitting(false); }
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Không thể lưu sản phẩm"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <Modal isOpen onClose={onClose} title={isEdit ? "Cập nhật sản phẩm" : "Thêm sản phẩm mới"} size="md">
+    <Modal
+      isOpen
+      onClose={onClose}
+      title={isEdit ? "Cập nhật sản phẩm" : "Thêm sản phẩm mới"}
+      size="md"
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-ink-700 mb-1.5">
             Mã sản phẩm {!isEdit && <span className="text-danger-500">*</span>}
           </label>
-          <input value={form.maSP} disabled={isEdit}
+          <input
+            value={form.maSP}
+            disabled={isEdit}
             onChange={(e) => setForm((f) => ({ ...f, maSP: e.target.value }))}
             placeholder="VD: SP0001"
-            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm disabled:bg-ink-100 disabled:text-ink-400 focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm disabled:bg-ink-100 disabled:text-ink-400 focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+          />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-ink-700 mb-1.5">
             Tên sản phẩm <span className="text-danger-500">*</span>
           </label>
-          <input value={form.tenSP} onChange={(e) => setForm((f) => ({ ...f, tenSP: e.target.value }))}
-            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+          <input
+            value={form.tenSP}
+            onChange={(e) => setForm((f) => ({ ...f, tenSP: e.target.value }))}
+            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-ink-700 mb-1.5">Loại</label>
-            <select value={form.loaiSanPhamId} onChange={(e) => setForm((f) => ({ ...f, loaiSanPhamId: e.target.value }))}
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400">
+            <label className="block text-sm font-medium text-ink-700 mb-1.5">
+              Loại
+            </label>
+            <select
+              value={form.loaiSanPhamId}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, loaiSanPhamId: e.target.value }))
+              }
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            >
               <option value="">-- Chọn --</option>
-              {types.map((t) => <option key={t.id} value={t.id}>{t.tenLoai}</option>)}
+              {types.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.tenLoai}
+                </option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink-700 mb-1.5">Đơn vị</label>
-            <input value={form.donVi} onChange={(e) => setForm((f) => ({ ...f, donVi: e.target.value }))}
-              placeholder="cái, gói, tháng..."
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+            <label className="block text-sm font-medium text-ink-700 mb-1.5">
+              Đơn vị
+            </label>
+            <input
+              value={form.donVi}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, donVi: e.target.value }))
+              }
+              placeholder={fieldLabels.donViPlaceholder}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-ink-700 mb-1.5">Giá bán (VNĐ)</label>
-            <input type="number" min="0" value={form.giaBan} onChange={(e) => setForm((f) => ({ ...f, giaBan: e.target.value }))}
-              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+            <label className="block text-sm font-medium text-ink-700 mb-1.5">
+              Giá bán (VNĐ)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={form.giaBan}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, giaBan: e.target.value }))
+              }
+              className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            />
           </div>
           {!isEdit && (
             <div>
-              <label className="block text-sm font-medium text-ink-700 mb-1.5">Tồn ban đầu</label>
-              <input type="number" min="0" value={form.soLuongTonBanDau}
-                onChange={(e) => setForm((f) => ({ ...f, soLuongTonBanDau: e.target.value }))}
-                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400" />
+              <label className="block text-sm font-medium text-ink-700 mb-1.5">
+                {fieldLabels.tonBanDauLabel}
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.soLuongTonBanDau}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, soLuongTonBanDau: e.target.value }))
+                }
+                className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+              />
             </div>
           )}
         </div>
@@ -129,10 +202,17 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
           </label>
           {imagePreview ? (
             <div className="relative w-20 h-20">
-              <img src={imagePreview} alt="Xem trước" className="w-20 h-20 rounded-lg object-cover border border-ink-200" />
+              <img
+                src={imagePreview}
+                alt="Xem trước"
+                className="w-20 h-20 rounded-lg object-cover border border-ink-200"
+              />
               <button
                 type="button"
-                onClick={() => { setImageFile(null); setImagePreview(null); }}
+                onClick={() => {
+                  setImageFile(null);
+                  setImagePreview(null);
+                }}
                 className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-danger-500 text-white flex items-center justify-center"
               >
                 <X size={12} />
@@ -142,18 +222,29 @@ export default function ProductFormModal({ product, types = [], onClose, onSaved
             <label className="flex items-center justify-center gap-2 border border-dashed border-ink-200 rounded-lg py-2.5 text-sm text-ink-500 hover:border-accent-400 hover:text-accent-600 cursor-pointer transition-colors">
               <Upload size={14} />
               Chọn ảnh
-              <input type="file" accept=".jpg,.jpeg,.png,.webp,.gif" className="hidden" onChange={handlePickImage} />
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,.gif"
+                className="hidden"
+                onChange={handlePickImage}
+              />
             </label>
           )}
         </div>
 
-        {error && <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2.5">{error}</div>}
+        {error && (
+          <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2.5">
+            {error}
+          </div>
+        )}
 
         <div className="flex gap-2 pt-1">
           <Button type="submit" disabled={submitting} className="flex-1">
             {submitting ? "Đang lưu..." : isEdit ? "Cập nhật" : "Thêm mới"}
           </Button>
-          <Button type="button" variant="secondary" onClick={onClose}>Hủy</Button>
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Hủy
+          </Button>
         </div>
       </form>
     </Modal>

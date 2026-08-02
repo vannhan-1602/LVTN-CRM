@@ -21,10 +21,21 @@ public class GetAllTicketsQueryHandler : IRequestHandler<GetAllTicketsQuery, Pag
 
     public async Task<PagedResult<TicketDto>> Handle(GetAllTicketsQuery request, CancellationToken cancellationToken)
     {
-        // Sale chỉ xem Ticket mình xử lý.
-        var nhanVienXuLyId = _currentUser.Role == Roles.Sale
-            ? _currentUser.UserId
-            : request.NhanVienXuLyId;
+        // Sale mặc định chỉ xem ticket mình đang xử lý, TRỪ khi:
+        //  - request.ChuaGan = true → xem hàng chờ ticket chưa gán (để tự nhận), mọi Sale đều thấy như nhau.
+        //  - request.NhanVienXuLyId đã chỉ đích danh chính mình → giữ nguyên (tương đương mặc định).
+        // Sale không được xem ticket đang thuộc về đồng nghiệp khác bằng cách truyền nhanVienXuLyId của người khác.
+        var chuaGan = request.ChuaGan;
+        uint? nhanVienXuLyId;
+
+        if (_currentUser.Role == Roles.Sale)
+        {
+            nhanVienXuLyId = chuaGan == true ? null : _currentUser.UserId;
+        }
+        else
+        {
+            nhanVienXuLyId = request.NhanVienXuLyId;
+        }
 
         var result = await _ticketRepository.GetPagedAsync(
             request.PageNumber,
@@ -34,6 +45,7 @@ public class GetAllTicketsQueryHandler : IRequestHandler<GetAllTicketsQuery, Pag
             request.MucDoUuTien,
             request.KhachHangId,
             nhanVienXuLyId,
+            chuaGan,
             cancellationToken);
 
         return new PagedResult<TicketDto>

@@ -100,6 +100,17 @@ export default function TicketDetailPage() {
     finally { setSavingAssign(false); }
   };
 
+  // Sale tự nhận xử lý ticket đang chưa gán — không cho chọn người khác (chỉ Manager mới
+  // điều phối được), nên dùng nút riêng thay vì dropdown đầy đủ.
+  const handleClaim = async () => {
+    setSavingAssign(true); setError("");
+    try {
+      await ticketApi.assign(id, { nhanVienXuLyId: user?.userId });
+      await load();
+    } catch (err) { setError(getApiErrorMessage(err, "Không thể nhận ticket này")); }
+    finally { setSavingAssign(false); }
+  };
+
   const handleAddPhanHoi = async (e) => {
     e.preventDefault();
     if (!phanHoiForm.noiDung.trim()) return;
@@ -258,12 +269,32 @@ export default function TicketDetailPage() {
 
           {!isClosed && (
             <Card title="Nhân viên xử lý">
-              <form onSubmit={handleAssign} className="space-y-3">
-                <EmployeeSelect value={assignNV} onChange={setAssignNV} options={nhanVienList} emptyLabel="-- Chưa gán --" />
-                <Button type="submit" size="sm" variant="secondary" icon={UserCog} className="w-full" disabled={savingAssign}>
-                  {savingAssign ? "Đang lưu..." : "Cập nhật gán việc"}
-                </Button>
-              </form>
+              {user?.role === ROLES.Sale ? (
+                // Sale: chỉ tự nhận / không có quyền chuyển cho người khác (khớp quyền hạn backend).
+                ticket.nhanVienXuLyId === user?.userId ? (
+                  <p className="text-sm text-ink-700">
+                    Bạn đang xử lý ticket này. Liên hệ Manager nếu cần chuyển cho người khác.
+                  </p>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    icon={UserCog}
+                    className="w-full"
+                    disabled={savingAssign}
+                    onClick={handleClaim}
+                  >
+                    {savingAssign ? "Đang nhận..." : "Nhận xử lý ticket này"}
+                  </Button>
+                )
+              ) : (
+                <form onSubmit={handleAssign} className="space-y-3">
+                  <EmployeeSelect value={assignNV} onChange={setAssignNV} options={nhanVienList} emptyLabel="-- Chưa gán --" />
+                  <Button type="submit" size="sm" variant="secondary" icon={UserCog} className="w-full" disabled={savingAssign}>
+                    {savingAssign ? "Đang lưu..." : "Cập nhật gán việc"}
+                  </Button>
+                </form>
+              )}
             </Card>
           )}
           {isClosed && ticket.csat && (

@@ -30,6 +30,7 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, P
             Id = dto.Id,
             LoaiSanPhamId = dto.LoaiSanPhamId,
             TenLoai = dto.TenLoai,
+            HinhThuc = dto.HinhThuc,
             MaSP = dto.MaSP,
             TenSP = dto.TenSP,
             DonVi = dto.DonVi,
