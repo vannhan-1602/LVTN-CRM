@@ -285,8 +285,12 @@ public class LoyaltyRepository : ILoyaltyRepository
 
     public async Task<bool> DanhDauTokenDaSuDungAsync(ulong tokenId, CancellationToken ct = default)
     {
+        // Điều kiện atomic !x.DaSuDung — chặn double-redeem khi 2 request đọc token cùng lúc
+        // trước khi 1 trong 2 kịp đánh dấu "đã dùng" (VD: mail scanner tự động quét link +
+        // người dùng bấm thật gần như đồng thời), tránh tạo trùng Ticket "Yêu cầu sử dụng
+        // Voucher" cho cùng 1 voucher. Cùng pattern với ApDungVoucherAsync bên dưới.
         var rows = await _context.KhVoucherTokens
-            .Where(x => x.Id == tokenId)
+            .Where(x => x.Id == tokenId && !x.DaSuDung)
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.DaSuDung, true), ct);
         return rows > 0;
     }

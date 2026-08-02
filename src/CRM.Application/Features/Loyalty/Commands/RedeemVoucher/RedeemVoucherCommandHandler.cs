@@ -51,7 +51,13 @@ public class RedeemVoucherCommandHandler : IRequestHandler<RedeemVoucherCommand,
         if (voucher.NgayHetHan < today)
             return Fail("Voucher đã hết hạn sử dụng.");
 
-        await _repo.DanhDauTokenDaSuDungAsync(token.Id, ct);
+        // ExecuteUpdateAsync atomic (WHERE !DaSuDung) — nếu có request khác vừa đánh dấu token
+        // này "đã dùng" ngay trước đó (VD: mail scanner tự động quét link + người dùng bấm gần
+        // như đồng thời), rows sẽ = 0. Phải dừng lại ngay, KHÔNG được tiếp tục tạo Ticket, nếu
+        // không sẽ tạo trùng Ticket "Yêu cầu sử dụng Voucher" cho cùng 1 voucher.
+        var danhDauThanhCong = await _repo.DanhDauTokenDaSuDungAsync(token.Id, ct);
+        if (!danhDauThanhCong)
+            return Fail("Link này đã được sử dụng trước đó. Nếu cần hỗ trợ thêm, vui lòng liên hệ tổng đài.");
 
         // Tạo Ticket "Yêu cầu sử dụng Voucher" để nhân viên chủ động liên hệ hỗ trợ khách áp dụng
         // ưu đãi vào báo giá/hóa đơn gần nhất, rồi gắn Ticket_Id vào voucher để truy vết 2 chiều.

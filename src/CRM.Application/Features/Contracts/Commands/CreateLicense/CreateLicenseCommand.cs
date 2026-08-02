@@ -5,6 +5,7 @@ using CRM.Application.Interfaces.Contracts;
 using CRM.Application.Interfaces.Products;
 using CRM.Domain.Entities.Sales;
 using CRM.Domain.Enums;
+using CRM.Domain.Interfaces.Repositories;
 using FluentValidation;
 using MediatR;
 
@@ -42,17 +43,19 @@ public class CreateLicenseCommandHandler : IRequestHandler<CreateLicenseCommand,
     private readonly IProductRepository _productRepository;
     private readonly ILicenseRepository _licenseRepository;
     private readonly ICurrentUserService _currentUser;
+    private readonly IUnitOfWork _unitOfWork;
 
     public CreateLicenseCommandHandler(
         IContractRepository contractRepository, IContractMilestoneRepository milestoneRepository,
         IProductRepository productRepository, ILicenseRepository licenseRepository,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser, IUnitOfWork unitOfWork)
     {
         _contractRepository = contractRepository;
         _milestoneRepository = milestoneRepository;
         _productRepository = productRepository;
         _licenseRepository = licenseRepository;
         _currentUser = currentUser;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<LicenseDto> Handle(CreateLicenseCommand request, CancellationToken ct)
@@ -98,19 +101,26 @@ public class CreateLicenseCommandHandler : IRequestHandler<CreateLicenseCommand,
         // license không thể còn hiệu lực sau khi hợp đồng đã kết thúc/thanh lý.
         var ngayHetHan = hopDong.NgayKetThuc;
 
-        var license = await _licenseRepository.AddAsync(
-            request.HopDongId, request.SanPhamId, request.SoLuongUser, request.PhienBan?.Trim(),
-            request.MoiTruongTrienKhai, ngayKichHoat, ngayHetHan, ct);
+        // Bọc trong 1 transaction: nếu AdjustStockAsync thất bại (VD: 2 Manager cùng cấp License
+        // cho sản phẩm chỉ còn đúng 1 tồn kho — race condition giữa lúc check tonHienTai ở trên
+        // và lúc trừ kho thật), License vừa tạo phải bị rollback theo, không để lại 1 dòng
+        // License "ma" không có tồn kho đứng sau.
+        return await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        {
+            var license = await _licenseRepository.AddAsync(
+                request.HopDongId, request.SanPhamId, request.SoLuongUser, request.PhienBan?.Trim(),
+                request.MoiTruongTrienKhai, ngayKichHoat, ngayHetHan, ct);
 
-        // Trừ kho ngay khi cấp license thành công — không để nhân viên phải tự đi ghi tay ở
-        // trang Sản phẩm nữa. MaChungTu dùng MaHopDong thật (có thể tra cứu lại), thay vì
-        // để trống hoặc để người dùng gõ tay như trước.
-        await _productRepository.AdjustStockAsync(
-            request.SanPhamId, StockTransactionType.XuatBan, -1,
-            maChungTu: hopDong.MaHopDong,
-            ghiChu: $"Cấp license {sanPham.TenSP} ({license.MaLicenseKey}) cho hợp đồng {hopDong.MaHopDong}",
-            nguoiThucHienId: _currentUser.UserId, ct: ct);
+            // Trừ kho ngay khi cấp license thành công — không để nhân viên phải tự đi ghi tay ở
+            // trang Sản phẩm nữa. MaChungTu dùng MaHopDong thật (có thể tra cứu lại), thay vì
+            // để trống hoặc để người dùng gõ tay như trước.
+            await _productRepository.AdjustStockAsync(
+                request.SanPhamId, StockTransactionType.XuatBan, -1,
+                maChungTu: hopDong.MaHopDong,
+                ghiChu: $"Cấp license {sanPham.TenSP} ({license.MaLicenseKey}) cho hợp đồng {hopDong.MaHopDong}",
+                nguoiThucHienId: _currentUser.UserId, ct: ct);
 
-        return license;
+            return license;
+        }, ct);
     }
 }

@@ -36,6 +36,6 @@ public interface IProductRepository
     Task<List<ProductImageDto>> GetImagesAsync(uint sanPhamId, CancellationToken ct = default);
     Task<ProductImageDto> AddImageAsync(uint sanPhamId, string urlHinhAnh, bool isMain, CancellationToken ct = default);
     Task<bool> SetMainImageAsync(uint sanPhamId, ulong imageId, CancellationToken ct = default);
-    Task<bool> DeleteImageAsync(ulong imageId, CancellationToken ct = default);
+    Task<bool> DeleteImageAsync(uint sanPhamId, ulong imageId, CancellationToken ct = default);
     Task<ProductImageDto?> GetImageByIdAsync(ulong imageId, CancellationToken ct = default);
 }

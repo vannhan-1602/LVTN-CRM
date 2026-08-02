@@ -138,9 +138,16 @@ public class AnalyticsRepository : IAnalyticsRepository
         // toàn thời gian, giữ đúng hành vi cũ.
         var chiQuery = chiQueryGoc;
         if (tuNgay.HasValue)
-            chiQuery = chiQuery.Where(x => x.NgayTao != null && x.NgayTao >= tuNgay.Value);
+            chiQuery = chiQuery.Where(x => x.NgayTao != null && x.NgayTao >= tuNgay.Value.Date);
         if (denNgay.HasValue)
-            chiQuery = chiQuery.Where(x => x.NgayTao != null && x.NgayTao <= denNgay.Value);
+        {
+            // denNgay đến từ <input type="date"> ở FE nên luôn là 00:00:00 của ngày đó — so sánh
+            // "<=" sẽ VÔ TÌNH LOẠI cả những phiếu tạo trong chính ngày denNgay (VD: 15h00 ngày
+            // 31/12 sẽ bị loại nếu lọc "đến 31/12"). Phải so với đầu ngày HÔM SAU mới bao trọn
+            // hết ngày denNgay.
+            var denNgayExclusive = denNgay.Value.Date.AddDays(1);
+            chiQuery = chiQuery.Where(x => x.NgayTao != null && x.NgayTao < denNgayExclusive);
+        }
 
         var tongTheoBoLoc = await chiQuery.SumAsync(x => (decimal?)x.SoTien, ct) ?? 0m;
         var soPhieuTheoBoLoc = await chiQuery.CountAsync(ct);

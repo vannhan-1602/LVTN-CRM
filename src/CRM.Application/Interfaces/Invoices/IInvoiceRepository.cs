@@ -17,7 +17,9 @@ public interface IInvoiceRepository
 
     /// Cộng dồn SoTienDaThu và tự cập nhật TrangThaiThanhToan tương ứng,
     /// dùng khi có phiếu thu mới được tạo cho hóa đơn này.
-    Task<(decimal SoTienDaThu, decimal TongTien)> UpdateSoTienDaThuAsync(
+    /// ThanhCong=false nghĩa là UPDATE bị chặn atomic ở DB (sẽ vượt TongTien hoặc hóa đơn
+    /// không tồn tại) — KHÔNG có gì được ghi, caller phải rollback phiếu thu vừa tạo.
+    Task<(bool ThanhCong, decimal SoTienDaThu, decimal TongTien)> UpdateSoTienDaThuAsync(
         ulong hoaDonId, decimal soTienCong, CancellationToken ct = default);
 
     Task<string> GenerateMaHoaDonAsync(CancellationToken ct = default);

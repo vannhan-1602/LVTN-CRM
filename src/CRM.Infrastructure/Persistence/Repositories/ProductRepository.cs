@@ -333,22 +333,21 @@ public class ProductRepository : IProductRepository
         return true;
     }
 
-    public async Task<bool> DeleteImageAsync(ulong imageId, CancellationToken ct = default)
+    public async Task<bool> DeleteImageAsync(uint sanPhamId, ulong imageId, CancellationToken ct = default)
     {
-        var entity = await _context.Set<BhSanPhamHinhAnhEntity>().FirstOrDefaultAsync(h => h.Id == imageId, ct);
+        var entity = await _context.Set<BhSanPhamHinhAnhEntity>()
+            .FirstOrDefaultAsync(h => h.Id == imageId && h.SanPham_Id == sanPhamId, ct);
         if (entity is null) return false;
 
         var wasMain = entity.IsMain;
-        var sanPhamId = entity.SanPham_Id;
+        var sanPhamIdEntity = entity.SanPham_Id;
         _context.Set<BhSanPhamHinhAnhEntity>().Remove(entity);
         await _context.SaveChangesAsync(ct);
 
-        // Nếu vừa xóa ảnh chính, tự động chọn 1 ảnh phụ còn lại (nếu có) làm ảnh chính mới,
-        // để sản phẩm không bị "mất ảnh đại diện" đột ngột.
-        if (wasMain && sanPhamId.HasValue)
+        if (wasMain && sanPhamIdEntity.HasValue)
         {
             var next = await _context.Set<BhSanPhamHinhAnhEntity>()
-                .Where(h => h.SanPham_Id == sanPhamId.Value)
+                .Where(h => h.SanPham_Id == sanPhamIdEntity.Value)
                 .OrderBy(h => h.Id)
                 .FirstOrDefaultAsync(ct);
             if (next is not null)

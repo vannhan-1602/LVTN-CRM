@@ -10,6 +10,9 @@ namespace CRM.Application.Features.Contracts.Commands.RenewLicense;
 // Gia hạn 1 License đã cấp cho hợp đồng gốc, dựa theo thời hạn của 1 hợp đồng LoaiHopDong=GiaHan
 // đã tạo từ hợp đồng gốc đó. KHÔNG tạo License mới, KHÔNG đổi MaLicenseKey — chỉ nối dài
 // NgayHetHan (khách vẫn dùng license cũ, đổi key sẽ bắt khách kích hoạt lại phần mềm).
+// Trạng thái License sau khi Renew (xem LicenseRepository.RenewAsync): HetHan -> DangHoatDong
+// (đúng mục đích chính của Renew), nhưng TamKhoa được GIỮ NGUYÊN — Renew không được thay Manager
+// tự ý mở khóa License đang bị khóa có chủ đích.
 public record RenewLicenseCommand(ulong LicenseId, ulong HopDongGiaHanId) : IRequest<LicenseDto>;
 
 public class RenewLicenseCommandValidator : AbstractValidator<RenewLicenseCommand>

@@ -82,15 +82,23 @@ public class InvoiceRepository : IInvoiceRepository
     /// <summary>
     /// Cộng dồn SoTienDaThu và tự cập nhật TrangThaiThanhToan tương ứng — TRONG CÙNG 1 câu
     /// UPDATE (biểu thức SQL tham chiếu chính giá trị SoTienDaThu/TongTien của DB tại thời
-    /// điểm ghi, không đọc lại bằng round-trip riêng). Trả về (SoTienDaThu, TongTien) SAU khi
-    /// cộng để caller tự kiểm tra có bị vượt tổng tiền hay không (do 2 phiếu thu tạo đồng thời
-    /// cùng qua được bước validate "còn lại" trước khi ghi).
+    /// điểm ghi, không đọc lại bằng round-trip riêng).
+    ///
+    /// QUAN TRỌNG: điều kiện chặn overflow (SoTienDaThu + soTienCong <= TongTien) nằm ngay
+    /// trong WHERE — giống AdjustStockAsync (Kho) — để việc CHẶN và việc GHI là 1 thao tác
+    /// atomic duy nhất ở tầng DB. Trước đây UPDATE luôn chạy vô điều kiện rồi mới đọc lại để
+    /// caller tự kiểm tra có vượt hay không — nghĩa là 2 Phiếu Thu tạo đồng thời có thể cùng
+    /// vượt qua bước validate "còn lại" ở Application layer, cả 2 đều ghi đè UPDATE thành công
+    /// (1 trong 2 làm SoTienDaThu vượt TongTien thật sự trong DB), rồi handler mới throw lỗi —
+    /// lúc đó dữ liệu sai đã commit rồi, throw chỉ để thông báo suông chứ không rollback được gì.
+    /// Giờ nếu rowsAffected == 0 nghĩa là UPDATE bị chặn ngay từ đầu (hoặc không có hóa đơn),
+    /// KHÔNG có gì bị ghi sai vào DB — caller (Handler) phải rollback luôn Phiếu Thu vừa tạo.
     /// </summary>
-    public async Task<(decimal SoTienDaThu, decimal TongTien)> UpdateSoTienDaThuAsync(
+    public async Task<(bool ThanhCong, decimal SoTienDaThu, decimal TongTien)> UpdateSoTienDaThuAsync(
         ulong hoaDonId, decimal soTienCong, CancellationToken ct = default)
     {
-        await _context.KtHoaDons
-            .Where(x => x.Id == hoaDonId)
+        var rowsAffected = await _context.KtHoaDons
+            .Where(x => x.Id == hoaDonId && (x.SoTienDaThu ?? 0m) + soTienCong <= x.TongTien)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.SoTienDaThu, x => (x.SoTienDaThu ?? 0m) + soTienCong)
                 .SetProperty(x => x.TrangThaiThanhToan, x =>
@@ -108,7 +116,7 @@ public class InvoiceRepository : IInvoiceRepository
             .Select(x => new { x.SoTienDaThu, x.TongTien })
             .FirstAsync(ct);
 
-        return (after.SoTienDaThu ?? 0m, after.TongTien);
+        return (rowsAffected > 0, after.SoTienDaThu ?? 0m, after.TongTien);
     }
 
     public async Task<string> GenerateMaHoaDonAsync(CancellationToken ct = default)
@@ -193,20 +201,20 @@ public class InvoiceRepository : IInvoiceRepository
 
     private static InvoiceDto MapToDto(
         KtHoaDonEntity e, string? tenKhachHang, string? maHopDong, int? soDot = null, uint? nhanVienPhuTrachId = null) => new()
-    {
-        Id = e.Id,
-        MaHoaDon = e.MaHoaDon,
-        HopDongId = e.HopDongId,
-        MaHopDong = maHopDong,
-        LichThanhToanId = e.LichThanhToanId,
-        SoDot = soDot,
-        KhachHangId = e.KhachHang_Id,
-        TenKhachHang = tenKhachHang,
-        NhanVienPhuTrachId = nhanVienPhuTrachId,
-        TongTien = e.TongTien,
-        SoTienDaThu = e.SoTienDaThu ?? 0m,
-        TrangThaiThanhToan = e.TrangThaiThanhToan,
-        CreatedAt = e.CreatedAt,
-        UpdatedAt = e.UpdatedAt
-    };
+        {
+            Id = e.Id,
+            MaHoaDon = e.MaHoaDon,
+            HopDongId = e.HopDongId,
+            MaHopDong = maHopDong,
+            LichThanhToanId = e.LichThanhToanId,
+            SoDot = soDot,
+            KhachHangId = e.KhachHang_Id,
+            TenKhachHang = tenKhachHang,
+            NhanVienPhuTrachId = nhanVienPhuTrachId,
+            TongTien = e.TongTien,
+            SoTienDaThu = e.SoTienDaThu ?? 0m,
+            TrangThaiThanhToan = e.TrangThaiThanhToan,
+            CreatedAt = e.CreatedAt,
+            UpdatedAt = e.UpdatedAt
+        };
 }

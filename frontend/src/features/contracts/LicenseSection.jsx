@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { KeyRound, Plus, Lock, Unlock, RefreshCw, ListChecks } from "lucide-react";
+import {
+  KeyRound,
+  Plus,
+  Lock,
+  Unlock,
+  RefreshCw,
+  ListChecks,
+} from "lucide-react";
 import contractApi from "../../api/contractApi";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
@@ -145,7 +152,9 @@ export default function LicenseSection({
       await contractApi.toggleLicenseLock(license.id, khoa);
       await load();
     } catch (err) {
-      setError(getApiErrorMessage(err, "Không thể cập nhật trạng thái License"));
+      setError(
+        getApiErrorMessage(err, "Không thể cập nhật trạng thái License"),
+      );
     } finally {
       setBusyId(null);
     }
@@ -157,7 +166,8 @@ export default function LicenseSection({
   // Chỉ hiện Card này khi: hợp đồng (ChinhThuc) có sản phẩm dạng License, HOẶC đã có License
   // được cấp/thuộc hợp đồng gốc (trường hợp GiaHan). Còn lại (hợp đồng thuần dịch vụ, chưa từng
   // có License) thì ẩn hẳn — tránh hiện khung rỗng gây hiểu nhầm hợp đồng có phần mềm.
-  if (!loading && licenses.length === 0 && !(hasLicenseProduct && !isGiaHan)) return null;
+  if (!loading && licenses.length === 0 && !(hasLicenseProduct && !isGiaHan))
+    return null;
 
   const canCreate = isManager && !isGiaHan && !isFinal && hasLicenseProduct;
 
@@ -167,7 +177,12 @@ export default function LicenseSection({
       action={
         canCreate &&
         !showForm && (
-          <Button size="sm" variant="secondary" icon={Plus} onClick={() => setShowForm(true)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={Plus}
+            onClick={() => setShowForm(true)}
+          >
             Cấp License
           </Button>
         )
@@ -175,7 +190,8 @@ export default function LicenseSection({
     >
       {isGiaHan && (
         <p className="text-xs text-ink-400 mb-3">
-          Danh sách License thuộc hợp đồng gốc — chọn "Gia hạn" để nối dài thời hạn theo hợp đồng này.
+          Danh sách License thuộc hợp đồng gốc — chọn "Gia hạn" để nối dài thời
+          hạn theo hợp đồng này.
         </p>
       )}
 
@@ -185,10 +201,14 @@ export default function LicenseSection({
           className="border border-ink-100 rounded-lg p-4 bg-surface-alt space-y-3 mb-4"
         >
           <div>
-            <label className="block text-xs font-medium text-ink-500 mb-1">Sản phẩm (License)</label>
+            <label className="block text-xs font-medium text-ink-500 mb-1">
+              Sản phẩm (License)
+            </label>
             <select
               value={form.sanPhamId}
-              onChange={(e) => setForm((f) => ({ ...f, sanPhamId: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, sanPhamId: e.target.value }))
+              }
               className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
             >
               <option value="">-- Chọn sản phẩm --</option>
@@ -207,20 +227,28 @@ export default function LicenseSection({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-ink-500 mb-1">Số lượng user</label>
+              <label className="block text-xs font-medium text-ink-500 mb-1">
+                Số lượng user
+              </label>
               <input
                 type="number"
                 min="1"
                 value={form.soLuongUser}
-                onChange={(e) => setForm((f) => ({ ...f, soLuongUser: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, soLuongUser: e.target.value }))
+                }
                 className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-ink-500 mb-1">Môi trường triển khai</label>
+              <label className="block text-xs font-medium text-ink-500 mb-1">
+                Môi trường triển khai
+              </label>
               <select
                 value={form.moiTruongTrienKhai}
-                onChange={(e) => setForm((f) => ({ ...f, moiTruongTrienKhai: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, moiTruongTrienKhai: e.target.value }))
+                }
                 className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
               >
                 <option value="Cloud">Cloud</option>
@@ -230,24 +258,35 @@ export default function LicenseSection({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-ink-500 mb-1">Phiên bản</label>
+            <label className="block text-xs font-medium text-ink-500 mb-1">
+              Phiên bản
+            </label>
             <input
               value={form.phienBan}
-              onChange={(e) => setForm((f) => ({ ...f, phienBan: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, phienBan: e.target.value }))
+              }
               placeholder="VD: 2026.1"
               className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
             />
           </div>
 
           {error && (
-            <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2">{error}</div>
+            <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2">
+              {error}
+            </div>
           )}
 
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={submitting}>
               {submitting ? "Đang cấp..." : "Cấp License"}
             </Button>
-            <Button type="button" size="sm" variant="secondary" onClick={resetForm}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={resetForm}
+            >
               Hủy
             </Button>
           </div>
@@ -255,7 +294,9 @@ export default function LicenseSection({
       )}
 
       {!showForm && error && (
-        <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2 mb-3">{error}</div>
+        <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2 mb-3">
+          {error}
+        </div>
       )}
 
       {loading ? (
@@ -273,7 +314,10 @@ export default function LicenseSection({
       ) : (
         <div className="space-y-2">
           {licenses.map((lic) => {
-            const meta = LICENSE_STATUS_META[lic.trangThai] ?? { label: lic.trangThai, tone: "neutral" };
+            const meta = LICENSE_STATUS_META[lic.trangThai] ?? {
+              label: lic.trangThai,
+              tone: "neutral",
+            };
             const isHetHan = lic.trangThai === "HetHan";
             return (
               <div
@@ -285,15 +329,21 @@ export default function LicenseSection({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="text-sm font-medium text-ink-900">{lic.tenSanPham}</span>
+                    <span className="text-sm font-medium text-ink-900">
+                      {lic.tenSanPham}
+                    </span>
                     <Badge label={meta.label} tone={meta.tone} />
                   </div>
-                  <p className="text-xs text-ink-400 font-mono">{lic.maLicenseKey}</p>
+                  <p className="text-xs text-ink-400 font-mono">
+                    {lic.maLicenseKey}
+                  </p>
                   <div className="flex flex-wrap gap-x-4 mt-1 text-xs text-ink-400">
                     <span>{lic.moiTruongTrienKhai}</span>
                     {lic.phienBan && <span>Phiên bản {lic.phienBan}</span>}
                     <span>{lic.soLuongUser} user</span>
-                    {lic.ngayHetHan && <span>Hết hạn {formatDate(lic.ngayHetHan)}</span>}
+                    {lic.ngayHetHan && (
+                      <span>Hết hạn {formatDate(lic.ngayHetHan)}</span>
+                    )}
                   </div>
                 </div>
                 {isManager && (
@@ -302,6 +352,11 @@ export default function LicenseSection({
                       <button
                         onClick={() => handleRenew(lic.id)}
                         disabled={busyId === lic.id}
+                        title={
+                          lic.trangThai === "TamKhoa"
+                            ? "License đang bị khóa — Gia hạn chỉ nối dài ngày hết hạn, KHÔNG tự mở khóa. Vào hợp đồng gốc để mở khóa nếu cần."
+                            : undefined
+                        }
                         className="text-xs font-medium text-info-600 hover:underline inline-flex items-center gap-1 disabled:opacity-50"
                       >
                         <RefreshCw size={12} /> Gia hạn

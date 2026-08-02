@@ -17,7 +17,9 @@ using Microsoft.Extensions.Logging;
 namespace CRM.Application.Features.Contracts.Commands.CreateRenewalContract;
 
 // Tạo hợp đồng gia hạn (LoaiHopDong=GiaHan) từ 1 hợp đồng đã có — copy điều khoản
-// (KhachHangId, ThoiHan, HinhThucThanhToan), liên kết HopDongGocId về hợp đồng cũ,
+// (KhachHangId, ThoiHan, HinhThucThanhToan), liên kết HopDongGocId về hợp đồng ChinhThuc GỐC
+// THẬT (nếu hopDongCu đã là GiaHan thì kế thừa HopDongGocId của nó, không dùng Id của chính
+// nó — tránh đứt chuỗi khi gia hạn nhiều cấp liên tiếp, xem chi tiết trong Handle bên dưới),
 // và chuyển hợp đồng cũ sang ThanhLy.
 //
 // LichThanhToans: BẮT BUỘC nếu hợp đồng cũ là TraGop — hợp đồng mới không tự kế thừa lịch
@@ -86,6 +88,17 @@ public class CreateRenewalContractCommandHandler
 
         var maHopDong = await _contractRepository.GenerateMaHopDongAsync(ct);
 
+        // HopDongGocId PHẢI luôn trỏ về hợp đồng ChinhThuc gốc thật, KHÔNG phải hợp đồng vừa
+        // gia hạn ngay trước đó — vì License luôn được cấp gắn với HopDongId của hợp đồng
+        // ChinhThuc gốc (xem CreateLicenseCommand). Nếu hopDongCu bản thân nó đã là GiaHan
+        // (gia hạn của 1 gia hạn, VD năm 2 -> năm 3), phải kế thừa HopDongGocId của nó thay vì
+        // dùng Id của chính nó — nếu không, từ cấp gia hạn thứ 2 trở đi chuỗi HopDongGocId sẽ bị
+        // đứt khỏi hợp đồng gốc thật, khiến RenewLicenseCommand/LicenseSection không tìm thấy
+        // (hoặc từ chối) License vốn vẫn thuộc đúng khách hàng/hợp đồng gốc đó.
+        var hopDongGocIdThat = hopDongCu.LoaiHopDong == "GiaHan" && hopDongCu.HopDongGocId.HasValue
+            ? hopDongCu.HopDongGocId.Value
+            : hopDongCu.Id;
+
         var hopDongMoi = new HopDong
         {
             MaHopDong = maHopDong,
@@ -96,7 +109,7 @@ public class CreateRenewalContractCommandHandler
             HinhThucThanhToan = hopDongCu.HinhThucThanhToan,
             TrangThai = ContractStatus.DangThucHien,
             LoaiHopDong = "GiaHan",
-            HopDongGocId = hopDongCu.Id,
+            HopDongGocId = hopDongGocIdThat,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

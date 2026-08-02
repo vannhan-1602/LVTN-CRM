@@ -186,7 +186,7 @@ public class ProductController : ControllerBase
         // Lấy thông tin ảnh trước để xóa file vật lý sau khi xóa bản ghi DB thành công.
         var image = await _mediator.Send(new GetProductImageByIdQuery(imageId), ct);
 
-        var deleted = await _mediator.Send(new DeleteProductImageCommand(imageId), ct);
+        var deleted = await _mediator.Send(new DeleteProductImageCommand(id, imageId), ct);
         if (!deleted)
             return NotFound(ApiResponse.Fail("Không tìm thấy ảnh."));
 

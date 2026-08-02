@@ -8,6 +8,7 @@ using CRM.Application.Interfaces.Invoices;
 using CRM.Application.Interfaces.PhieuThuChi;
 using CRM.Application.Services;
 using CRM.Domain.Enums;
+using CRM.Domain.Interfaces.Repositories;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -71,6 +72,7 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
     private readonly IContractRepository _contractRepo;
     private readonly ICustomerRepository _customerRepo;
     private readonly ICurrentUserService _currentUser;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLog;
     private readonly LoyaltyService _loyaltyService;
     private readonly ILogger<CreatePhieuThuChiCommandHandler> _logger;
@@ -81,6 +83,7 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
         IContractRepository contractRepo,
         ICustomerRepository customerRepo,
         ICurrentUserService currentUser,
+        IUnitOfWork unitOfWork,
         IAuditLogPublisher auditLog,
         LoyaltyService loyaltyService,
         ILogger<CreatePhieuThuChiCommandHandler> logger)
@@ -90,6 +93,7 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
         _contractRepo = contractRepo;
         _customerRepo = customerRepo;
         _currentUser = currentUser;
+        _unitOfWork = unitOfWork;
         _auditLog = auditLog;
         _loyaltyService = loyaltyService;
         _logger = logger;
@@ -133,37 +137,49 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
                 ?? throw new NotFoundException("Khách hàng", resolvedKhachHangId.Value);
         }
 
-        // ── 3. Tạo phiếu ─────────────────────────────────────────────────
-        var maPhieu = await _phieuThuChiRepo.GenerateMaPhieuAsync(request.LoaiPhieu, ct);
+        // ── 3+4. Tạo phiếu (+ cập nhật SoTienDaThu hóa đơn nếu là Phiếu Thu) ─────
+        // Phiếu Thu: bọc chung 1 transaction — nếu UpdateSoTienDaThuAsync bị chặn atomic (2
+        // phiếu thu tạo đồng thời cùng qua được bước validate "còn lại" ở bước 1), Phiếu Thu
+        // vừa tạo PHẢI rollback theo, không được để lại phiếu "ma" không khớp với hóa đơn.
+        // Phiếu Chi: không đụng tới hóa đơn/trạng thái thanh toán nào cần giữ nhất quán, nên
+        // không cần bọc transaction — chi tiền tiếp khách không có rủi ro race condition này.
+        DomainPhieuThuChi created;
+        decimal? soTienDaThuSauKhiCong = null;
+        decimal? tongTienHoaDon = null;
 
-        var phieu = new DomainPhieuThuChi
-        {
-            MaPhieu = maPhieu,
-            LoaiPhieu = request.LoaiPhieu,
-            KhachHangId = resolvedKhachHangId,
-            HoaDonId = request.HoaDonId,
-            SoTien = request.SoTien,
-            NguoiLapId = _currentUser.UserId,   // uint? trực tiếp, không cần cast
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        var created = await _phieuThuChiRepo.AddAsync(phieu, ct);
-
-        // ── 4. Cập nhật SoTienDaThu hóa đơn (chỉ Phiếu Thu) ─────────────
-        // Dùng SQL UPDATE cộng dồn để tránh race condition khi nhiều phiếu thu
-        // được tạo đồng thời cho cùng một hóa đơn.
         if (request.LoaiPhieu == PaymentVoucherType.Thu && request.HoaDonId.HasValue)
         {
-            var (soTienDaThuSauKhiCong, tongTienHoaDon) =
-                await _invoiceRepo.UpdateSoTienDaThuAsync(request.HoaDonId.Value, request.SoTien, ct);
+            (created, soTienDaThuSauKhiCong, tongTienHoaDon) = await _unitOfWork.ExecuteInTransactionAsync(
+                async () =>
+                {
+                    var maPhieuThu = await _phieuThuChiRepo.GenerateMaPhieuAsync(request.LoaiPhieu, ct);
+                    var phieuThu = new DomainPhieuThuChi
+                    {
+                        MaPhieu = maPhieuThu,
+                        LoaiPhieu = request.LoaiPhieu,
+                        KhachHangId = resolvedKhachHangId,
+                        HoaDonId = request.HoaDonId,
+                        SoTien = request.SoTien,
+                        NguoiLapId = _currentUser.UserId,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    var createdPhieu = await _phieuThuChiRepo.AddAsync(phieuThu, ct);
 
-            if (soTienDaThuSauKhiCong > tongTienHoaDon)
-                throw new BusinessRuleException(
-                    "Có phiếu thu khác vừa được tạo cho hóa đơn này cùng lúc, khiến tổng tiền thu vượt quá hóa đơn. Vui lòng thử lại.");
+                    var (thanhCong, daThu, tongTien) =
+                        await _invoiceRepo.UpdateSoTienDaThuAsync(request.HoaDonId.Value, request.SoTien, ct);
+
+                    if (!thanhCong)
+                        throw new BusinessRuleException(
+                            "Có phiếu thu khác vừa được tạo cho hóa đơn này cùng lúc, khiến tổng tiền thu vượt quá hóa đơn. Vui lòng thử lại.");
+
+                    return (createdPhieu, daThu, tongTien);
+                }, ct);
 
             // Hóa đơn vừa hoàn tất VÀ ứng với 1 đợt trả góp → đồng bộ trạng thái đợt đó,
-            // tránh job nhắc thanh toán báo "quá hạn" oan cho đợt đã thu xong.
+            // tránh job nhắc thanh toán báo "quá hạn" oan cho đợt đã thu xong. Việc này không
+            // cần chung transaction với trên — lỗi ở đây chỉ log cảnh báo, không hủy giao dịch
+            // thu tiền đã ghi nhận thành công.
             if (soTienDaThuSauKhiCong >= tongTienHoaDon && hoaDon?.LichThanhToanId.HasValue == true)
             {
                 try
@@ -177,6 +193,23 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
                         hoaDon.LichThanhToanId.Value, request.HoaDonId.Value);
                 }
             }
+        }
+        else
+        {
+            var maPhieu = await _phieuThuChiRepo.GenerateMaPhieuAsync(request.LoaiPhieu, ct);
+            var phieu = new DomainPhieuThuChi
+            {
+                MaPhieu = maPhieu,
+                LoaiPhieu = request.LoaiPhieu,
+                KhachHangId = resolvedKhachHangId,
+                HoaDonId = request.HoaDonId,
+                SoTien = request.SoTien,
+                NguoiLapId = _currentUser.UserId,   // uint? trực tiếp, không cần cast
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            created = await _phieuThuChiRepo.AddAsync(phieu, ct);
         }
 
         // ── 5. Xử lý Loyalty (tích điểm + tính hạng + voucher + email) ──────
@@ -198,13 +231,13 @@ public class CreatePhieuThuChiCommandHandler : IRequestHandler<CreatePhieuThuChi
                 try
                 {
                     await _loyaltyService.XuLySauPhieuThuAsync(
-                        khachHangId:    hoaDonForLoyalty.KhachHangId,
-                        tenKhachHang:   customerForEmail?.TenKhachHang ?? "Quý khách",
+                        khachHangId: hoaDonForLoyalty.KhachHangId,
+                        tenKhachHang: customerForEmail?.TenKhachHang ?? "Quý khách",
                         khachHangEmail: customerForEmail?.Email,
-                        maHoaDon:       hoaDonForLoyalty.MaHoaDon,
-                        soTienThu:      request.SoTien,
-                        hoaDonId:       hoaDonForLoyalty.Id,
-                        phieuThuChiId:  created.Id);
+                        maHoaDon: hoaDonForLoyalty.MaHoaDon,
+                        soTienThu: request.SoTien,
+                        hoaDonId: hoaDonForLoyalty.Id,
+                        phieuThuChiId: created.Id);
                 }
                 catch (Exception ex)
                 {
