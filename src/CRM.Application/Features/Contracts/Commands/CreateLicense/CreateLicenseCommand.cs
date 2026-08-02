@@ -1,8 +1,10 @@
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Contracts.DTOs;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Contracts;
 using CRM.Application.Interfaces.Products;
 using CRM.Domain.Entities.Sales;
+using CRM.Domain.Enums;
 using FluentValidation;
 using MediatR;
 
@@ -39,15 +41,18 @@ public class CreateLicenseCommandHandler : IRequestHandler<CreateLicenseCommand,
     private readonly IContractMilestoneRepository _milestoneRepository;
     private readonly IProductRepository _productRepository;
     private readonly ILicenseRepository _licenseRepository;
+    private readonly ICurrentUserService _currentUser;
 
     public CreateLicenseCommandHandler(
         IContractRepository contractRepository, IContractMilestoneRepository milestoneRepository,
-        IProductRepository productRepository, ILicenseRepository licenseRepository)
+        IProductRepository productRepository, ILicenseRepository licenseRepository,
+        ICurrentUserService currentUser)
     {
         _contractRepository = contractRepository;
         _milestoneRepository = milestoneRepository;
         _productRepository = productRepository;
         _licenseRepository = licenseRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<LicenseDto> Handle(CreateLicenseCommand request, CancellationToken ct)
@@ -77,6 +82,14 @@ public class CreateLicenseCommandHandler : IRequestHandler<CreateLicenseCommand,
             throw new BusinessRuleException(
                 "Chưa thể cấp License: hợp đồng chưa có mốc Bàn giao được khách xác nhận.");
 
+        // Đơn vị tồn kho cho sản phẩm License = 1 license key cấp ra (khớp với đơn giá đang
+        // niêm yết "đ/License" và lịch sử giao dịch kho hiện có), KHÔNG phải theo SoLuongUser —
+        // SoLuongUser chỉ là thông số kỹ thuật của license, không phải số lượng trừ kho.
+        var tonHienTai = await _productRepository.GetCurrentStockAsync(request.SanPhamId, ct);
+        if (tonHienTai < 1)
+            throw new BusinessRuleException(
+                $"Sản phẩm '{sanPham.TenSP}' đã hết tồn kho License, không thể cấp thêm.");
+
         var ngayKichHoat = DateOnly.FromDateTime(DateTime.UtcNow);
         // QUAN TRỌNG: License phải hết hạn CÙNG LÚC với hợp đồng (HopDong.NgayKetThuc = NgayKy +
         // ThoiHan, đã tính sẵn khi tạo hợp đồng) — KHÔNG được tính lại "NgayKichHoat + ThoiHan",
@@ -85,8 +98,19 @@ public class CreateLicenseCommandHandler : IRequestHandler<CreateLicenseCommand,
         // license không thể còn hiệu lực sau khi hợp đồng đã kết thúc/thanh lý.
         var ngayHetHan = hopDong.NgayKetThuc;
 
-        return await _licenseRepository.AddAsync(
+        var license = await _licenseRepository.AddAsync(
             request.HopDongId, request.SanPhamId, request.SoLuongUser, request.PhienBan?.Trim(),
             request.MoiTruongTrienKhai, ngayKichHoat, ngayHetHan, ct);
+
+        // Trừ kho ngay khi cấp license thành công — không để nhân viên phải tự đi ghi tay ở
+        // trang Sản phẩm nữa. MaChungTu dùng MaHopDong thật (có thể tra cứu lại), thay vì
+        // để trống hoặc để người dùng gõ tay như trước.
+        await _productRepository.AdjustStockAsync(
+            request.SanPhamId, StockTransactionType.XuatBan, -1,
+            maChungTu: hopDong.MaHopDong,
+            ghiChu: $"Cấp license {sanPham.TenSP} ({license.MaLicenseKey}) cho hợp đồng {hopDong.MaHopDong}",
+            nguoiThucHienId: _currentUser.UserId, ct: ct);
+
+        return license;
     }
 }

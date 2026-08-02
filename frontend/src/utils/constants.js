@@ -211,12 +211,21 @@ export function getStockTransactionLabel(loaiGiaoDich, hinhThuc) {
   );
 }
 
-/** Danh sách option cho dropdown "Loại giao dịch", nhãn đổi theo HinhThuc, value giữ nguyên. */
+/**
+ * Danh sách option cho dropdown "Loại giao dịch", nhãn đổi theo HinhThuc, value giữ nguyên.
+ *
+ * Với sản phẩm HinhThuc="License": ẩn option XuatBan ("Cấp License") khỏi form nhập tay này.
+ * Giao dịch đó giờ được CreateLicenseCommand tự động ghi nhận khi Manager bấm "Cấp License"
+ * ở trang hợp đồng (kèm MaHopDong thật để tra cứu) — để lại option tay ở đây sẽ khiến nhân
+ * viên có thể trừ kho 2 lần cho cùng 1 license nếu vô tình dùng cả 2 đường.
+ */
 export function getStockTransactionOptions(hinhThuc) {
   const table =
     STOCK_TRANSACTION_LABELS_BY_HINHTHUC[hinhThuc] ??
     STOCK_TRANSACTION_LABELS_BY_HINHTHUC.VatLy;
-  return STOCK_TRANSACTION_TYPE_OPTIONS.map((o) => ({
+  return STOCK_TRANSACTION_TYPE_OPTIONS.filter(
+    (o) => !(hinhThuc === "License" && o.value === "XuatBan"),
+  ).map((o) => ({
     value: o.value,
     label: table[o.value] ?? o.label,
   }));
@@ -248,7 +257,10 @@ export const PRODUCT_FIELD_LABELS_BY_HINHTHUC = {
 
 /** Nhãn/placeholder cho form sản phẩm, theo HinhThuc — mặc định VatLy nếu chưa chọn Loại. */
 export function getProductFieldLabels(hinhThuc) {
-  return PRODUCT_FIELD_LABELS_BY_HINHTHUC[hinhThuc] ?? PRODUCT_FIELD_LABELS_BY_HINHTHUC.VatLy;
+  return (
+    PRODUCT_FIELD_LABELS_BY_HINHTHUC[hinhThuc] ??
+    PRODUCT_FIELD_LABELS_BY_HINHTHUC.VatLy
+  );
 }
 
 // CH_CoHoiBanHang.GiaiDoan

@@ -62,8 +62,16 @@ public class UpdateStockCommandHandler : IRequestHandler<UpdateStockCommand, Sto
 
     public async Task<StockTransactionResultDto> Handle(UpdateStockCommand request, CancellationToken ct)
     {
-        var product = await _productRepository.GetByIdAsync(request.SanPhamId, ct)
+        var product = await _productRepository.GetByIdEnrichedAsync(request.SanPhamId, ct)
             ?? throw new NotFoundException(nameof(SanPham), request.SanPhamId);
+
+        // Với sản phẩm License: XuatBan ("Cấp License") giờ chỉ được ghi nhận tự động qua
+        // CreateLicenseCommand (khi Manager cấp license thật cho hợp đồng) — chặn ở đây để
+        // không ai (kể cả gọi thẳng API) trừ kho tay trùng với giao dịch tự động đó.
+        if (product.HinhThuc == "License" && request.LoaiGiaoDich == StockTransactionType.XuatBan)
+            throw new BusinessRuleException(
+                "Không thể tạo phiếu 'Cấp License' thủ công cho sản phẩm dạng License. " +
+                "Hãy dùng nút 'Cấp License' ở trang hợp đồng — hệ thống sẽ tự trừ kho.");
 
         // Số lượng giao dịch luôn nhập dương; dấu +/- do loại giao dịch quyết định
         var soLuongThayDoi = StockTransactionType.DecreaseTypes.Contains(request.LoaiGiaoDich)
