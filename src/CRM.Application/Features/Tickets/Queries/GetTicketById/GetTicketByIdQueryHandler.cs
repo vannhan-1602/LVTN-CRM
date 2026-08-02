@@ -2,6 +2,7 @@ using CRM.Application.Common.Constants;
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Tickets.Mappings;
 using CRM.Application.Interfaces.Common;
+using CRM.Application.Interfaces.Customers;
 using CRM.Application.Interfaces.Tickets;
 using CRM.Domain.Entities.Tickets;
 using CRM.Domain.Enums;
@@ -12,13 +13,16 @@ namespace CRM.Application.Features.Tickets.Queries.GetTicketById;
 public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, TicketDetailDto>
 {
     private readonly ITicketRepository _ticketRepository;
+    private readonly ICustomerRepository _customerRepository;
     private readonly ICsatRepository _csatRepository;
     private readonly ICurrentUserService _currentUser;
 
     public GetTicketByIdQueryHandler(ITicketRepository ticketRepository,
+        ICustomerRepository customerRepository,
         ICsatRepository csatRepository, ICurrentUserService currentUser)
     {
         _ticketRepository = ticketRepository;
+        _customerRepository = customerRepository;
         _csatRepository = csatRepository;
         _currentUser = currentUser;
     }
@@ -44,6 +48,11 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
             ? await _csatRepository.GetByTicketIdAsync(request.Id, cancellationToken)
             : null;
 
+        // Nhân viên xử lý cần biết khách hàng là ai để liên hệ (tên/SĐT/email) — ticket chỉ lưu
+        // KhachHangId nên phải tra thêm; nếu khách hàng đã bị xóa mềm thì bỏ qua, không chặn
+        // việc xem ticket.
+        var khachHang = await _customerRepository.GetByIdEnrichedAsync(ticket.KhachHangId, cancellationToken);
+
         var dto = TicketMapper.ToDto(ticket);
         return new TicketDetailDto
         {
@@ -54,6 +63,9 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
             FileDinhKem = dto.FileDinhKem,
             LoaiTicketId = dto.LoaiTicketId,
             KhachHangId = dto.KhachHangId,
+            TenKhachHang = khachHang?.TenKhachHang,
+            EmailKhachHang = khachHang?.Email,
+            SoDienThoaiKhachHang = khachHang?.SoDienThoai,
             HopDongId = dto.HopDongId,
             SanPhamId = dto.SanPhamId,
             MucDoUuTien = dto.MucDoUuTien,

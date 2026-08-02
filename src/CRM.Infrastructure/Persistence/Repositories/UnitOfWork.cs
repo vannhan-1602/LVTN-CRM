@@ -26,6 +26,12 @@ public class UnitOfWork : IUnitOfWork
     Func<Task<T>> operation,
     CancellationToken cancellationToken = default)
     {
+       
+        if (_context.Database.CurrentTransaction is not null)
+        {
+            return await operation();
+        }
+
         var strategy = _context.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {

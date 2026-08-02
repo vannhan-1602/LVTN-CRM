@@ -12,6 +12,9 @@ namespace CRM.Application.Features.Tickets.DTOs
         public string? FileDinhKem { get; set; }
         public ushort? LoaiTicketId { get; set; }
         public ulong KhachHangId { get; set; }
+        public string? TenKhachHang { get; set; }
+        public string? EmailKhachHang { get; set; }
+        public string? SoDienThoaiKhachHang { get; set; }
         public ulong? HopDongId { get; set; }
         public uint? SanPhamId { get; set; }
         public string MucDoUuTien { get; set; } = string.Empty;

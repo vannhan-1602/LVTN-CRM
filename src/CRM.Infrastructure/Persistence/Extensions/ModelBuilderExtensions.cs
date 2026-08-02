@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using CRM.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CRM.Infrastructure.Persistence.Extensions;
 
@@ -9,7 +10,7 @@ public static class ModelBuilderExtensions
 {
 
     /// Các bảng có cột IsDeleted trong db BH_CoHoiBanHang, KH_KhachHang, TK_Ticket
-  
+
     private static readonly HashSet<string> SoftDeleteTableNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "BH_CoHoiBanHang",
@@ -45,6 +46,30 @@ public static class ModelBuilderExtensions
         var lambda = Expression.Lambda(condition, parameter);
 
         modelBuilder.Entity(entityType).HasQueryFilter(lambda);
+    }
+
+    public static void ApplyUtcDateTimeConversion(this ModelBuilder modelBuilder)
+    {
+        var utcConverter = new ValueConverter<DateTime, DateTime>(
+            v => v.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(v, DateTimeKind.Utc) : v.ToUniversalTime(),
+            v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+        var nullableUtcConverter = new ValueConverter<DateTime?, DateTime?>(
+            v => v.HasValue
+                ? (v.Value.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v.Value.ToUniversalTime())
+                : v,
+            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime))
+                    property.SetValueConverter(utcConverter);
+                else if (property.ClrType == typeof(DateTime?))
+                    property.SetValueConverter(nullableUtcConverter);
+            }
+        }
     }
 }
 

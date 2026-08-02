@@ -230,6 +230,26 @@ public class LoyaltyService
     // Đầu mỗi tháng còn tính lại hạng cho toàn bộ khách hàng (điểm rolling-12-tháng có
     // thể tụt dưới ngưỡng dù khách không phát sinh giao dịch mới).
     // ══════════════════════════════════════════════════════════════════════════
+    private static readonly TimeZoneInfo VnTimeZone = ResolveVnTimeZone();
+
+    private static TimeZoneInfo ResolveVnTimeZone()
+    {
+        // Windows dùng "SE Asia Standard Time", Linux/Docker dùng "Asia/Ho_Chi_Minh".
+        try { return TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); }
+        catch (TimeZoneNotFoundException)
+        {
+            try { return TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"); }
+            catch (TimeZoneNotFoundException)
+            {
+                return TimeZoneInfo.CreateCustomTimeZone("VN", TimeSpan.FromHours(7), "Vietnam", "Vietnam");
+            }
+        }
+    }
+
+    private static DateTime NgayHomNayVN() =>
+        TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, VnTimeZone).Date;
+
+    private static int NamHienTaiVN() => NgayHomNayVN().Year;
 
     private const int SoNgayGuiTruocSinhNhat = 3;
 
@@ -243,7 +263,7 @@ public class LoyaltyService
 
         // Job đầu tháng: tính lại hạng cho toàn bộ KH (chạy trong lần đầu tiên của job
         // trong ngày 1 hàng tháng — hosted service chạy 1 lần/ngày nên không bị lặp).
-        if (DateTime.UtcNow.Day == 1)
+        if (NgayHomNayVN().Day == 1)
             await TinhLaiHangChoTatCaAsync(ct);
 
         // Đọc lại chính những email vừa ghi log trong lần chạy này để báo cáo rõ ràng —
@@ -290,7 +310,7 @@ public class LoyaltyService
             // Tránh gửi trùng: GetKhachHangNgayDacBietAsync trả về cùng 1 KH trong suốt cửa sổ
             // N ngày trước ngày đặc biệt, nên phải tự kiểm tra đã gửi trong năm chưa TRƯỚC khi
             // phát voucher (bản thân Gui...Async cũng tự kiểm tra lại trước khi gửi mail).
-            if (await _repo.DaGuiEmailTrongNamAsync(kh.KhachHangId, loaiEmail, DateTime.UtcNow.Year, ct))
+            if (await _repo.DaGuiEmailTrongNamAsync(kh.KhachHangId, loaiEmail, NamHienTaiVN(), ct))
                 continue;
 
             var (voucherId, maVoucher, phanTramGiam, voucherLink) =
@@ -333,7 +353,7 @@ public class LoyaltyService
             return;
         }
 
-        var today = DateTime.UtcNow.Date;
+        var today = NgayHomNayVN();
 
         foreach (var le in danhSachNgayLe)
         {
@@ -422,7 +442,7 @@ public class LoyaltyService
                 // chưa được tính lại (sắp bị hạ ở lần tính hạng kế tiếp).
                 if (tongDiem >= hangInfo.DiemToiThieu) continue;
 
-                if (await _repo.DaGuiEmailTrongNamAsync(id, "CanhBaoXuongHang", DateTime.UtcNow.Year, ct))
+                if (await _repo.DaGuiEmailTrongNamAsync(id, "CanhBaoXuongHang", NamHienTaiVN(), ct))
                     continue;
 
                 var thongTin = await _repo.GetTenVaEmailAsync(id, ct);

@@ -38,6 +38,16 @@ const TABS = [
   { key: "voucher", label: "Voucher", icon: Ticket },
 ];
 
+// Điểm được tính trong hạng hiện tại nếu NgayPhatSinh nằm trong 12 tháng gần nhất
+// (khớp đúng logic rolling window ở LoyaltyRepository.GetTichLuy12ThangAsync bên BE).
+// Thuần tính trên FE, không cần đổi API/BE.
+function conHan(ngayPhatSinh) {
+  if (!ngayPhatSinh) return false;
+  const mocHetHan = new Date();
+  mocHetHan.setMonth(mocHetHan.getMonth() - 12);
+  return new Date(ngayPhatSinh) >= mocHetHan;
+}
+
 export default function CustomerLoyaltySection({ khachHangId }) {
   const [activeTab, setActiveTab] = useState("diem");
 
@@ -140,7 +150,9 @@ export default function CustomerLoyaltySection({ khachHangId }) {
             <div className="h-1.5 bg-ink-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-accent-500 rounded-full"
-                style={{ width: `${chuaCoGiaoDich ? 0 : (tienDoPhanTram ?? 0)}%` }}
+                style={{
+                  width: `${chuaCoGiaoDich ? 0 : (tienDoPhanTram ?? 0)}%`,
+                }}
               />
             </div>
           </div>
@@ -174,27 +186,44 @@ export default function CustomerLoyaltySection({ khachHangId }) {
             <EmptyState icon={TrendingUp} title="Chưa có lịch sử điểm" />
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {info.lichSuDiem.map((d) => (
-                <div
-                  key={d.id}
-                  className="flex items-center justify-between text-sm border-b border-ink-50 pb-2 last:border-0"
-                >
-                  <div>
-                    <p className="text-ink-700">
-                      {LOAI_GIAO_DICH_LABEL[d.loaiGiaoDich] ?? d.loaiGiaoDich}
-                    </p>
-                    <p className="text-xs text-ink-400">
-                      {formatDate(d.ngayPhatSinh)}
-                    </p>
-                  </div>
-                  <span
-                    className={`font-semibold ${d.soDiem >= 0 ? "text-success-600" : "text-danger-600"}`}
+              {info.lichSuDiem.map((d) => {
+                // Chỉ đánh giá còn hạn/hết hạn cho điểm cộng dương (điểm mua hàng) —
+                // dòng điều chỉnh âm không thuộc window 12 tháng nên không cần badge.
+                const daConHan = d.soDiem > 0 ? conHan(d.ngayPhatSinh) : null;
+                return (
+                  <div
+                    key={d.id}
+                    className="flex items-center justify-between text-sm border-b border-ink-50 pb-2 last:border-0"
                   >
-                    {d.soDiem >= 0 ? "+" : ""}
-                    {d.soDiem}
-                  </span>
-                </div>
-              ))}
+                    <div>
+                      <p className="text-ink-700">
+                        {LOAI_GIAO_DICH_LABEL[d.loaiGiaoDich] ?? d.loaiGiaoDich}
+                      </p>
+                      <p className="text-xs text-ink-400 flex items-center gap-1.5">
+                        {formatDate(d.ngayPhatSinh)}
+                        {daConHan === true && (
+                          <span className="text-success-600">· Còn hạn</span>
+                        )}
+                        {daConHan === false && (
+                          <span className="text-ink-300">· Hết hạn</span>
+                        )}
+                      </p>
+                    </div>
+                    <span
+                      className={`font-semibold ${
+                        d.soDiem >= 0
+                          ? daConHan === false
+                            ? "text-ink-300 line-through"
+                            : "text-success-600"
+                          : "text-danger-600"
+                      }`}
+                    >
+                      {d.soDiem >= 0 ? "+" : ""}
+                      {d.soDiem}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           ))}
 

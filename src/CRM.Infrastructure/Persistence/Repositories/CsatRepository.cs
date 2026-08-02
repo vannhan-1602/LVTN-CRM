@@ -75,13 +75,15 @@ public class CsatRepository : ICsatRepository
 
     public async Task<CsatDto?> SubmitAsync(string token, byte diemDanhGia, string? nhanXet, CancellationToken ct = default)
     {
-        var entity = await _context.TkDanhGiaHaiLongs.FirstOrDefaultAsync(x => x.Token == token, ct);
-        if (entity is null || entity.DiemDanhGia.HasValue) return null;
+       
+        var rows = await _context.TkDanhGiaHaiLongs
+            .Where(x => x.Token == token && x.DiemDanhGia == null)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.DiemDanhGia, diemDanhGia)
+                .SetProperty(x => x.NhanXet, nhanXet != null ? nhanXet.Trim() : null)
+                .SetProperty(x => x.NgayDanhGia, DateTime.UtcNow), ct);
 
-        entity.DiemDanhGia = diemDanhGia;
-        entity.NhanXet = nhanXet?.Trim();
-        entity.NgayDanhGia = DateTime.UtcNow;
-        await _context.SaveChangesAsync(ct);
+        if (rows == 0) return null;
 
         return await GetByTokenAsync(token, ct);
     }

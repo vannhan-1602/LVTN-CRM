@@ -9,5 +9,6 @@ public partial class CrmDbContext
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplySoftDeleteQueryFilters();
+        modelBuilder.ApplyUtcDateTimeConversion();
     }
 }
