@@ -396,8 +396,13 @@ public class LoyaltyService
                 if (await _repo.DaGuiEmailTrongNamAsync(kh.KhachHangId, loaiEmail, today.Year, ct))
                     continue;
 
+                // Lưu ý: "loaiEmail" (vd "NgayLe_test01") chỉ dùng để chống gửi trùng theo năm,
+                // KHÔNG được truyền làm "lyDo" phát voucher — cột LyDoPhatHanh trong DB là ENUM
+                // cố định ('ThangHang','SinhNhat','NgayThanhLap','NgayLe','CuoiNam','ThuCong'),
+                // truyền chuỗi động vào sẽ làm insert voucher lỗi (bị nuốt exception) và mail
+                // gửi ra sẽ không có voucher.
                 var (voucherId, maVoucher, phanTramGiam, voucherLink) =
-                    await TaoVoucherNeuDuHangAsync(kh.KhachHangId, kh.HangHienTaiId, loaiEmail, ct);
+                    await TaoVoucherNeuDuHangAsync(kh.KhachHangId, kh.HangHienTaiId, "NgayLe", ct);
 
                 try
                 {
