@@ -253,17 +253,26 @@ public class LoyaltyService
 
     private const int SoNgayGuiTruocSinhNhat = 3;
 
-    public async Task<string> ChayJobHangNgayAsync(CancellationToken ct = default)
+    /// <param name="chiKhachHangId">
+    /// CHỈ DÙNG ĐỂ TEST: nếu truyền vào, job vẫn chạy đúng toàn bộ điều kiện nghiệp vụ thật
+    /// (sinh nhật/ngày thành lập trong N ngày tới, ngày lễ khớp hôm nay, cảnh báo xuống hạng)
+    /// nhưng CHỈ gửi email cho đúng 1 khách hàng này — tránh gọi tay nhiều lần làm bắn email
+    /// tới toàn bộ khách hàng đủ điều kiện (dễ chạm rate-limit SMTP thật khi test).
+    /// Để null (mặc định) thì chạy đúng như hosted service — quét toàn bộ khách hàng.
+    /// </param>
+    public async Task<string> ChayJobHangNgayAsync(CancellationToken ct = default, ulong? chiKhachHangId = null)
     {
         var start = DateTime.UtcNow;
 
-        await XuLySinhNhatVaNgayThanhLapAsync(ct);
-        await XuLyNgayLeAsync(ct);
-        await XuLyCanhBaoXuongHangAsync(ct);
+        await XuLySinhNhatVaNgayThanhLapAsync(ct, chiKhachHangId);
+        await XuLyNgayLeAsync(ct, chiKhachHangId);
+        await XuLyCanhBaoXuongHangAsync(ct, chiKhachHangId);
 
         // Job đầu tháng: tính lại hạng cho toàn bộ KH (chạy trong lần đầu tiên của job
         // trong ngày 1 hàng tháng — hosted service chạy 1 lần/ngày nên không bị lặp).
-        if (NgayHomNayVN().Day == 1)
+        // Khi đang test cho 1 khách (chiKhachHangId != null) thì BỎ QUA bước này — đây là
+        // job quét toàn bộ, không có ý nghĩa lọc theo 1 khách và không phải mục tiêu khi test.
+        if (chiKhachHangId is null && NgayHomNayVN().Day == 1)
             await TinhLaiHangChoTatCaAsync(ct);
 
         // Đọc lại chính những email vừa ghi log trong lần chạy này để báo cáo rõ ràng —
@@ -290,12 +299,14 @@ public class LoyaltyService
 
         return summary;
     }
-    private async Task XuLySinhNhatVaNgayThanhLapAsync(CancellationToken ct)
+    private async Task XuLySinhNhatVaNgayThanhLapAsync(CancellationToken ct, ulong? chiKhachHangId = null)
     {
         List<KhachHangNgayDacBiet> danhSach;
         try
         {
             danhSach = await _repo.GetKhachHangNgayDacBietAsync(SoNgayGuiTruocSinhNhat, ct);
+            if (chiKhachHangId.HasValue)
+                danhSach = danhSach.Where(x => x.KhachHangId == chiKhachHangId.Value).ToList();
         }
         catch (Exception ex)
         {
@@ -338,7 +349,7 @@ public class LoyaltyService
         }
     }
 
-    private async Task XuLyNgayLeAsync(CancellationToken ct)
+    private async Task XuLyNgayLeAsync(CancellationToken ct, ulong? chiKhachHangId = null)
     {
         List<NgayLeDto> danhSachNgayLe;
         try
@@ -382,6 +393,8 @@ public class LoyaltyService
             try
             {
                 khachHangs = await _repo.GetKhachHangChoNgayLeAsync(le.ApDungChoLoaiKH, le.HangToiThieuApDung, ct);
+                if (chiKhachHangId.HasValue)
+                    khachHangs = khachHangs.Where(x => x.KhachHangId == chiKhachHangId.Value).ToList();
             }
             catch (Exception ex)
             {
@@ -418,12 +431,14 @@ public class LoyaltyService
         }
     }
 
-    private async Task XuLyCanhBaoXuongHangAsync(CancellationToken ct)
+    private async Task XuLyCanhBaoXuongHangAsync(CancellationToken ct, ulong? chiKhachHangId = null)
     {
         List<ulong> ids;
         try
         {
-            ids = await _repo.GetAllKhachHangIdsAsync(ct);
+            ids = chiKhachHangId.HasValue
+                ? new List<ulong> { chiKhachHangId.Value }
+                : await _repo.GetAllKhachHangIdsAsync(ct);
         }
         catch (Exception ex)
         {

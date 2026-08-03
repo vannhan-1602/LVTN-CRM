@@ -16,15 +16,12 @@ public class LoyaltyController : ControllerBase
     private readonly LoyaltyService _loyaltyService;
     public LoyaltyController(LoyaltyService loyaltyService) => _loyaltyService = loyaltyService;
 
- 
-    // Chạy thủ công job hàng ngày: email sinh nhật/ngày thành lập, email ngày lễ,
-    //cảnh báo xuống hạng, và (nếu hôm nay là ngày 1) tính lại hạng toàn bộ KH.
-    // Quét TOÀN BỘ khách hàng đủ điều kiện trong hệ thống — không phải gửi cho 1 người.
-    // Dùng để test nhanh thay vì chờ hosted service tự chạy theo lịch.
+
+
     [HttpPost("run-daily-job")]
-    public async Task<IActionResult> RunDailyJob(CancellationToken ct)
+    public async Task<IActionResult> RunDailyJob(CancellationToken ct, [FromQuery] ulong? khachHangId = null)
     {
-        var summary = await _loyaltyService.ChayJobHangNgayAsync(ct);
+        var summary = await _loyaltyService.ChayJobHangNgayAsync(ct, khachHangId);
         return Ok(ApiResponse.Ok(summary));
     }
 }
