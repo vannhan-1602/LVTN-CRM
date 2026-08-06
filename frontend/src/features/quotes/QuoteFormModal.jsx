@@ -4,6 +4,7 @@ import quoteApi from "../../api/quoteApi";
 import customerApi from "../../api/customerApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import MoneyInput from "../../components/common/MoneyInput";
 import { formatDate, getApiErrorMessage } from "../../utils/formatters";
 
 const LY_DO_VOUCHER_LABEL = {
@@ -191,13 +192,11 @@ export default function QuoteFormModal({
                 onChange={(e) => updateLine(idx, "soLuong", e.target.value)}
                 className="col-span-2 border border-ink-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
               />
-              <input
-                type="number"
-                min="0"
+              <MoneyInput
                 value={line.donGia}
                 placeholder="Đơn giá"
-                onChange={(e) => updateLine(idx, "donGia", e.target.value)}
-                className="col-span-4 border border-ink-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+                onChange={(v) => updateLine(idx, "donGia", v)}
+                className="col-span-4 border border-ink-200 rounded-lg px-2 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
               />
               <button
                 type="button"

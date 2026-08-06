@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace CRM.Infrastructure.Services.Email;
 
 /// <summary>
@@ -193,6 +195,34 @@ internal static class EmailTemplateHelper
               Nếu nút trên không hoạt động, vui lòng liên hệ trực tiếp nhân viên phụ trách của quý khách.
             </p>
             """);
+
+    // ── Gửi hợp đồng kèm file PDF đính kèm ───────────────────────────────────
+    public static string HopDong(string tenKhachHang, string maHopDong, string? loiNhan)
+    {
+        // loiNhan là văn bản tự do nhân viên gõ tay — PHẢI HTML-encode trước khi chèn vào
+        // template, nếu không sẽ là lỗ hổng HTML/script injection trong email gửi khách.
+        var loiNhanSafe = string.IsNullOrWhiteSpace(loiNhan)
+            ? null
+            : WebUtility.HtmlEncode(loiNhan).Replace("\n", "<br>");
+
+        return WrapLayout(tenKhachHang, $"📎 Hợp đồng {maHopDong}", $"""
+            <p style="color:#334155;line-height:1.6;">
+              Chúng tôi xin gửi đến quý khách hợp đồng <strong>{maHopDong}</strong> dưới dạng file PDF
+              đính kèm trong email này. Kính đề nghị quý khách xem lại toàn bộ nội dung, ký và
+              đóng dấu (nếu là tổ chức) rồi gửi lại bản scan hoặc bản gốc cho chúng tôi để hoàn tất
+              thủ tục ký kết.
+            </p>
+            {(loiNhanSafe == null ? "" : $"""
+            <table style="width:100%;background:#EFF6FF;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #BFDBFE;">
+              <tr><td style="color:#1E3A8A;font-size:13px;line-height:1.6;">{loiNhanSafe}</td></tr>
+            </table>
+            """)}
+            <p style="color:#94A3B8;font-size:12px;">
+              Nếu có bất kỳ thắc mắc nào về nội dung hợp đồng, vui lòng liên hệ trực tiếp nhân viên
+              phụ trách của quý khách trước khi ký.
+            </p>
+            """);
+    }
 
     // ── Nhắc thanh toán (sắp đến hạn 1 đợt trả góp) ─────────────────────────
     public static string NhacThanhToan(

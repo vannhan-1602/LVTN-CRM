@@ -28,6 +28,7 @@ using CRM.Infrastructure.Persistence.Mappings;
 using CRM.Infrastructure.Persistence.Repositories;
 using CRM.Infrastructure.Services;
 using CRM.Infrastructure.Services.Email;
+using CRM.Infrastructure.Services.Pdf;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -87,6 +88,7 @@ public static class DependencyInjection
         services.AddScoped<ILoyaltyRepository, LoyaltyRepository>();
         services.AddScoped<CRM.Application.Interfaces.Analytics.IAnalyticsRepository, CRM.Infrastructure.Persistence.Repositories.AnalyticsRepository>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddSingleton<IContractPdfGenerator, ContractPdfGenerator>();
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IPhieuThuChiRepository, PhieuThuChiRepository>();
         services.AddScoped<CRM.Application.Interfaces.Alerts.IAlertRepository, CRM.Infrastructure.Persistence.Repositories.AlertRepository>();

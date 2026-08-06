@@ -223,6 +223,20 @@ public class EmailService : IEmailService
         await GuiAsync(khachHangId, email, tieuDe, html, "NhacGiaHanHopDong", null, ct);
     }
 
+    // GỬI HỢP ĐỒNG (kèm file PDF đính kèm)
+    public async Task<(bool ThanhCong, string? LoiChiTiet)> GuiEmailHopDongAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maHopDong, byte[] fileHopDongPdf, string? loiNhan,
+        CancellationToken ct = default)
+    {
+        var tieuDe = $"[CRM] 📎 Hợp đồng {maHopDong}";
+        var html = EmailTemplateHelper.HopDong(tenKhachHang, maHopDong, loiNhan);
+        var tenFile = $"HopDong_{maHopDong}.pdf";
+
+        return await GuiAsync(khachHangId, email, tieuDe, html, "HopDong", null, ct,
+            (tenFile, fileHopDongPdf));
+    }
+
     // CẢNH BÁO SLA (nội bộ — gửi nhân viên xử lý, KHÔNG ghi vào KH_EmailLog vì
     // bảng đó có KhachHang_Id NOT NULL, không phù hợp để log email gửi nhân viên).
     public async Task GuiEmailCanhBaoSlaAsync(
@@ -257,17 +271,30 @@ public class EmailService : IEmailService
         }
     }
 
-    // CORE — Gửi email thật qua MailKit + ghi log
+    // CORE — Gửi email thật qua MailKit + ghi log. `attachment` optional: (TenFile, Bytes) —
+    // dùng cho các email có file đính kèm (hiện tại: gửi hợp đồng PDF).
     private async Task<(bool ThanhCong, string? LoiChiTiet)> GuiAsync(
         ulong khachHangId, string emailDen, string tieuDe, string htmlBody,
         string loaiEmail, ulong? voucherId,
-        CancellationToken ct)
+        CancellationToken ct,
+        (string TenFile, byte[] Bytes)? attachment = null)
     {
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(FromName, SmtpUser));
         message.To.Add(MailboxAddress.Parse(emailDen));
         message.Subject = tieuDe;
-        message.Body = new TextPart("html") { Text = htmlBody };
+
+        if (attachment.HasValue)
+        {
+            var builder = new BodyBuilder { HtmlBody = htmlBody };
+            builder.Attachments.Add(attachment.Value.TenFile, attachment.Value.Bytes,
+                ContentType.Parse("application/pdf"));
+            message.Body = builder.ToMessageBody();
+        }
+        else
+        {
+            message.Body = new TextPart("html") { Text = htmlBody };
+        }
 
         bool thanhCong = false;
         string? loiChiTiet = null;

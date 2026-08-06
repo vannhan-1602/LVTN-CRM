@@ -10,6 +10,10 @@ const contractApi = {
     axiosClient.put(`/Contract/${id}/status`, { trangThai }),
   delete: (id) => axiosClient.delete(`/Contract/${id}`),
 
+  // ── Gửi hợp đồng (kèm PDF) cho khách hàng qua email ────────────────────
+  sendEmail: (id, data) => axiosClient.post(`/Contract/${id}/send-email`, data),
+  getEmailHistory: (id) => axiosClient.get(`/Contract/${id}/email-history`),
+
   // ── Mốc triển khai (Đào tạo / Bàn giao / Nghiệm thu) ──────────────────
   getMocTrienKhai: (id) => axiosClient.get(`/Contract/${id}/moc-trien-khai`),
   createMocTrienKhai: (id, data) =>

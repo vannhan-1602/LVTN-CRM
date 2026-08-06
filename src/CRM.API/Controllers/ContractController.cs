@@ -7,12 +7,14 @@ using CRM.Application.Features.Contracts.Commands.CreateRenewalContract;
 using CRM.Application.Features.Contracts.Commands.DeleteContract;
 using CRM.Application.Features.Contracts.Commands.DeleteMilestone;
 using CRM.Application.Features.Contracts.Commands.RenewLicense;
+using CRM.Application.Features.Contracts.Commands.SendContractEmail;
 using CRM.Application.Features.Contracts.Commands.ToggleLicenseLock;
 using CRM.Application.Features.Contracts.Commands.UpdateContractStatus;
 using CRM.Application.Features.Contracts.Commands.UpdateMilestone;
 using CRM.Application.Features.Contracts.DTOs;
 using CRM.Application.Features.Contracts.Queries.GetAllContracts;
 using CRM.Application.Features.Contracts.Queries.GetContractById;
+using CRM.Application.Features.Contracts.Queries.GetContractEmailHistory;
 using CRM.Application.Features.Contracts.Queries.GetLichThanhToanByHopDong;
 using CRM.Application.Features.Contracts.Queries.GetLicensesByContract;
 using CRM.Application.Features.Contracts.Queries.GetMilestonesByContract;
@@ -84,6 +86,25 @@ public class ContractController : ControllerBase
     {
         var result = await _mediator.Send(new GetLichThanhToanByHopDongQuery(id), ct);
         return Ok(ApiResponse<List<Application.Features.Contracts.DTOs.LichThanhToanDto>>.Ok(result));
+    }
+
+    // Gửi hợp đồng (kèm file PDF) cho khách hàng qua email — chỉ Sale + Manager (người
+    // có quyền tạo/sửa hợp đồng) mới được gửi, giống quyền tạo hợp đồng từ báo giá.
+    [HttpPost("{id:long}/send-email")]
+    [Authorize(Policy = Policies.SalesTeam)]
+    public async Task<IActionResult> SendEmail(
+        ulong id, [FromBody] SendContractEmailRequestDto request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new SendContractEmailCommand(id, request), ct);
+        return Ok(ApiResponse<SendContractEmailResultDto>.Ok(result, $"Đã gửi hợp đồng tới {result.EmailDaGui}."));
+    }
+
+    [HttpGet("{id:long}/email-history")]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
+    public async Task<IActionResult> GetEmailHistory(ulong id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetContractEmailHistoryQuery(id), ct);
+        return Ok(ApiResponse<List<ContractEmailHistoryItemDto>>.Ok(result));
     }
 
     [HttpPut("{id:long}/status")]

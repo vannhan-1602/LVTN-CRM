@@ -429,6 +429,21 @@ public class LoyaltyRepository : ILoyaltyRepository
         return rows.Select(x => (x.LoaiEmail, x.TrangThaiGui == "ThanhCong", x.EmailDen, x.LoiChiTiet)).ToList();
     }
 
+    public async Task<List<(DateTime? CreatedAt, bool ThanhCong, string EmailDen, string? LoiChiTiet)>> LayLichSuGuiEmailAsync(
+        ulong khachHangId, string loaiEmail, string chuaTrongTieuDe, CancellationToken ct = default)
+    {
+        var rows = await _context.KhEmailLogs
+            .AsNoTracking()
+            .Where(x => x.KhachHang_Id == khachHangId
+                && x.LoaiEmail == loaiEmail
+                && x.TieuDe.Contains(chuaTrongTieuDe))
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => new { x.CreatedAt, x.TrangThaiGui, x.EmailDen, x.LoiChiTiet })
+            .ToListAsync(ct);
+
+        return rows.Select(x => (x.CreatedAt, x.TrangThaiGui == "ThanhCong", x.EmailDen, x.LoiChiTiet)).ToList();
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // BACKGROUND JOB
     // ══════════════════════════════════════════════════════════════════════════

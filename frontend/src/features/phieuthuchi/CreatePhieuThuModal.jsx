@@ -2,6 +2,7 @@ import { useState } from "react";
 import phieuThuChiApi from "../../api/phieuThuChiApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import MoneyInput from "../../components/common/MoneyInput";
 import { formatCurrency, getApiErrorMessage } from "../../utils/formatters";
 
 export default function CreatePhieuThuModal({
@@ -69,14 +70,11 @@ export default function CreatePhieuThuModal({
           <label className="block text-sm font-medium text-ink-700 mb-1.5">
             Số tiền thu (VNĐ) <span className="text-danger-500">*</span>
           </label>
-          <input
-            type="number"
-            min="0"
-            step="1"
+          <MoneyInput
             value={soTien}
-            onChange={(e) => setSoTien(e.target.value)}
-            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
-            placeholder="VD: 5000000"
+            onChange={(v) => setSoTien(v)}
+            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            placeholder="VD: 5.000.000"
           />
         </div>
 

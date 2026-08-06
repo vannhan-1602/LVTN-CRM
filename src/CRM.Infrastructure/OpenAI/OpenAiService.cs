@@ -15,9 +15,6 @@ public class OpenAiService : IOpenAiService
     {
         _settings = settings.Value;
 
-        // BaseUrl trống → dùng OpenAI thật. BaseUrl có giá trị → trỏ sang provider
-        // tương thích OpenAI API (Groq/Ollama/OpenRouter...) để dùng MIỄN PHÍ, không
-        // cần đổi code nơi khác — chỉ đổi cấu hình trong appsettings/user-secrets.
         _chatClient = string.IsNullOrWhiteSpace(_settings.BaseUrl)
             ? new ChatClient(_settings.Model, _settings.ApiKey)
             : new ChatClient(
@@ -31,7 +28,7 @@ public class OpenAiService : IOpenAiService
         var options = new ChatCompletionOptions
         {
             // Giới hạn rõ ràng thay vì để mặc định của provider — đủ cho vài đoạn JSON/text
-            // ngắn, tránh model trả lời lan man (tốn token/tiền, chậm) mà không kiểm soát được.
+            // ngắn, tránh model trả lời lan man
             MaxOutputTokenCount = 1200
         };
 

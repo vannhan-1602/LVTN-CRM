@@ -3,6 +3,7 @@ import phieuThuChiApi from "../../api/phieuThuChiApi";
 import customerApi from "../../api/customerApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import MoneyInput from "../../components/common/MoneyInput";
 
 import { getApiErrorMessage } from "../../utils/formatters";
 // Tạo phiếu chi — không bắt buộc gắn hóa đơn, chỉ cần chọn khách hàng.
@@ -77,14 +78,11 @@ export default function CreatePhieuChiModal({ onClose, onSaved }) {
           <label className="block text-sm font-medium text-ink-700 mb-1.5">
             Số tiền chi (VNĐ) <span className="text-danger-500">*</span>
           </label>
-          <input
-            type="number"
-            min="0"
-            step="1"
+          <MoneyInput
             value={soTien}
-            onChange={(e) => setSoTien(e.target.value)}
-            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
-            placeholder="VD: 2000000 (tiếp khách, quà tặng...)"
+            onChange={(v) => setSoTien(v)}
+            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            placeholder="VD: 2.000.000 (tiếp khách, quà tặng...)"
           />
         </div>
 

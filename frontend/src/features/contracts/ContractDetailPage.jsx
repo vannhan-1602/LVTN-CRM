@@ -8,6 +8,7 @@ import {
   Users,
   FileText,
   RefreshCw,
+  Printer,
 } from "lucide-react";
 import contractApi from "../../api/contractApi";
 import quoteApi from "../../api/quoteApi";
@@ -21,7 +22,11 @@ import RenewContractModal from "./RenewContractModal";
 import MilestoneSection from "./MilestoneSection";
 import LicenseSection from "./LicenseSection";
 import { ROLES, CONTRACT_STATUS } from "../../utils/constants";
-import { formatDate, formatDateTime, getApiErrorMessage } from "../../utils/formatters";
+import {
+  formatDate,
+  formatDateTime,
+  getApiErrorMessage,
+} from "../../utils/formatters";
 
 const STATUS_TONE = {
   DangThucHien: "success",
@@ -186,6 +191,13 @@ export default function ContractDetailPage() {
         }
         actions={
           <>
+            <Button
+              variant="secondary"
+              icon={Printer}
+              onClick={() => window.open(`/contracts/${id}/print`, "_blank")}
+            >
+              In hợp đồng
+            </Button>
             {canManage && !isFinal && (
               <Button
                 variant="secondary"
@@ -265,9 +277,13 @@ export default function ContractDetailPage() {
             </div>
           </Card>
 
-          <Card title={`Sản phẩm trong hợp đồng${quoteChiTiet.length ? ` (${quoteChiTiet.length})` : ""}`}>
+          <Card
+            title={`Sản phẩm trong hợp đồng${quoteChiTiet.length ? ` (${quoteChiTiet.length})` : ""}`}
+          >
             {loadingQuoteChiTiet ? (
-              <p className="text-sm text-ink-400 text-center py-3">Đang tải...</p>
+              <p className="text-sm text-ink-400 text-center py-3">
+                Đang tải...
+              </p>
             ) : quoteChiTiet.length === 0 ? (
               <p className="text-sm text-ink-400">
                 Không tìm thấy dòng sản phẩm nào từ báo giá gốc.
@@ -281,7 +297,9 @@ export default function ContractDetailPage() {
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-ink-900">{sp.tenSP}</span>
+                        <span className="text-sm font-medium text-ink-900">
+                          {sp.tenSP}
+                        </span>
                         {sp.hinhThuc === "License" && (
                           <Badge label="License" tone="info" />
                         )}
@@ -294,7 +312,8 @@ export default function ContractDetailPage() {
                       </div>
                       <p className="text-xs text-ink-400">
                         {sp.maSP} · SL {sp.soLuong}
-                        {sp.donVi ? ` ${sp.donVi}` : ""} × {formatMoney(sp.donGia)}
+                        {sp.donVi ? ` ${sp.donVi}` : ""} ×{" "}
+                        {formatMoney(sp.donGia)}
                       </p>
                     </div>
                     <span className="text-sm font-medium text-ink-900">
@@ -305,47 +324,47 @@ export default function ContractDetailPage() {
               </div>
             )}
           </Card>
-            <Card title="Lịch trả góp">
-              {loadingLich ? (
-                <p className="text-sm text-ink-400">Đang tải lịch trả góp...</p>
-              ) : lichThanhToans.length === 0 ? (
-                <p className="text-sm text-ink-400">
-                  Chưa có dữ liệu lịch trả góp.
-                </p>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-ink-400 text-xs uppercase">
-                      <th className="pb-2">Đợt</th>
-                      <th className="pb-2">Số tiền</th>
-                      <th className="pb-2">Hạn thanh toán</th>
-                      <th className="pb-2">Trạng thái</th>
+          <Card title="Lịch trả góp">
+            {loadingLich ? (
+              <p className="text-sm text-ink-400">Đang tải lịch trả góp...</p>
+            ) : lichThanhToans.length === 0 ? (
+              <p className="text-sm text-ink-400">
+                Chưa có dữ liệu lịch trả góp.
+              </p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-ink-400 text-xs uppercase">
+                    <th className="pb-2">Đợt</th>
+                    <th className="pb-2">Số tiền</th>
+                    <th className="pb-2">Hạn thanh toán</th>
+                    <th className="pb-2">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lichThanhToans.map((l) => (
+                    <tr key={l.id} className="border-t border-ink-100">
+                      <td className="py-2">Đợt {l.soDot}</td>
+                      <td className="py-2">{formatMoney(l.soTien)}</td>
+                      <td className="py-2">{formatDate(l.hanThanhToan)}</td>
+                      <td className="py-2">
+                        <Badge
+                          label={l.trangThai}
+                          tone={
+                            l.trangThai === "DaThanhToan"
+                              ? "success"
+                              : l.trangThai === "QuaHan"
+                                ? "danger"
+                                : "neutral"
+                          }
+                        />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {lichThanhToans.map((l) => (
-                      <tr key={l.id} className="border-t border-ink-100">
-                        <td className="py-2">Đợt {l.soDot}</td>
-                        <td className="py-2">{formatMoney(l.soTien)}</td>
-                        <td className="py-2">{formatDate(l.hanThanhToan)}</td>
-                        <td className="py-2">
-                          <Badge
-                            label={l.trangThai}
-                            tone={
-                              l.trangThai === "DaThanhToan"
-                                ? "success"
-                                : l.trangThai === "QuaHan"
-                                  ? "danger"
-                                  : "neutral"
-                            }
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </Card>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Card>
 
           <MilestoneSection
             hopDongId={contract.id}
@@ -433,11 +452,17 @@ export default function ContractDetailPage() {
             <Card title="Liên kết gia hạn">
               {contract.maHopDongGoc && (
                 <button
-                  onClick={() => navigate(`/contracts/${contract.hopDongGocId}`)}
+                  onClick={() =>
+                    navigate(`/contracts/${contract.hopDongGocId}`)
+                  }
                   className="w-full text-left p-2.5 rounded-lg hover:bg-ink-100 transition-colors text-xs mb-1.5"
                 >
-                  <span className="text-ink-400">Gia hạn từ hợp đồng gốc: </span>
-                  <span className="font-mono text-ink-900">{contract.maHopDongGoc}</span>
+                  <span className="text-ink-400">
+                    Gia hạn từ hợp đồng gốc:{" "}
+                  </span>
+                  <span className="font-mono text-ink-900">
+                    {contract.maHopDongGoc}
+                  </span>
                 </button>
               )}
               {contract.hopDongLienKet?.map((hd) => (
@@ -448,9 +473,14 @@ export default function ContractDetailPage() {
                 >
                   <span>
                     <span className="text-ink-400">Đã gia hạn thành: </span>
-                    <span className="font-mono text-ink-900">{hd.maHopDong}</span>
+                    <span className="font-mono text-ink-900">
+                      {hd.maHopDong}
+                    </span>
                   </span>
-                  <Badge label={hd.trangThai} tone={STATUS_TONE[hd.trangThai]} />
+                  <Badge
+                    label={hd.trangThai}
+                    tone={STATUS_TONE[hd.trangThai]}
+                  />
                 </button>
               ))}
             </Card>

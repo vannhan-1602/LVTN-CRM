@@ -18,6 +18,7 @@ import QuoteListPage from "../features/quotes/QuoteListPage";
 import QuoteDetailPage from "../features/quotes/QuoteDetailPage";
 import ContractListPage from "../features/contracts/ContractListPage";
 import ContractDetailPage from "../features/contracts/ContractDetailPage";
+import ContractPrintPage from "../features/contracts/ContractPrintPage";
 import OpportunityListPage from "../features/opportunities/OpportunityListPage";
 import OpportunityDetailPage from "../features/opportunities/OpportunityDetailPage";
 import InvoiceListPage from "../features/invoices/InvoiceListPage";
@@ -54,6 +55,17 @@ export default function AppRoutes() {
 
       {/* Route công khai cho Landing Page */}
       <Route path="/landing" element={<LandingPageDemo />} />
+
+      {/* Trang in hợp đồng — cố tình đặt ngoài MainLayout để không dính sidebar/topbar khi in */}
+      <Route
+        element={
+          <ProtectedRoute
+            allowedRoles={[ROLES.Sale, ROLES.Manager, ROLES.Accountant]}
+          />
+        }
+      >
+        <Route path="/contracts/:id/print" element={<ContractPrintPage />} />
+      </Route>
 
       <Route element={<MainLayout />}>
         <Route element={<ProtectedRoute />}>

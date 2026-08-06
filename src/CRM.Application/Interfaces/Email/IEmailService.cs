@@ -91,6 +91,13 @@ public interface IEmailService
         string maLicenseKey, string tenSanPham, DateOnly ngayHetHan, int soNgayConLai,
         CancellationToken ct = default);
 
+    // Gửi hợp đồng (kèm file PDF đính kèm) cho khách hàng — dùng khi nhân viên bấm
+    // "Gửi email cho khách" trên màn hình xem trước/in hợp đồng.
+    Task<(bool ThanhCong, string? LoiChiTiet)> GuiEmailHopDongAsync(
+        ulong khachHangId, string tenKhachHang, string email,
+        string maHopDong, byte[] fileHopDongPdf, string? loiNhan,
+        CancellationToken ct = default);
+
     // Cảnh báo SLA — gửi cho nhân viên xử lý khi ticket quá hạn xử lý (ThoiHanSLA).
     Task GuiEmailCanhBaoSlaAsync(
         string tenNhanVien, string email,

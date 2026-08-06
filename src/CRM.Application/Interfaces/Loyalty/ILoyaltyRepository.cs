@@ -87,6 +87,12 @@ public interface ILoyaltyRepository
     Task<List<(string LoaiEmail, bool ThanhCong, string EmailDen, string? LoiChiTiet)>> ThongKeEmailLogTuAsync(
         DateTime tuThoiDiem, CancellationToken ct = default);
 
+    /// <summary>Lịch sử gửi email loại `loaiEmail` cho 1 khách hàng có tiêu đề chứa `chuaTrongTieuDe`
+    /// (VD: mã hợp đồng) — dùng để suy ra "đã gửi hợp đồng cho khách chưa, lúc nào" mà KHÔNG cần
+    /// thêm cột trạng thái riêng trong HD_HopDong (tận dụng KH_EmailLog sẵn có).</summary>
+    Task<List<(DateTime? CreatedAt, bool ThanhCong, string EmailDen, string? LoiChiTiet)>> LayLichSuGuiEmailAsync(
+        ulong khachHangId, string loaiEmail, string chuaTrongTieuDe, CancellationToken ct = default);
+
     // ── Dùng cho Background Job ───────────────────────────────────────────────
 
     /// <summary>

@@ -3,6 +3,7 @@ import contractApi from "../../api/contractApi";
 import quoteApi from "../../api/quoteApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import MoneyInput from "../../components/common/MoneyInput";
 import { Plus, X } from "lucide-react";
 
 import { getApiErrorMessage } from "../../utils/formatters";
@@ -207,14 +208,11 @@ export default function CreateContractModal({ onClose, onSaved }) {
                     <span className="text-xs font-medium text-ink-500 w-12">
                       Đợt {dot.soDot}
                     </span>
-                    <input
-                      type="number"
+                    <MoneyInput
                       placeholder="Số tiền"
                       value={dot.soTien}
-                      onChange={(e) =>
-                        updateDotTraGop(idx, "soTien", e.target.value)
-                      }
-                      className="flex-1 border border-ink-200 rounded-lg px-2 py-1.5 text-xs"
+                      onChange={(v) => updateDotTraGop(idx, "soTien", v)}
+                      className="flex-1 border border-ink-200 rounded-lg px-2 py-1.5 text-xs text-right"
                     />
                     <input
                       type="date"
