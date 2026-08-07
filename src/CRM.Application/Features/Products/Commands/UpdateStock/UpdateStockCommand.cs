@@ -16,6 +16,7 @@ public record UpdateStockCommand(
     uint SanPhamId,
     string LoaiGiaoDich,
     int SoLuong,
+    string? ChieuDieuChinh,
     string? MaChungTu,
     string? GhiChu
 ) : IRequest<StockTransactionResultDto>;
@@ -33,6 +34,13 @@ public class UpdateStockCommandValidator : AbstractValidator<UpdateStockCommand>
 
         RuleFor(x => x.SoLuong)
             .GreaterThan(0).WithMessage("Số lượng giao dịch phải lớn hơn 0.");
+
+        // Kiểm kê là loại DUY NHẤT có thể đi theo cả 2 chiều (kiểm thừa/kiểm thiếu), nên bắt
+        // buộc phải nói rõ chiều — không suy đoán được từ mỗi LoaiGiaoDich như các loại khác.
+        RuleFor(x => x.ChieuDieuChinh)
+            .Must(v => v == "Tang" || v == "Giam")
+            .When(x => x.LoaiGiaoDich == StockTransactionType.KiemKe)
+            .WithMessage("Kiểm kê phải chọn rõ chiều điều chỉnh: Tăng (kiểm thừa) hoặc Giảm (kiểm thiếu).");
 
         RuleFor(x => x.MaChungTu).MaximumLength(50);
         RuleFor(x => x.GhiChu).MaximumLength(255);
@@ -65,18 +73,26 @@ public class UpdateStockCommandHandler : IRequestHandler<UpdateStockCommand, Sto
         var product = await _productRepository.GetByIdEnrichedAsync(request.SanPhamId, ct)
             ?? throw new NotFoundException(nameof(SanPham), request.SanPhamId);
 
-        // Với sản phẩm License: XuatBan ("Cấp License") giờ chỉ được ghi nhận tự động qua
+        // Với sản phẩm License/Subscription: XuatBan ("Cấp License") giờ chỉ được ghi nhận tự động qua
         // CreateLicenseCommand (khi Manager cấp license thật cho hợp đồng) — chặn ở đây để
         // không ai (kể cả gọi thẳng API) trừ kho tay trùng với giao dịch tự động đó.
-        if (product.HinhThuc == "License" && request.LoaiGiaoDich == StockTransactionType.XuatBan)
+        if ((product.HinhThuc == "License" || product.HinhThuc == "Subscription")
+            && request.LoaiGiaoDich == StockTransactionType.XuatBan)
             throw new BusinessRuleException(
-                "Không thể tạo phiếu 'Cấp License' thủ công cho sản phẩm dạng License. " +
+                "Không thể tạo phiếu 'Cấp License' thủ công cho sản phẩm dạng License/Subscription. " +
                 "Hãy dùng nút 'Cấp License' ở trang hợp đồng — hệ thống sẽ tự trừ kho.");
 
-        // Số lượng giao dịch luôn nhập dương; dấu +/- do loại giao dịch quyết định
-        var soLuongThayDoi = StockTransactionType.DecreaseTypes.Contains(request.LoaiGiaoDich)
-            ? -request.SoLuong
-            : request.SoLuong;
+        // Số lượng giao dịch luôn nhập dương; dấu +/- do loại giao dịch quyết định.
+        // Riêng KiemKe là loại 2 CHIỀU (kiểm thừa = tăng, kiểm thiếu = giảm) — trước đây bị
+        // gộp nhầm vào nhánh "luôn tăng" khiến không thể ghi nhận hao hụt phát hiện qua kiểm
+        // kê; giờ tách riêng, lấy dấu theo ChieuDieuChinh (đã bắt buộc ở Validator).
+        var soLuongThayDoi = request.LoaiGiaoDich switch
+        {
+            _ when StockTransactionType.DecreaseTypes.Contains(request.LoaiGiaoDich) => -request.SoLuong,
+            _ when StockTransactionType.IncreaseTypes.Contains(request.LoaiGiaoDich) => request.SoLuong,
+            StockTransactionType.KiemKe => request.ChieuDieuChinh == "Giam" ? -request.SoLuong : request.SoLuong,
+            _ => request.SoLuong,
+        };
 
         var tonHienTai = await _productRepository.GetCurrentStockAsync(request.SanPhamId, ct);
         if (tonHienTai + soLuongThayDoi < 0)

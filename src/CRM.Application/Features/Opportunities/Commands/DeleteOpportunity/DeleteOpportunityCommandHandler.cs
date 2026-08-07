@@ -4,6 +4,7 @@ using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Opportunities;
 using CRM.Domain.Entities.Sales;
+using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -31,6 +32,12 @@ public class DeleteOpportunityCommandHandler : IRequestHandler<DeleteOpportunity
 
         if (_currentUser.Role == Roles.Sale && entity.NhanVienPhuTrachId != _currentUser.UserId)
             throw new ForbiddenException("Bạn không có quyền xóa cơ hội của nhân viên khác.");
+
+        // Đồng bộ với UpdateOpportunityCommand: cơ hội đã chốt (Thành công/Thất bại) là bản ghi
+        // lịch sử dùng để thống kê tỷ lệ chốt đơn — không cho xóa để tránh sai lệch số liệu.
+        if (entity.GiaiDoan == CoHoiGiaiDoan.ThanhCong.ToString() || entity.GiaiDoan == CoHoiGiaiDoan.ThatBai.ToString())
+            throw new BusinessRuleException(
+                $"Cơ hội đã ở trạng thái '{entity.GiaiDoan}', không thể xóa (dữ liệu lịch sử dùng cho thống kê).");
 
         await _repo.SoftDeleteAsync(req.Id, ct);
         await _uow.SaveChangesAsync(ct);

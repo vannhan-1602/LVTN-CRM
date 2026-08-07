@@ -142,6 +142,13 @@ export const MOC_TRANG_THAI_COLOR = {
   DaXacNhan: "bg-success-50 text-success-700",
 };
 
+export const HINH_THUC_LOAI_SAN_PHAM_LABEL = {
+  VatLy: "Vật lý (hàng hóa, có tồn kho vật lý)",
+  DichVu: "Dịch vụ",
+  License: "License (cấp phát quyền dùng phần mềm)",
+  Subscription: "Subscription (thuê bao phần mềm)",
+};
+
 export const STOCK_TRANSACTION_TYPE_OPTIONS = [
   { value: "NhapMua", label: "Nhập mua" },
   { value: "XuatBan", label: "Xuất bán" },
@@ -224,7 +231,11 @@ export function getStockTransactionOptions(hinhThuc) {
     STOCK_TRANSACTION_LABELS_BY_HINHTHUC[hinhThuc] ??
     STOCK_TRANSACTION_LABELS_BY_HINHTHUC.VatLy;
   return STOCK_TRANSACTION_TYPE_OPTIONS.filter(
-    (o) => !(hinhThuc === "License" && o.value === "XuatBan"),
+    (o) =>
+      !(
+        (hinhThuc === "License" || hinhThuc === "Subscription") &&
+        o.value === "XuatBan"
+      ),
   ).map((o) => ({
     value: o.value,
     label: table[o.value] ?? o.label,

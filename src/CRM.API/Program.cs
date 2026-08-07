@@ -89,6 +89,20 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
+
+    // Chống brute-force đăng nhập: giới hạn theo IP, tách riêng (chặt hơn) khỏi
+    // PublicFormSubmit vì login là mục tiêu tấn công phổ biến nhất. Không lock account theo
+    // username trong DB (tránh bị lợi dụng để khóa tài khoản người khác hàng loạt chỉ bằng
+    // cách gõ sai mật khẩu — "account lockout DoS") — chỉ giới hạn theo IP ở tầng middleware.
+    options.AddPolicy("LoginAttempt", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0
+            }));
 });
 
 var app = builder.Build();

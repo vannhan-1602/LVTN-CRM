@@ -2,6 +2,7 @@ using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Contracts.DTOs;
 using CRM.Application.Interfaces.Contracts;
 using CRM.Domain.Entities.Sales;
+using CRM.Domain.Enums;
 using FluentValidation;
 using MediatR;
 
@@ -40,8 +41,15 @@ public class CreateMilestoneCommandHandler : IRequestHandler<CreateMilestoneComm
 
     public async Task<MocTrienKhaiDto> Handle(CreateMilestoneCommand request, CancellationToken ct)
     {
-        _ = await _contractRepository.GetByIdAsync(request.HopDongId, ct)
+        var hopDong = await _contractRepository.GetByIdAsync(request.HopDongId, ct)
             ?? throw new NotFoundException(nameof(HopDong), request.HopDongId);
+
+        // Đồng bộ với CreateLicenseCommand/SendContractEmailCommand: hợp đồng đã Thanh lý là
+        // bản ghi lịch sử đã đóng, không nên thêm mốc triển khai mới vào đó nữa. Vẫn cho phép
+        // thêm mốc khi TamDung — có thể là ghi nhận mốc đã xảy ra trước lúc tạm dừng.
+        if (hopDong.TrangThai == ContractStatus.ThanhLy)
+            throw new BusinessRuleException(
+                $"Hợp đồng {hopDong.MaHopDong} đã thanh lý, không thể thêm mốc triển khai mới.");
 
         return await _milestoneRepository.AddAsync(
             request.HopDongId, request.LoaiMoc, request.NoiDung?.Trim(),

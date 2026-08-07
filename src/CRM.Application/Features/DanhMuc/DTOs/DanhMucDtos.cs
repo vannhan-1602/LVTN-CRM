@@ -1,3 +1,5 @@
+using CRM.Domain.Enums;
+
 namespace CRM.Application.Features.DanhMuc.DTOs;
 
 // ── LoaiKhachHang ─────────────────────────────────────────────────────────────
@@ -49,11 +51,17 @@ public class LoaiSanPhamDto
     public uint Id { get; set; }
     public string TenLoai { get; set; } = string.Empty;
     public string? MoTa { get; set; }
+    public string HinhThuc { get; set; } = "VatLy";
 }
 public class UpsertLoaiSanPhamDto
 {
     public string TenLoai { get; set; } = string.Empty;
     public string? MoTa { get; set; }
+
+    /// <summary>VatLy | DichVu | License | Subscription. Trước đây field này không tồn tại
+    /// trong DTO nên Admin không thể chọn qua giao diện — cột BH_LoaiSanPham.HinhThuc chỉ có
+    /// thể đúng giá trị License/Subscription nếu được set sẵn từ dữ liệu seed.</summary>
+    public string HinhThuc { get; set; } = ProductFormType.VatLy;
 }
 
 // ── XepHang ───────────────────────────────────────────────────────────────────

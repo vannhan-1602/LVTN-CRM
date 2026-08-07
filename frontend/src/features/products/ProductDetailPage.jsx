@@ -19,6 +19,7 @@ import { formatDateTime, getImageUrl, getApiErrorMessage } from "../../utils/for
 const emptyStockForm = {
   loaiGiaoDich: "NhapMua",
   soLuong: "",
+  chieuDieuChinh: "Tang",
   maChungTu: "",
   ghiChu: "",
 };
@@ -56,12 +57,22 @@ function StockSection({ productId, hinhThuc, canManage, onStockChanged }) {
       setError("Số lượng phải lớn hơn 0");
       return;
     }
+    if (
+      form.loaiGiaoDich === "KiemKe" &&
+      form.chieuDieuChinh !== "Tang" &&
+      form.chieuDieuChinh !== "Giam"
+    ) {
+      setError("Kiểm kê phải chọn rõ Tăng (kiểm thừa) hoặc Giảm (kiểm thiếu)");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
       await productApi.adjustStock(productId, {
         loaiGiaoDich: form.loaiGiaoDich,
         soLuong: Number(form.soLuong),
+        chieuDieuChinh:
+          form.loaiGiaoDich === "KiemKe" ? form.chieuDieuChinh : null,
         maChungTu: form.maChungTu || null,
         ghiChu: form.ghiChu || null,
       });
@@ -146,6 +157,23 @@ function StockSection({ productId, hinhThuc, canManage, onStockChanged }) {
                 className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
               />
             </div>
+            {form.loaiGiaoDich === "KiemKe" && (
+              <div>
+                <label className="block text-xs font-medium text-ink-500 mb-1">
+                  Chiều điều chỉnh
+                </label>
+                <select
+                  value={form.chieuDieuChinh}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, chieuDieuChinh: e.target.value }))
+                  }
+                  className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="Tang">Tăng (kiểm kê phát hiện thừa)</option>
+                  <option value="Giam">Giảm (kiểm kê phát hiện thiếu)</option>
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-xs font-medium text-ink-500 mb-1">
                 Mã chứng từ

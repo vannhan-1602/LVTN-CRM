@@ -7,6 +7,18 @@ public enum ProductStatus
     DangKinhDoanh = 1
 }
 
+/// <summary>Hình thức loại sản phẩm. Khớp enum BH_LoaiSanPham.HinhThuc trong DB — 4 giá trị cố
+/// định (không thêm/bớt được nếu không đổi schema DB).</summary>
+public static class ProductFormType
+{
+    public const string VatLy = "VatLy";
+    public const string DichVu = "DichVu";
+    public const string License = "License";
+    public const string Subscription = "Subscription";
+
+    public static readonly IReadOnlyList<string> All = [VatLy, DichVu, License, Subscription];
+}
+
 /// <summary>Trạng thái báo giá. Khớp enum HD_BaoGia.TrangThai trong DB.</summary>
 public static class QuoteStatus
 {

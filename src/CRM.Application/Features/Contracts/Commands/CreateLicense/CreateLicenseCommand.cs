@@ -75,9 +75,14 @@ public class CreateLicenseCommandHandler : IRequestHandler<CreateLicenseCommand,
         var sanPham = await _productRepository.GetByIdEnrichedAsync(request.SanPhamId, ct)
             ?? throw new NotFoundException("Sản phẩm", request.SanPhamId);
 
-        if (sanPham.HinhThuc != "License")
+        // "Subscription" dùng chung toàn bộ quy trình cấp phát với "License" (cùng bản chất:
+        // cấp quyền sử dụng phần mềm, không phải hàng vật lý) — xem comment ở
+        // STOCK_TRANSACTION_LABELS_BY_HINHTHUC (frontend/constants.js). Trước đây bị chặn cứng
+        // chỉ nhận "License" khiến sản phẩm Subscription bán/ký hợp đồng/thu tiền được nhưng
+        // không bao giờ cấp phát được — đã mở để 2 loại này dùng chung 1 luồng như thiết kế.
+        if (sanPham.HinhThuc != "License" && sanPham.HinhThuc != "Subscription")
             throw new BusinessRuleException(
-                $"Sản phẩm '{sanPham.TenSP}' không phải sản phẩm dạng License (đang là '{sanPham.HinhThuc}').");
+                $"Sản phẩm '{sanPham.TenSP}' không phải sản phẩm dạng License/Subscription (đang là '{sanPham.HinhThuc}').");
 
         var mocTrienKhais = await _milestoneRepository.GetByHopDongAsync(request.HopDongId, ct);
         var daBanGiao = mocTrienKhais.Any(m => m.LoaiMoc == "BanGiao" && m.TrangThai == "DaXacNhan");

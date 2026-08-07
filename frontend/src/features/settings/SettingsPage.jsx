@@ -17,6 +17,7 @@ import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import { useForm } from "react-hook-form";
 import useDanhMucStore from "../../stores/danhMucStore";
+import { HINH_THUC_LOAI_SAN_PHAM_LABEL } from "../../utils/constants";
 
 import { getApiErrorMessage } from "../../utils/formatters";
 // ── Generic CRUD table cho danh mục đơn giản ────────────────────────────────
@@ -925,6 +926,12 @@ export default function SettingsPage() {
           deleteFn={danhMucApi.deleteLoaiSanPham}
           columns={[
             { key: "tenLoai", label: "Tên loại" },
+            {
+              key: "hinhThuc",
+              label: "Hình thức",
+              render: (item) =>
+                HINH_THUC_LOAI_SAN_PHAM_LABEL[item.hinhThuc] ?? item.hinhThuc,
+            },
             { key: "moTa", label: "Mô tả" },
           ]}
           fields={[
@@ -933,6 +940,15 @@ export default function SettingsPage() {
               label: "Tên loại sản phẩm",
               required: true,
               rules: { required: "Bắt buộc" },
+            },
+            {
+              name: "hinhThuc",
+              label: "Hình thức",
+              type: "select",
+              required: true,
+              options: Object.entries(HINH_THUC_LOAI_SAN_PHAM_LABEL).map(
+                ([value, label]) => ({ value, label }),
+              ),
             },
             { name: "moTa", label: "Mô tả", type: "textarea" },
           ]}

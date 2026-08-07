@@ -237,7 +237,8 @@ public class DanhMucRepository : IDanhMucRepository
         var entity = new BhLoaiSanPhamEntity
         {
             TenLoai = dto.TenLoai.Trim(),
-            MoTa = dto.MoTa?.Trim()
+            MoTa = dto.MoTa?.Trim(),
+            HinhThuc = dto.HinhThuc
         };
         _context.BhLoaiSanPhams.Add(entity);
         await _context.SaveChangesAsync(ct);
@@ -252,8 +253,19 @@ public class DanhMucRepository : IDanhMucRepository
         if (await _context.BhLoaiSanPhams.AnyAsync(x => x.TenLoai == dto.TenLoai && x.Id != id, ct))
             throw new BusinessRuleException($"Loại sản phẩm '{dto.TenLoai}' đã tồn tại.");
 
+        // Đổi HinhThuc của 1 loại sản phẩm ĐANG có sản phẩm bên dưới sẽ làm lệch nghiệp vụ
+        // (VD: sản phẩm đang là License bỗng bị đổi thành VatLy — các License/Contract cũ tham
+        // chiếu tới sẽ không còn khớp điều kiện HinhThuc ở CreateLicenseCommand) — chặn tương tự
+        // cách DeleteLoaiSanPhamAsync đã chặn xóa khi còn sản phẩm phụ thuộc.
+        if (entity.HinhThuc != dto.HinhThuc
+            && await _context.BhSanPhams.AnyAsync(x => x.LoaiSanPham_Id == id, ct))
+            throw new BusinessRuleException(
+                "Không thể đổi Hình thức vì đang có sản phẩm thuộc loại này. " +
+                "Hãy tạo loại sản phẩm mới nếu cần Hình thức khác.");
+
         entity.TenLoai = dto.TenLoai.Trim();
         entity.MoTa = dto.MoTa?.Trim();
+        entity.HinhThuc = dto.HinhThuc;
         await _context.SaveChangesAsync(ct);
         return ToDto(entity);
     }
@@ -272,7 +284,7 @@ public class DanhMucRepository : IDanhMucRepository
 
     private static LoaiSanPhamDto ToDto(BhLoaiSanPhamEntity e) => new()
     {
-        Id = e.Id, TenLoai = e.TenLoai, MoTa = e.MoTa
+        Id = e.Id, TenLoai = e.TenLoai, MoTa = e.MoTa, HinhThuc = e.HinhThuc
     };
 
     // ══════════════════════════════════════════════════════════════════════════

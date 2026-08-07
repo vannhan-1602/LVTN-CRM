@@ -63,6 +63,11 @@ public class AdjustStockRequestDto
 {
     public string LoaiGiaoDich { get; set; } = string.Empty;
     public int SoLuong { get; set; } // luôn nhập số dương, dấu +/- do LoaiGiaoDich quyết định
+
+    /// <summary>Bắt buộc khi LoaiGiaoDich = "KiemKe" — "Tang" (kiểm kê phát hiện thừa) hoặc
+    /// "Giam" (kiểm kê phát hiện thiếu/mất mát). Các loại giao dịch khác bỏ qua trường này vì
+    /// chiều tăng/giảm đã cố định theo loại giao dịch (NhapMua luôn tăng, XuatBan luôn giảm...).</summary>
+    public string? ChieuDieuChinh { get; set; }
     public string? MaChungTu { get; set; }
     public string? GhiChu { get; set; }
 }

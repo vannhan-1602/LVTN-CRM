@@ -106,7 +106,7 @@ public class ProductController : ControllerBase
     public async Task<IActionResult> AdjustStock(uint id, [FromBody] AdjustStockRequestDto request, CancellationToken ct)
     {
         var result = await _mediator.Send(new UpdateStockCommand(
-            id, request.LoaiGiaoDich, request.SoLuong, request.MaChungTu, request.GhiChu), ct);
+            id, request.LoaiGiaoDich, request.SoLuong, request.ChieuDieuChinh, request.MaChungTu, request.GhiChu), ct);
 
         return Ok(ApiResponse<StockTransactionResultDto>.Ok(result, "Cập nhật tồn kho thành công."));
     }

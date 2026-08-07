@@ -1,6 +1,7 @@
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.DanhMuc.DTOs;
 using CRM.Application.Interfaces.DanhMuc;
+using CRM.Domain.Enums;
 using FluentValidation;
 using MediatR;
 
@@ -163,6 +164,8 @@ public class CreateLoaiSanPhamCommandValidator : AbstractValidator<CreateLoaiSan
     {
         RuleFor(x => x.Dto.TenLoai).NotEmpty().MaximumLength(100)
             .WithMessage("Tên loại sản phẩm không được để trống và tối đa 100 ký tự.");
+        RuleFor(x => x.Dto.HinhThuc).Must(v => ProductFormType.All.Contains(v))
+            .WithMessage($"Hình thức phải là một trong: {string.Join(", ", ProductFormType.All)}.");
     }
 }
 public class UpdateLoaiSanPhamCommandValidator : AbstractValidator<UpdateLoaiSanPhamCommand>
@@ -172,6 +175,8 @@ public class UpdateLoaiSanPhamCommandValidator : AbstractValidator<UpdateLoaiSan
         RuleFor(x => x.Id).GreaterThan(0U);
         RuleFor(x => x.Dto.TenLoai).NotEmpty().MaximumLength(100)
             .WithMessage("Tên loại sản phẩm không được để trống và tối đa 100 ký tự.");
+        RuleFor(x => x.Dto.HinhThuc).Must(v => ProductFormType.All.Contains(v))
+            .WithMessage($"Hình thức phải là một trong: {string.Join(", ", ProductFormType.All)}.");
     }
 }
 
