@@ -23,6 +23,15 @@ function formatMoney(n) {
   return n == null || n === "" ? "" : Number(n).toLocaleString("vi-VN") + " đ";
 }
 
+// Tự động co giãn chiều cao ô textarea theo đúng nội dung đang gõ, để không
+// bị cắt/ẩn chữ trong khung nhỏ cố định — chỉ dùng cho các ô sửa điều khoản
+// hợp đồng bên dưới (đọc kỹ để dò lại nội dung trước khi in).
+function autoGrowTextarea(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
 // Đọc số tiền ra chữ (đơn vị: đồng) — thuật toán đọc số tiếng Việt theo nhóm 3
 // chữ số (nghìn/triệu/tỷ), không phải nối chuỗi đơn giản, để đúng cách trình
 // bày trên hợp đồng/hóa đơn thật.
@@ -117,21 +126,30 @@ function buildDefaultClauses({ contract, baoHanhThang, mucPhatViPham, soBan }) {
     dieu4: `Hợp đồng có hiệu lực kể từ ngày ${
       contract.ngayKy ? formatDate(contract.ngayKy) : "…"
     }${contract.thoiHan ? `, thời hạn ${contract.thoiHan} tháng` : ""}${
-      contract.ngayKetThuc ? `, đến ngày ${formatDate(contract.ngayKetThuc)}` : ""
+      contract.ngayKetThuc
+        ? `, đến ngày ${formatDate(contract.ngayKetThuc)}`
+        : ""
     }. Tiến độ triển khai, đào tạo, bàn giao và nghiệm thu cụ thể theo Phụ lục/Biên bản mốc triển khai do hai bên xác nhận trong quá trình thực hiện.`,
-    dieu5: "5.1. Cung cấp giải pháp/dịch vụ phần mềm đúng nội dung, số lượng, chất lượng và tiến độ đã thỏa thuận tại Điều 1, Điều 4.\n5.2. Hướng dẫn, đào tạo và hỗ trợ kỹ thuật cho Bên B trong quá trình triển khai và sử dụng.\n5.3. Có quyền yêu cầu Bên B thanh toán đầy đủ, đúng hạn theo Điều 3; tạm ngừng cung cấp dịch vụ nếu Bên B vi phạm nghĩa vụ thanh toán quá thời hạn đã thỏa thuận, sau khi đã có văn bản thông báo trước ít nhất 07 (bảy) ngày.",
-    dieu6: "6.1. Thanh toán đầy đủ, đúng hạn theo Điều 3; cung cấp thông tin, phối hợp cần thiết để Bên A triển khai đúng tiến độ.\n6.2. Có quyền yêu cầu Bên A thực hiện đúng nội dung, chất lượng và tiến độ đã cam kết; yêu cầu khắc phục lỗi phát sinh trong thời gian bảo hành theo Điều 7.\n6.3. Không được sao chép, chuyển giao, phân phối lại, dịch ngược (reverse engineering) hoặc cho bên thứ ba thuê lại phần mềm khi chưa có sự đồng ý bằng văn bản của Bên A, trừ trường hợp pháp luật có quy định khác.",
+    dieu5:
+      "5.1. Cung cấp giải pháp/dịch vụ phần mềm đúng nội dung, số lượng, chất lượng và tiến độ đã thỏa thuận tại Điều 1, Điều 4.\n5.2. Hướng dẫn, đào tạo và hỗ trợ kỹ thuật cho Bên B trong quá trình triển khai và sử dụng.\n5.3. Có quyền yêu cầu Bên B thanh toán đầy đủ, đúng hạn theo Điều 3; tạm ngừng cung cấp dịch vụ nếu Bên B vi phạm nghĩa vụ thanh toán quá thời hạn đã thỏa thuận, sau khi đã có văn bản thông báo trước ít nhất 07 (bảy) ngày.",
+    dieu6:
+      "6.1. Thanh toán đầy đủ, đúng hạn theo Điều 3; cung cấp thông tin, phối hợp cần thiết để Bên A triển khai đúng tiến độ.\n6.2. Có quyền yêu cầu Bên A thực hiện đúng nội dung, chất lượng và tiến độ đã cam kết; yêu cầu khắc phục lỗi phát sinh trong thời gian bảo hành theo Điều 7.\n6.3. Không được sao chép, chuyển giao, phân phối lại, dịch ngược (reverse engineering) hoặc cho bên thứ ba thuê lại phần mềm khi chưa có sự đồng ý bằng văn bản của Bên A, trừ trường hợp pháp luật có quy định khác.",
     dieu7: `Thời gian bảo hành: ${
       baoHanhThang || "…"
     } tháng kể từ ngày nghiệm thu/bàn giao. Trong thời gian bảo hành, Bên A có trách nhiệm khắc phục miễn phí các lỗi phát sinh do phần mềm gây ra, không bao gồm lỗi do Bên B tự ý can thiệp, sửa đổi mã nguồn hoặc do hạ tầng/thiết bị/đường truyền của Bên B. Sau thời gian bảo hành, việc bảo trì (nếu có) thực hiện theo thỏa thuận riêng giữa hai bên.`,
-    dieu8: "Bên A là chủ sở hữu quyền tác giả đối với mã nguồn, thiết kế, cơ sở dữ liệu và các thành phần kỹ thuật của phần mềm nền tảng theo quy định của Luật Sở hữu trí tuệ. Bên B được cấp quyền sử dụng (license) phần mềm theo phạm vi, thời hạn và số lượng người dùng đã thỏa thuận; việc cấp quyền này không phải là chuyển nhượng quyền sở hữu trí tuệ. Đối với các phần tùy chỉnh (customize) riêng theo yêu cầu của Bên B, nếu có, quyền sở hữu và quyền sử dụng thực hiện theo thỏa thuận riêng bằng văn bản giữa hai bên.",
-    dieu9: "Hai bên cam kết giữ bí mật mọi thông tin, dữ liệu, tài liệu kỹ thuật và nội dung hợp đồng này, không tiết lộ cho bên thứ ba khi chưa có sự đồng ý bằng văn bản của bên còn lại, trừ trường hợp phải cung cấp theo yêu cầu của cơ quan nhà nước có thẩm quyền theo quy định pháp luật. Đối với dữ liệu cá nhân mà Bên A tiếp cận, xử lý thay mặt hoặc theo yêu cầu của Bên B trong quá trình cung cấp, vận hành phần mềm, Bên A cam kết tuân thủ Nghị định số 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân, chỉ xử lý dữ liệu đúng phạm vi, mục đích đã thỏa thuận và áp dụng các biện pháp bảo mật kỹ thuật phù hợp.",
+    dieu8:
+      "Bên A là chủ sở hữu quyền tác giả đối với mã nguồn, thiết kế, cơ sở dữ liệu và các thành phần kỹ thuật của phần mềm nền tảng theo quy định của Luật Sở hữu trí tuệ. Bên B được cấp quyền sử dụng (license) phần mềm theo phạm vi, thời hạn và số lượng người dùng đã thỏa thuận; việc cấp quyền này không phải là chuyển nhượng quyền sở hữu trí tuệ. Đối với các phần tùy chỉnh (customize) riêng theo yêu cầu của Bên B, nếu có, quyền sở hữu và quyền sử dụng thực hiện theo thỏa thuận riêng bằng văn bản giữa hai bên.",
+    dieu9:
+      "Hai bên cam kết giữ bí mật mọi thông tin, dữ liệu, tài liệu kỹ thuật và nội dung hợp đồng này, không tiết lộ cho bên thứ ba khi chưa có sự đồng ý bằng văn bản của bên còn lại, trừ trường hợp phải cung cấp theo yêu cầu của cơ quan nhà nước có thẩm quyền theo quy định pháp luật. Đối với dữ liệu cá nhân mà Bên A tiếp cận, xử lý thay mặt hoặc theo yêu cầu của Bên B trong quá trình cung cấp, vận hành phần mềm, Bên A cam kết tuân thủ Nghị định số 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân, chỉ xử lý dữ liệu đúng phạm vi, mục đích đã thỏa thuận và áp dụng các biện pháp bảo mật kỹ thuật phù hợp.",
     dieu10: `Bên vi phạm nghĩa vụ hợp đồng phải chịu phạt vi phạm với mức ${
       mucPhatViPham || 0
     }% giá trị phần nghĩa vụ hợp đồng bị vi phạm (không vượt quá 8% theo Điều 301 Luật Thương mại 2005). Nếu có thiệt hại thực tế xảy ra, bên vi phạm còn phải bồi thường thiệt hại theo quy định tại Điều 302 Luật Thương mại 2005 và Bộ luật Dân sự 2015; tổng trách nhiệm bồi thường của Bên A theo hợp đồng này, trừ trường hợp do lỗi cố ý, không vượt quá tổng giá trị hợp đồng đã thanh toán tại thời điểm phát sinh.`,
-    dieu11: "Trường hợp việc thực hiện hợp đồng bị ảnh hưởng bởi sự kiện bất khả kháng theo quy định tại khoản 1 Điều 156 Bộ luật Dân sự 2015 (thiên tai, hỏa hoạn, dịch bệnh, chiến tranh, thay đổi chính sách pháp luật...), bên bị ảnh hưởng phải thông báo bằng văn bản cho bên còn lại trong thời hạn hợp lý và được miễn trách nhiệm đối với phần nghĩa vụ không thể thực hiện do sự kiện đó, sau khi đã áp dụng mọi biện pháp cần thiết trong khả năng cho phép để khắc phục hậu quả.",
-    dieu12: "Mọi tranh chấp phát sinh từ hoặc liên quan đến hợp đồng này trước hết được giải quyết thông qua thương lượng, hòa giải giữa hai bên. Trường hợp không tự giải quyết được trong thời hạn 30 (ba mươi) ngày kể từ ngày phát sinh tranh chấp, một trong hai bên có quyền đưa vụ việc ra giải quyết tại Tòa án nhân dân có thẩm quyền theo quy định pháp luật Việt Nam. Trong thời gian giải quyết tranh chấp, các bên vẫn phải tiếp tục thực hiện các nghĩa vụ không liên quan trực tiếp đến nội dung đang tranh chấp.",
-    dieu13: "13.1. Mỗi bên có quyền đơn phương chấm dứt hợp đồng nếu bên còn lại vi phạm nghĩa vụ cơ bản của hợp đồng và không khắc phục trong thời hạn 15 (mười lăm) ngày kể từ ngày nhận được thông báo bằng văn bản của bên bị vi phạm.\n13.2. Hai bên có thể thỏa thuận chấm dứt hợp đồng trước thời hạn bằng văn bản; nghĩa vụ thanh toán cho phần công việc, sản phẩm đã thực hiện đến thời điểm chấm dứt vẫn phải được các bên hoàn tất đầy đủ.\n13.3. Việc chấm dứt hợp đồng không làm mất hiệu lực của các điều khoản về bảo mật thông tin (Điều 9), quyền sở hữu trí tuệ (Điều 8) và giải quyết tranh chấp (Điều 12).",
+    dieu11:
+      "Trường hợp việc thực hiện hợp đồng bị ảnh hưởng bởi sự kiện bất khả kháng theo quy định tại khoản 1 Điều 156 Bộ luật Dân sự 2015 (thiên tai, hỏa hoạn, dịch bệnh, chiến tranh, thay đổi chính sách pháp luật...), bên bị ảnh hưởng phải thông báo bằng văn bản cho bên còn lại trong thời hạn hợp lý và được miễn trách nhiệm đối với phần nghĩa vụ không thể thực hiện do sự kiện đó, sau khi đã áp dụng mọi biện pháp cần thiết trong khả năng cho phép để khắc phục hậu quả.",
+    dieu12:
+      "Mọi tranh chấp phát sinh từ hoặc liên quan đến hợp đồng này trước hết được giải quyết thông qua thương lượng, hòa giải giữa hai bên. Trường hợp không tự giải quyết được trong thời hạn 30 (ba mươi) ngày kể từ ngày phát sinh tranh chấp, một trong hai bên có quyền đưa vụ việc ra giải quyết tại Tòa án nhân dân có thẩm quyền theo quy định pháp luật Việt Nam. Trong thời gian giải quyết tranh chấp, các bên vẫn phải tiếp tục thực hiện các nghĩa vụ không liên quan trực tiếp đến nội dung đang tranh chấp.",
+    dieu13:
+      "13.1. Mỗi bên có quyền đơn phương chấm dứt hợp đồng nếu bên còn lại vi phạm nghĩa vụ cơ bản của hợp đồng và không khắc phục trong thời hạn 15 (mười lăm) ngày kể từ ngày nhận được thông báo bằng văn bản của bên bị vi phạm.\n13.2. Hai bên có thể thỏa thuận chấm dứt hợp đồng trước thời hạn bằng văn bản; nghĩa vụ thanh toán cho phần công việc, sản phẩm đã thực hiện đến thời điểm chấm dứt vẫn phải được các bên hoàn tất đầy đủ.\n13.3. Việc chấm dứt hợp đồng không làm mất hiệu lực của các điều khoản về bảo mật thông tin (Điều 9), quyền sở hữu trí tuệ (Điều 8) và giải quyết tranh chấp (Điều 12).",
     dieu14: `14.1. Hợp đồng có hiệu lực kể từ ngày ký và chấm dứt khi hai bên đã hoàn thành nghĩa vụ hoặc theo thỏa thuận chấm dứt/thanh lý của hai bên.\n14.2. Mọi sửa đổi, bổ sung hợp đồng phải được lập thành văn bản (phụ lục hợp đồng) và có chữ ký của cả hai bên.\n14.3. Hợp đồng được lập thành ${
       soBan || 2
     } (${soBan || 2}) bản có giá trị pháp lý như nhau, mỗi bên giữ ${Math.floor(
@@ -256,6 +274,14 @@ export default function ContractPrintPage() {
     });
   }
 
+  // Nội dung điều khoản có thể đổi do bấm "Khôi phục mặc định" (không phải do
+  // gõ tay), lúc đó sự kiện onInput của textarea không bắn ra — nên cần chạy
+  // lại autoGrow ở đây mỗi khi nội dung hoặc trạng thái mở khung sửa đổi.
+  useEffect(() => {
+    if (!showClauseEditor) return;
+    document.querySelectorAll(".clause-textarea").forEach(autoGrowTextarea);
+  }, [clauses, showClauseEditor]);
+
   async function handleSendEmail() {
     const thieu = [];
     if (!benA.tenCongTy?.trim()) thieu.push("Tên công ty Bên A");
@@ -347,9 +373,22 @@ export default function ContractPrintPage() {
         <Button
           variant="secondary"
           icon={previewMode ? Pencil : ArrowLeft}
-          onClick={() =>
-            previewMode ? setPreviewMode(false) : navigate(-1)
-          }
+          onClick={() => {
+            if (previewMode) {
+              setPreviewMode(false);
+              return;
+            }
+            // Trang này thường được mở bằng window.open(url, "_blank") từ trang
+            // Chi tiết hợp đồng, tức là mở ra một tab mới không có lịch sử điều
+            // hướng trước đó — lúc đó navigate(-1) không có gì để quay lại nên
+            // không phản hồi gì cả. Nếu tab hiện tại không có lịch sử, đóng tab
+            // luôn (coi như quay lại); nếu có lịch sử thật thì mới điều hướng lùi.
+            if (window.history.length <= 1) {
+              window.close();
+            } else {
+              navigate(-1);
+            }
+          }}
         >
           {previewMode ? "Quay lại chỉnh sửa" : "Quay lại"}
         </Button>
@@ -689,8 +728,8 @@ export default function ContractPrintPage() {
                 Nội dung mặc định được sinh theo số tháng bảo hành / mức phạt /
                 số bản đã điền ở trên. Sửa tay điều nào thì điều đó sẽ không tự
                 cập nhật theo các ô trên nữa — bấm "Khôi phục mặc định" để đồng
-                bộ lại. Chỉ áp dụng cho bản in này, không thay đổi dữ liệu
-                trong hệ thống.
+                bộ lại. Chỉ áp dụng cho bản in này, không thay đổi dữ liệu trong
+                hệ thống.
               </div>
               {CLAUSE_FIELDS.map(({ key, label }) => (
                 <div key={key}>
@@ -710,10 +749,19 @@ export default function ContractPrintPage() {
                     )}
                   </div>
                   <textarea
+                    ref={autoGrowTextarea}
                     value={clauses[key]}
                     onChange={(e) => setClauseText(key, e.target.value)}
-                    rows={key === "dieu5" || key === "dieu6" || key === "dieu13" || key === "dieu14" ? 4 : 2}
-                    className="w-full border border-ink-200 rounded-lg px-2 py-1.5 text-xs font-mono"
+                    onInput={(e) => autoGrowTextarea(e.target)}
+                    rows={
+                      key === "dieu5" ||
+                      key === "dieu6" ||
+                      key === "dieu13" ||
+                      key === "dieu14"
+                        ? 4
+                        : 2
+                    }
+                    className="clause-textarea w-full border border-ink-200 rounded-lg px-2 py-1.5 text-xs font-mono resize-none overflow-hidden leading-relaxed"
                   />
                 </div>
               ))}
@@ -726,8 +774,8 @@ export default function ContractPrintPage() {
           phổ biến, dựa trên Bộ luật Dân sự 2015, Luật Thương mại 2005, Luật Sở
           hữu trí tuệ và Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân —
           không thay thế tư vấn của luật sư. Nên rà soát lại nội dung, đặc biệt
-          các điều khoản sở hữu trí tuệ, bảo mật và phạt vi phạm, trước khi
-          dùng cho giao dịch thật.
+          các điều khoản sở hữu trí tuệ, bảo mật và phạt vi phạm, trước khi dùng
+          cho giao dịch thật.
         </div>
       </div>
 
