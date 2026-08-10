@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Pencil,
@@ -47,8 +48,6 @@ export default function ContractDetailPage() {
   const canManage = [ROLES.Sale, ROLES.Manager].includes(user?.role);
   const canDelete = user?.role === ROLES.Manager;
 
-  const [contract, setContract] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -60,18 +59,27 @@ export default function ContractDetailPage() {
   const [quoteChiTiet, setQuoteChiTiet] = useState([]);
   const [loadingQuoteChiTiet, setLoadingQuoteChiTiet] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await contractApi.getById(id);
-      setContract(res.data ?? null);
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Không thể tải thông tin hợp đồng"));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: contract,
+    isLoading: loading,
+    refetch: load,
+  } = useQuery({
+    queryKey: ["contract", id],
+    queryFn: async () => {
+      try {
+        const res = await contractApi.getById(id);
+        setError("");
+        return res.data ?? null;
+      } catch (err) {
+        setError(getApiErrorMessage(err, "Không thể tải thông tin hợp đồng"));
+        throw err;
+      }
+    },
+    // Tự tải lại — bắt trạng thái Hết hạn (ContractExpirationJob), License hết hạn
+    // (LicenseLifecycleJob), hoặc do người khác (Manager) vừa cập nhật hợp đồng này.
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+  });
 
   const loadLichThanhToan = async () => {
     setLoadingLich(true);
@@ -98,10 +106,6 @@ export default function ContractDetailPage() {
       setLoadingQuoteChiTiet(false);
     }
   };
-
-  useEffect(() => {
-    load();
-  }, [id]);
 
   useEffect(() => {
     if (contract?.baoGiaId) {

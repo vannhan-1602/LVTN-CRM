@@ -16,7 +16,8 @@ public interface ILicenseRepository
         CancellationToken ct = default);
 
     /// <summary>Gia hạn 1 License có sẵn: cập nhật NgayHetHan mới, giữ nguyên MaLicenseKey,
-    /// tự chuyển lại DangHoatDong nếu đang HetHan/TamKhoa.</summary>
+    /// tự chuyển lại DangHoatDong nếu đang HetHan — riêng TamKhoa thì GIỮ NGUYÊN (không tự ý
+    /// mở khóa License đang bị Manager khóa có chủ đích).</summary>
     Task<LicenseDto?> RenewAsync(ulong id, DateOnly ngayHetHanMoi, CancellationToken ct = default);
 
     /// <summary>Khóa (TamKhoa) hoặc mở khóa (DangHoatDong) — không áp dụng cho License đã HetHan.</summary>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { Pencil, Trash2, MapPin, Plus, Star, X } from "lucide-react";
 import customerApi from "../../api/customerApi";
@@ -15,7 +16,11 @@ import ActivitySection from "../activities/ActivitySection";
 import CustomerLoyaltySection from "./CustomerLoyaltySection";
 import CustomerExpenseSection from "./CustomerExpenseSection";
 import { ROLES } from "../../utils/constants";
-import { formatDateTime, badgeToneForId, getApiErrorMessage } from "../../utils/formatters";
+import {
+  formatDateTime,
+  badgeToneForId,
+  getApiErrorMessage,
+} from "../../utils/formatters";
 
 const LOAI_DIA_CHI_OPTIONS = [
   { value: "Office", label: "Văn phòng" },
@@ -359,28 +364,31 @@ export default function CustomerDetailPage() {
   const canDelete = user?.role === ROLES.Manager;
   const canViewExpense = [ROLES.Manager, ROLES.Accountant].includes(user?.role);
 
-  const [customer, setCustomer] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [showEditModal, setShowEditModal] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await customerApi.getById(id);
-      setCustomer(res.data ?? null);
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Không thể tải thông tin khách hàng"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, [id]);
+  const {
+    data: customer,
+    isLoading: loading,
+    refetch: load,
+  } = useQuery({
+    queryKey: ["customer", id],
+    queryFn: async () => {
+      try {
+        const res = await customerApi.getById(id);
+        setError("");
+        return res.data ?? null;
+      } catch (err) {
+        setError(getApiErrorMessage(err, "Không thể tải thông tin khách hàng"));
+        throw err;
+      }
+    },
+    // Tự tải lại — bắt điểm/hạng khách hàng vừa được LoyaltyService cộng ngầm
+    // sau phiếu thu (không đồng bộ, không nằm cùng request tạo phiếu thu).
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+  });
 
   const handleDelete = async () => {
     if (!window.confirm("Xóa khách hàng này? Hợp đồng không thể khôi phục."))

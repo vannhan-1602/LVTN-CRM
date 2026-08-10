@@ -63,7 +63,11 @@ public class LicenseRepository : ILicenseRepository
         if (entity is null) return null;
 
         entity.NgayHetHan = ngayHetHanMoi;
-        entity.TrangThai = "DangHoatDong";
+        // Chỉ tự chuyển sang DangHoatDong khi đang HetHan (đúng mục đích chính của Renew).
+        // Nếu đang TamKhoa thì GIỮ NGUYÊN — Renew không được tự ý mở khóa License đang bị
+        // Manager khóa có chủ đích (xem comment trong RenewLicenseCommand.cs).
+        if (entity.TrangThai != "TamKhoa")
+            entity.TrangThai = "DangHoatDong";
         entity.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(ct);
         return ToDto(entity);

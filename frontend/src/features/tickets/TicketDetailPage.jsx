@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { Trash2, Lock, Send, UserCog } from "lucide-react";
 import ticketApi from "../../api/ticketApi";
@@ -29,9 +30,7 @@ export default function TicketDetailPage() {
   const { user } = useAuthStore();
   const canDelete = user?.role === ROLES.Manager;
 
-  const [ticket, setTicket] = useState(null);
   const [nhanVienList, setNhanVienList] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [editForm, setEditForm] = useState(null);
@@ -53,32 +52,41 @@ export default function TicketDetailPage() {
     [nhanVienList],
   );
 
-  const load = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await ticketApi.getById(id);
-      setTicket(res.data);
-      setEditForm({
-        trangThai: res.data.trangThai,
-        mucDoUuTien: res.data.mucDoUuTien,
-        ngayHenXuLy: res.data.ngayHenXuLy
-          ? res.data.ngayHenXuLy.slice(0, 16)
-          : "",
-      });
-      setAssignNV(
-        res.data.nhanVienXuLyId ? String(res.data.nhanVienXuLyId) : "",
-      );
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Không thể tải ticket"));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: ticket,
+    isLoading: loading,
+    refetch: load,
+  } = useQuery({
+    queryKey: ["ticket", id],
+    queryFn: async () => {
+      try {
+        const res = await ticketApi.getById(id);
+        setError("");
+        return res.data ?? null;
+      } catch (err) {
+        setError(getApiErrorMessage(err, "Không thể tải ticket"));
+        throw err;
+      }
+    },
+    // Tự tải lại — bắt trạng thái do SLA escalation job chuyển, hoặc do
+    // đồng nghiệp khác vừa phản hồi/đổi trạng thái ticket này.
+    refetchInterval: 3000,
+    refetchOnWindowFocus: true,
+  });
 
+  // Chỉ nạp lại form chỉnh sửa khi CHUYỂN sang ticket khác (đổi id) — không
+  // nạp lại theo mỗi lần poll, tránh ghi đè lựa chọn dở dang của người dùng.
   useEffect(() => {
-    load();
-  }, [id]);
+    if (!ticket) return;
+    setEditForm({
+      trangThai: ticket.trangThai,
+      mucDoUuTien: ticket.mucDoUuTien,
+      ngayHenXuLy: ticket.ngayHenXuLy ? ticket.ngayHenXuLy.slice(0, 16) : "",
+    });
+    setAssignNV(ticket.nhanVienXuLyId ? String(ticket.nhanVienXuLyId) : "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket?.id]);
+
   useEffect(() => {
     authApi
       .getStaffList()
@@ -200,7 +208,7 @@ export default function TicketDetailPage() {
       </div>
     );
   }
-  if (!ticket) return null;
+  if (!ticket || !editForm) return null;
 
   return (
     <div className="space-y-5">
