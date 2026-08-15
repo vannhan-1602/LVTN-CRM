@@ -4,6 +4,7 @@ using CRM.Application.Features.Contracts.DTOs;
 using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Contracts;
+using CRM.Application.Interfaces.Customers;
 using CRM.Domain.Entities.Sales;
 using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
@@ -53,17 +54,19 @@ public class CreateRenewalContractCommandHandler
 {
     private const string AuditTable = "HD_HopDong";
     private readonly IContractRepository _contractRepository;
+    private readonly ICustomerRepository _customerRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLogPublisher;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<CreateRenewalContractCommandHandler> _logger;
 
     public CreateRenewalContractCommandHandler(
-        IContractRepository contractRepository, IUnitOfWork unitOfWork,
-        IAuditLogPublisher auditLogPublisher, ICurrentUserService currentUser,
-        ILogger<CreateRenewalContractCommandHandler> logger)
+        IContractRepository contractRepository, ICustomerRepository customerRepository,
+        IUnitOfWork unitOfWork, IAuditLogPublisher auditLogPublisher,
+        ICurrentUserService currentUser, ILogger<CreateRenewalContractCommandHandler> logger)
     {
         _contractRepository = contractRepository;
+        _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
         _auditLogPublisher = auditLogPublisher;
         _currentUser = currentUser;
@@ -74,6 +77,16 @@ public class CreateRenewalContractCommandHandler
     {
         var hopDongCu = await _contractRepository.GetByIdAsync(request.HopDongCuId, ct)
             ?? throw new NotFoundException(nameof(HopDong), request.HopDongCuId);
+
+        // Sale chỉ gia hạn được hợp đồng của khách hàng mình phụ trách — đồng bộ với check đã
+        // có ở CreateContractFromQuoteCommandHandler cho lần tạo hợp đồng đầu tiên.
+        if (_currentUser.Role == Roles.Sale)
+        {
+            var khachHang = await _customerRepository.GetByIdAsync(hopDongCu.KhachHangId, ct);
+            if (khachHang?.NhanVienPhuTrachId != _currentUser.UserId)
+                throw new ForbiddenException(
+                    "Bạn không có quyền gia hạn hợp đồng của khách hàng do nhân viên khác phụ trách.");
+        }
 
         if (hopDongCu.TrangThai == ContractStatus.ThanhLy)
             throw new BusinessRuleException("Hợp đồng đã thanh lý, không thể gia hạn.");

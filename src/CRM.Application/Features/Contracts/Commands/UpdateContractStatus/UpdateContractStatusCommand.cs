@@ -1,7 +1,10 @@
+using CRM.Application.Common.Constants;
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Contracts.DTOs;
 using CRM.Application.Interfaces.Audit;
+using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Contracts;
+using CRM.Application.Interfaces.Customers;
 using CRM.Domain.Entities.Sales;
 using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
@@ -29,17 +32,22 @@ public class UpdateContractStatusCommandHandler : IRequestHandler<UpdateContract
 {
     private const string AuditTable = "HD_HopDong";
     private readonly IContractRepository _contractRepository;
+    private readonly ICustomerRepository _customerRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLogPublisher;
+    private readonly ICurrentUserService _currentUser;
     private readonly ILogger<UpdateContractStatusCommandHandler> _logger;
 
     public UpdateContractStatusCommandHandler(
-        IContractRepository contractRepository, IUnitOfWork unitOfWork,
-        IAuditLogPublisher auditLogPublisher, ILogger<UpdateContractStatusCommandHandler> logger)
+        IContractRepository contractRepository, ICustomerRepository customerRepository,
+        IUnitOfWork unitOfWork, IAuditLogPublisher auditLogPublisher,
+        ICurrentUserService currentUser, ILogger<UpdateContractStatusCommandHandler> logger)
     {
         _contractRepository = contractRepository;
+        _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
         _auditLogPublisher = auditLogPublisher;
+        _currentUser = currentUser;
         _logger = logger;
     }
 
@@ -47,6 +55,17 @@ public class UpdateContractStatusCommandHandler : IRequestHandler<UpdateContract
     {
         var contract = await _contractRepository.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException(nameof(HopDong), request.Id);
+
+        // Sale chỉ đổi trạng thái hợp đồng của khách hàng mình phụ trách — đồng bộ với check
+        // đã có sẵn ở CreateContractFromQuoteCommandHandler. HopDong không lưu người phụ trách
+        // trực tiếp nên phải tra qua KhachHang (giống pattern CreateQuoteCommandHandler).
+        if (_currentUser.Role == Roles.Sale)
+        {
+            var khachHang = await _customerRepository.GetByIdAsync(contract.KhachHangId, ct);
+            if (khachHang?.NhanVienPhuTrachId != _currentUser.UserId)
+                throw new ForbiddenException(
+                    "Bạn không có quyền thay đổi trạng thái hợp đồng của khách hàng do nhân viên khác phụ trách.");
+        }
 
         if (contract.TrangThai == ContractStatus.ThanhLy)
             throw new BusinessRuleException("Hợp đồng đã thanh lý, không thể thay đổi trạng thái.");

@@ -1,3 +1,4 @@
+using CRM.Application.Common.Constants;
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Features.Contracts.DTOs;
 using CRM.Application.Interfaces.Common;
@@ -104,6 +105,16 @@ public class SendContractEmailCommandHandler : IRequestHandler<SendContractEmail
 
         var contract = await _contractRepository.GetByIdEnrichedAsync(cmd.HopDongId, ct)
             ?? throw new NotFoundException(nameof(HopDong), cmd.HopDongId);
+
+        // Sale chỉ gửi được hợp đồng của khách hàng mình phụ trách — thiếu check này thì bất kỳ
+        // Sale nào cũng gửi được hợp đồng (kèm PDF có giá trị pháp lý) cho khách của Sale khác.
+        if (_currentUser.Role == Roles.Sale)
+        {
+            var khachHangPhuTrach = await _customerRepository.GetByIdAsync(contract.KhachHangId, ct);
+            if (khachHangPhuTrach?.NhanVienPhuTrachId != _currentUser.UserId)
+                throw new ForbiddenException(
+                    "Bạn không có quyền gửi hợp đồng của khách hàng do nhân viên khác phụ trách.");
+        }
 
         // Hợp đồng đã thanh lý xong thì không còn ý nghĩa gửi để yêu cầu khách ký nữa.
         if (contract.TrangThai == ContractStatus.ThanhLy)
