@@ -9,5 +9,12 @@ using System.Threading.Tasks;
 
 namespace CRM.Application.Features.Leads.Queries.GetAllLeads
 {
-    public record GetAllLeadsQuery(int PageNumber, int PageSize, string? Search, bool? IsDeleted = null, string? TinhTrang = null) : IRequest<PagedResult<LeadDto>>;
+    public record GetAllLeadsQuery(
+        int PageNumber,
+        int PageSize,
+        string? Search,
+        bool? IsDeleted = null,
+        string? TinhTrang = null,
+        // true: hàng chờ Lead chưa gán (NhanVienPhuTrachId null), mọi Sale đều thấy như nhau.
+        bool? ChuaGan = null) : IRequest<PagedResult<LeadDto>>;
 }

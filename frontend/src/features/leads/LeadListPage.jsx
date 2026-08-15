@@ -11,6 +11,7 @@ import {
   ArrowRightLeft,
   PlayCircle,
   StopCircle,
+  UserCheck,
 } from "lucide-react";
 import leadApi from "../../api/leadApi";
 import authApi from "../../api/authApi";
@@ -36,6 +37,7 @@ export default function LeadListPage() {
   const navigate = useNavigate();
   const canDelete = user?.role === ROLES.Manager;
   const canEdit = [ROLES.Sale, ROLES.Manager].includes(user?.role);
+  const isSale = user?.role === ROLES.Sale;
 
   const [items, setItems] = useState([]);
   const [nhanVienList, setNhanVienList] = useState([]);
@@ -53,6 +55,10 @@ export default function LeadListPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
+
+  // viewMode: "cuaToi" (mặc định, Sale chỉ thấy Lead mình phụ trách — Manager thấy tất cả),
+  // "chuaGan" (hàng chờ Lead chưa gán — vd: lead từ form website, mọi Sale đều thấy như nhau).
+  const [viewMode, setViewMode] = useState("cuaToi");
 
   const nhanVienMap = useMemo(
     () =>
@@ -81,6 +87,7 @@ export default function LeadListPage() {
         search: search.trim() || undefined,
         isDeleted: filterDeleted === "true",
         tinhTrang: filterTinhTrang || undefined,
+        chuaGan: viewMode === "chuaGan" ? true : undefined,
       });
       setItems(res.data?.items ?? []);
       setTotalPages(res.data?.totalPages ?? 1);
@@ -103,7 +110,7 @@ export default function LeadListPage() {
 
   useEffect(() => {
     loadLeads();
-  }, [pageNumber, filterDeleted, filterTinhTrang]);
+  }, [pageNumber, filterDeleted, filterTinhTrang, viewMode]);
   useEffect(() => {
     loadNhanVien();
   }, []);
@@ -150,6 +157,18 @@ export default function LeadListPage() {
       await loadLeads();
     } catch (err) {
       setError(getApiErrorMessage(err, "Không thể cập nhật trạng thái"));
+    }
+  };
+
+  // Sale tự nhận phụ trách Lead đang chưa gán — không cho chọn người khác (chỉ Manager
+  // mới điều phối được), nên dùng action riêng thay vì mở form sửa đầy đủ.
+  const handleClaim = async (item) => {
+    try {
+      await leadApi.assign(item.id, { nhanVienPhuTrachId: user?.userId });
+      setSuccess("Đã nhận lead thành công");
+      await loadLeads();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Không thể nhận lead này"));
     }
   };
 
@@ -210,6 +229,35 @@ export default function LeadListPage() {
           )
         }
       />
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            setViewMode("cuaToi");
+            setPageNumber(1);
+          }}
+          className={`text-sm font-medium px-3.5 py-2 rounded-lg border transition-colors ${
+            viewMode === "cuaToi"
+              ? "bg-accent-50 border-accent-200 text-accent-700"
+              : "border-ink-200 text-ink-500 hover:bg-surface-alt"
+          }`}
+        >
+          {isSale ? "Lead của tôi" : "Tất cả lead"}
+        </button>
+        <button
+          onClick={() => {
+            setViewMode("chuaGan");
+            setPageNumber(1);
+          }}
+          className={`text-sm font-medium px-3.5 py-2 rounded-lg border transition-colors ${
+            viewMode === "chuaGan"
+              ? "bg-accent-50 border-accent-200 text-accent-700"
+              : "border-ink-200 text-ink-500 hover:bg-surface-alt"
+          }`}
+        >
+          Lead chưa gán
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
@@ -403,6 +451,18 @@ export default function LeadListPage() {
                             icon: Eye,
                             onClick: () => navigate(`/leads/${item.id}`),
                           },
+                          ...(isSale &&
+                          !item.nhanVienPhuTrachId &&
+                          item.tinhTrang !== "DaChuyenDoi" &&
+                          !item.isDeleted
+                            ? [
+                                {
+                                  label: "Tự nhận",
+                                  icon: UserCheck,
+                                  onClick: () => handleClaim(item),
+                                },
+                              ]
+                            : []),
                           ...(canEdit &&
                           item.tinhTrang !== "DaChuyenDoi" &&
                           !item.isDeleted

@@ -9,6 +9,7 @@ import {
   Building2,
   PlayCircle,
   StopCircle,
+  UserCheck,
 } from "lucide-react";
 import leadApi from "../../api/leadApi";
 import authApi from "../../api/authApi";
@@ -31,6 +32,7 @@ export default function LeadDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const canEdit = [ROLES.Sale, ROLES.Manager].includes(user?.role);
+  const isSale = user?.role === ROLES.Sale;
   const canDelete = user?.role === ROLES.Manager;
 
   const [lead, setLead] = useState(null);
@@ -82,6 +84,18 @@ export default function LeadDetailPage() {
       navigate("/leads");
     } catch (err) {
       setError(getApiErrorMessage(err, "Không thể xóa lead"));
+    }
+  };
+
+  // Sale tự nhận phụ trách Lead đang chưa gán — không cho chọn người khác (chỉ Manager
+  // mới điều phối được).
+  const handleClaim = async () => {
+    try {
+      await leadApi.assign(id, { nhanVienPhuTrachId: user?.userId });
+      setActionMsg("Đã nhận lead thành công");
+      await load();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Không thể nhận lead này"));
     }
   };
 
@@ -180,6 +194,12 @@ export default function LeadDetailPage() {
         }
         actions={
           <>
+            {/* Sale tự nhận Lead đang chưa gán */}
+            {isSale && !lead.nhanVienPhuTrachId && !isConverted && (
+              <Button icon={UserCheck} onClick={handleClaim}>
+                Tự nhận
+              </Button>
+            )}
             {/* Chỉ được sửa khi chưa chuyển đổi */}
             {canEdit && !isConverted && (
               <Button

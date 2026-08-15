@@ -1,6 +1,7 @@
 using CRM.Application.Common.Constants;
 using CRM.Application.Common.Models;
 using CRM.Application.Features.Customers.DTOs;
+using CRM.Application.Features.Leads.Commands.AssignLead;
 using CRM.Application.Features.Leads.Commands.ConvertLead;
 using CRM.Application.Features.Leads.Commands.CreateLead;
 using CRM.Application.Features.Leads.Commands.DeleteLead;
@@ -30,9 +31,10 @@ namespace CRM.API.Controllers
             [FromQuery] string? search = null,
             [FromQuery] bool? isDeleted = null,
             [FromQuery] string? tinhTrang = null,
+            [FromQuery] bool? chuaGan = null,
             CancellationToken ct = default)
         {
-            var result = await _mediator.Send(new GetAllLeadsQuery(pageNumber, pageSize, search, isDeleted, tinhTrang), ct);
+            var result = await _mediator.Send(new GetAllLeadsQuery(pageNumber, pageSize, search, isDeleted, tinhTrang, chuaGan), ct);
             return Ok(ApiResponse<PagedResult<LeadDto>>.Ok(result));
         }
 
@@ -78,6 +80,14 @@ namespace CRM.API.Controllers
         {
             await _mediator.Send(new RestoreLeadCommand(id), ct);
             return Ok(ApiResponse.Ok("Khôi phục lead thành công."));
+        }
+
+        // Gán (hoặc tự nhận) nhân viên phụ trách — dùng cho hàng chờ Lead chưa gán.
+        [HttpPost("{id:long}/assign")]
+        public async Task<IActionResult> Assign(ulong id, [FromBody] AssignLeadRequestDto request, CancellationToken ct)
+        {
+            var result = await _mediator.Send(new AssignLeadCommand(id, request.NhanVienPhuTrachId), ct);
+            return Ok(ApiResponse<LeadDto>.Ok(result, "Gán phụ trách lead thành công."));
         }
 
         // Convert của Sale "chuyển đổi lead thành khách hàng"

@@ -38,6 +38,11 @@ public class UpdateLeadRequestDto
     public uint? NhanVienPhuTrachId { get; set; }
 }
 
+public class AssignLeadRequestDto
+{
+    public uint? NhanVienPhuTrachId { get; set; }
+}
+
 public class CreatePublicLeadRequestDto
 {
     public string TenLead { get; set; } = string.Empty;

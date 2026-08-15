@@ -17,6 +17,9 @@ public interface ILeadRepository
         //  null/false = chỉ lấy chưa xóa (mặc định); true = chỉ lấy đã xóa (đã khóa)
         bool? isDeleted = null,
         string? tinhTrang = null,
+        //  true: chỉ lấy Lead chưa gán (NhanVienPhuTrachId null) — hàng chờ để Sale tự
+        // nhận, ưu tiên hơn ownerUserId vì 2 filter này loại trừ nhau về mặt nghiệp vụ.
+        bool? chuaGan = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Kiểm tra email đã tồn tại ở Lead khác chưa (loại trừ chính lead đang sửa qua excludeId).</summary>

@@ -21,11 +21,30 @@ namespace CRM.Application.Features.Leads.Queries.GetAllLeads
 
         public async Task<PagedResult<LeadDto>> Handle(GetAllLeadsQuery request, CancellationToken cancellationToken)
         {
-            // Sale chỉ xem Lead mình phụ trách  Manager xem toàn đội 
-            uint? ownerUserId = _currentUser.Role == Roles.Sale ? _currentUser.UserId : null;
+            // Sale mặc định chỉ xem Lead mình phụ trách, TRỪ khi:
+            //  - request.ChuaGan = true → xem hàng chờ Lead chưa gán (để tự nhận), mọi Sale đều thấy như nhau.
+            // Manager xem toàn đội (không lọc theo owner).
+            var chuaGan = request.ChuaGan;
+            uint? ownerUserId;
+
+            if (_currentUser.Role == Roles.Sale)
+            {
+                ownerUserId = chuaGan == true ? null : _currentUser.UserId;
+            }
+            else
+            {
+                ownerUserId = null;
+            }
 
             var result = await _leadRepository.GetPagedAsync(
-                request.PageNumber, request.PageSize, request.Search, ownerUserId, request.IsDeleted, request.TinhTrang, cancellationToken);
+                request.PageNumber,
+                request.PageSize,
+                request.Search,
+                ownerUserId,
+                request.IsDeleted,
+                request.TinhTrang,
+                chuaGan,
+                cancellationToken);
 
             return new PagedResult<LeadDto>
             {

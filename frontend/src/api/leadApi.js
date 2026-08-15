@@ -7,6 +7,7 @@ const leadApi = {
   update: (id, data) => axiosClient.put(`/Lead/${id}`, data),
   delete: (id) => axiosClient.delete(`/Lead/${id}`),
   restore: (id) => axiosClient.post(`/Lead/${id}/restore`),
+  assign: (id, data) => axiosClient.post(`/Lead/${id}/assign`, data),
   convert: (id, data) => axiosClient.post(`/Lead/${id}/convert`, data),
 };
 

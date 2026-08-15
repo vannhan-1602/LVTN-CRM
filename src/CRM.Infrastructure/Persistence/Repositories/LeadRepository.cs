@@ -26,7 +26,7 @@ public class LeadRepository : ILeadRepository
 
     public async Task<PagedResult<Lead>> GetPagedAsync(
         int pageNumber, int pageSize, string? search, uint? ownerUserId,
-        bool? isDeleted = null, string? tinhTrang = null, CancellationToken ct = default)
+        bool? isDeleted = null, string? tinhTrang = null, bool? chuaGan = null, CancellationToken ct = default)
     {
         var query = _context.Set<KhLeadEntity>().AsNoTracking()
             .Where(x => x.IsDeleted == (isDeleted ?? false));
@@ -39,8 +39,11 @@ public class LeadRepository : ILeadRepository
         if (!string.IsNullOrWhiteSpace(tinhTrang))
             query = query.Where(x => x.TinhTrang == tinhTrang);
 
-        // Sale chỉ thấy Lead mình phụ trách (NhanVienPhuTrach_Id tham chiếu HT_User.Id)
-        if (ownerUserId.HasValue)
+        // ChuaGan=true: chỉ lấy Lead chưa ai phụ trách (hàng chờ để Sale tự nhận) — ưu tiên
+        // hơn ownerUserId vì 2 filter này loại trừ nhau về mặt nghiệp vụ.
+        if (chuaGan == true)
+            query = query.Where(x => x.NhanVienPhuTrach_Id == null);
+        else if (ownerUserId.HasValue)
             query = query.Where(x => x.NhanVienPhuTrach_Id == ownerUserId.Value);
 
         var total = await query.CountAsync(ct);
