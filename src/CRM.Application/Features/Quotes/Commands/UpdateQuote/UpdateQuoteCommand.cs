@@ -28,6 +28,9 @@ public class UpdateQuoteCommandValidator : AbstractValidator<UpdateQuoteCommand>
         {
             item.RuleFor(i => i.SanPhamId).GreaterThan(0U).WithMessage("Sản phẩm không hợp lệ.");
             item.RuleFor(i => i.SoLuong).GreaterThan(0).WithMessage("Số lượng phải lớn hơn 0.");
+            item.RuleFor(i => i.DonGia).GreaterThanOrEqualTo(0)
+                .When(i => i.DonGia.HasValue)
+                .WithMessage("Đơn giá không được âm.");
         });
     }
 }

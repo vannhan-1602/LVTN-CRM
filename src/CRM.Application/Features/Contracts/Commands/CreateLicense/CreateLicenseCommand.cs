@@ -104,6 +104,20 @@ public class CreateLicenseCommandHandler : IRequestHandler<CreateLicenseCommand,
         // vì License thường được cấp trễ hơn NgayKy (sau khi đã Bàn giao xong), nên tính từ
         // NgayKichHoat sẽ cho ra ngày hết hạn License TRỄ HƠN ngày hết hạn hợp đồng — vô lý vì
         // license không thể còn hiệu lực sau khi hợp đồng đã kết thúc/thanh lý.
+        //
+        // NgayKetThuc chỉ được ContractRepository.AddAsync tính khi hợp đồng có ĐỦ cả NgayKy lẫn
+        // ThoiHan (ThoiHan là optional khi tạo hợp đồng) — nếu hợp đồng được tạo KHÔNG nhập Thời
+        // hạn, NgayKetThuc sẽ là null mãi mãi. Nếu không chặn ở đây, License sẽ được cấp với
+        // NgayHetHan=NULL (cột DB cho phép NULL) — license đó biến mất khỏi mọi cơ chế theo dõi:
+        // LicenseLifecycleJobHostedService lọc "NgayHetHan != null" ở CẢ 2 truy vấn (tự chuyển
+        // HetHan + gửi email nhắc 30/7 ngày), nên license không NgayHetHan sẽ "sống mãi" ngoài
+        // tầm kiểm soát, không bao giờ được nhắc gia hạn. Phải chặn ngay từ đây, bắt Manager bổ
+        // sung Thời hạn cho hợp đồng trước khi cấp License.
+        if (hopDong.NgayKetThuc is null)
+            throw new BusinessRuleException(
+                $"Hợp đồng {hopDong.MaHopDong} chưa xác định Thời hạn/Ngày kết thúc — vui lòng cập nhật " +
+                "Thời hạn hợp đồng trước khi cấp License, để License có ngày hết hạn xác định.");
+
         var ngayHetHan = hopDong.NgayKetThuc;
 
         // Bọc trong 1 transaction: nếu AdjustStockAsync thất bại (VD: 2 Manager cùng cấp License
