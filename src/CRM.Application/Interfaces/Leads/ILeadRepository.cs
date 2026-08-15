@@ -29,4 +29,14 @@ public interface ILeadRepository
     Task UpdateAsync(Lead lead, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(ulong id, CancellationToken cancellationToken = default);
     Task<bool> RestoreAsync(ulong id, CancellationToken cancellationToken = default);
+
+    /// <summary>Gán/tự nhận phụ trách Lead — ATOMIC bằng 1 câu UPDATE có điều kiện ngay trong
+    /// WHERE (cùng kỹ thuật đã dùng cho CsatRepository.SubmitAsync / VoucherRepository.RedeemAsync),
+    /// KHÔNG phải đọc-rồi-ghi như UpdateAsync ở trên.
+    /// - restrictIfCurrentOwnerNot = null: không giới hạn (Manager — luôn gán được).
+    /// - restrictIfCurrentOwnerNot có giá trị (Sale tự nhận): chỉ update THÀNH CÔNG nếu
+    ///   NhanVienPhuTrach_Id hiện tại trong DB đang NULL hoặc đúng bằng giá trị này — nếu 1 Sale
+    ///   khác vừa nhận mất Lead này trong lúc chờ, điều kiện WHERE không khớp, trả về false,
+    ///   KHÔNG ghi đè lên người đã nhận trước.</summary>
+    Task<bool> TryAssignAsync(ulong id, uint? newOwnerId, uint? restrictIfCurrentOwnerNot, CancellationToken cancellationToken = default);
 }

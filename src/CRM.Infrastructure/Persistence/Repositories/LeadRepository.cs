@@ -85,6 +85,27 @@ public class LeadRepository : ILeadRepository
         // Không SaveChanges ở đây — Handler gọi qua IUnitOfWork để giữ 1 transaction/Command.
     }
 
+    public async Task<bool> TryAssignAsync(ulong id, uint? newOwnerId, uint? restrictIfCurrentOwnerNot, CancellationToken ct = default)
+    {
+        var query = _context.Set<KhLeadEntity>().Where(x => x.Id == id);
+
+        // Sale tự nhận: chỉ cho update nếu hiện đang CHƯA ai nhận HOẶC đúng là mình đang phụ
+        // trách — điều kiện nằm NGAY TRONG WHERE của câu SQL nên atomic tuyệt đối, không có
+        // khoảng hở đọc-rồi-ghi như UpdateAsync ở trên (2 Sale bấm tự nhận cùng lúc thì chỉ
+        // đúng 1 người thắng, người thua nhận rows=0, KHÔNG bị ghi đè âm thầm).
+        if (restrictIfCurrentOwnerNot.HasValue)
+        {
+            query = query.Where(x =>
+                x.NhanVienPhuTrach_Id == null || x.NhanVienPhuTrach_Id == restrictIfCurrentOwnerNot.Value);
+        }
+
+        var rows = await query.ExecuteUpdateAsync(s => s
+            .SetProperty(x => x.NhanVienPhuTrach_Id, newOwnerId)
+            .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+
+        return rows > 0;
+    }
+
     public async Task<bool> DeleteAsync(ulong id, CancellationToken ct = default)
     {
         var entity = await _context.Set<KhLeadEntity>()

@@ -50,6 +50,7 @@ public class AssignLeadCommandHandler : IRequestHandler<AssignLeadCommand, LeadD
         var lead = await _leadRepository.GetByIdAsync(request.Id, cancellationToken: cancellationToken)
             ?? throw new NotFoundException(nameof(Lead), request.Id);
 
+        uint? restrictIfCurrentOwnerNot = null;
         if (_currentUser.Role == Roles.Sale)
         {
             // Sale chỉ được thao tác trên Lead hiện đang là của mình (hoặc chưa ai
@@ -61,6 +62,11 @@ public class AssignLeadCommandHandler : IRequestHandler<AssignLeadCommand, LeadD
 
             if (request.NhanVienPhuTrachId.HasValue && request.NhanVienPhuTrachId != _currentUser.UserId)
                 throw new ForbiddenException("Bạn chỉ có thể tự nhận phụ trách Lead, không thể gán cho người khác.");
+
+            // Điều kiện chống race condition được đẩy xuống tận câu SQL (TryAssignAsync) —
+            // check phía trên chỉ để trả lỗi RÕ NGHĨA (403) cho trường hợp thường gặp; check
+            // dưới DB mới là lớp an toàn THẬT khi 2 Sale bấm tự nhận cùng lúc.
+            restrictIfCurrentOwnerNot = _currentUser.UserId;
         }
 
         if (lead.TinhTrang == LeadTinhTrang.DaChuyenDoi)
@@ -68,13 +74,15 @@ public class AssignLeadCommandHandler : IRequestHandler<AssignLeadCommand, LeadD
 
         var oldDto = LeadMapper.ToDto(lead);
 
-        lead.NhanVienPhuTrachId = request.NhanVienPhuTrachId;
-        lead.UpdatedAt = DateTime.UtcNow;
+        var assigned = await _leadRepository.TryAssignAsync(
+            request.Id, request.NhanVienPhuTrachId, restrictIfCurrentOwnerNot, cancellationToken);
+        if (!assigned)
+            throw new BusinessRuleException(
+                "Lead này vừa được nhân viên khác nhận trước — vui lòng tải lại trang.");
 
-        await _leadRepository.UpdateAsync(lead, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var newDto = LeadMapper.ToDto(lead);
+        var updated = await _leadRepository.GetByIdAsync(request.Id, cancellationToken: cancellationToken)
+            ?? throw new NotFoundException(nameof(Lead), request.Id);
+        var newDto = LeadMapper.ToDto(updated);
         try
         {
             await _auditLogPublisher.PublishAsync(AuditTable, lead.Id, "UPDATE",
