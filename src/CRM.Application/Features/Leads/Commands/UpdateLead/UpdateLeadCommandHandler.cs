@@ -6,6 +6,7 @@ using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Leads;
 using CRM.Domain.Entities.Customers;
+using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -41,6 +42,13 @@ public class UpdateLeadCommandHandler : IRequestHandler<UpdateLeadCommand, LeadD
         //  Chặn Sale sửa Lead không phải của mình.
         if (_currentUser.Role == Roles.Sale && lead.NhanVienPhuTrachId != _currentUser.UserId)
             throw new ForbiddenException("Bạn không có quyền sửa dữ liệu của nhân viên khác.");
+
+        // Lead đã chuyển đổi thành Khách hàng là bản ghi lịch sử đã đóng — đồng bộ với
+        // AssignLeadCommandHandler/ConvertLeadCommandHandler (đều đã chặn thao tác trên Lead ở
+        // trạng thái này). Thông tin liên hệ thật giờ nằm ở bản ghi KH_KhachHang tương ứng, sửa
+        // ở đây sẽ tạo ra 2 bản dữ liệu lệch nhau không đồng bộ.
+        if (lead.TinhTrang == LeadTinhTrang.DaChuyenDoi)
+            throw new BusinessRuleException("Lead đã chuyển đổi thành khách hàng, không thể sửa. Vui lòng sửa trực tiếp trên Khách hàng.");
 
         var oldDto = LeadMapper.ToDto(lead);
 

@@ -245,6 +245,16 @@ public class CreateNgayLeCommandValidator : AbstractValidator<CreateNgayLeComman
             .WithMessage("Tháng phải từ 1 đến 12.");
         RuleFor(x => x.Dto.Ngay).InclusiveBetween((byte)1, (byte)31)
             .WithMessage("Ngày phải từ 1 đến 31.");
+        // InclusiveBetween(1,31) không đủ — Ngay=31 với Thang thuộc nhóm 30 ngày (4/6/9/11) hoặc
+        // Ngay=30/31 với Thang=2 là ngày KHÔNG TỒN TẠI trong bất kỳ năm nào (khác 29/2 vẫn tồn
+        // tại ở năm nhuận). LoyaltyService.ChayJobHangNgayAsync có try/catch quanh new DateTime()
+        // nên không crash — nhưng hậu quả là ngày lễ đó ÂM THẦM KHÔNG BAO GIỜ được gửi mà Admin
+        // không biết, vì validator không cảnh báo lúc nhập liệu.
+        RuleFor(x => x.Dto)
+            .Must(d => d.Thang is not (4 or 6 or 9 or 11) || d.Ngay <= 30)
+            .WithMessage("Tháng 4, 6, 9, 11 chỉ có tối đa 30 ngày.")
+            .Must(d => d.Thang != 2 || d.Ngay <= 29)
+            .WithMessage("Tháng 2 chỉ có tối đa 29 ngày (kể cả năm nhuận).");
         RuleFor(x => x.Dto.SoNgayGuiTruoc).InclusiveBetween((byte)1, (byte)30)
             .WithMessage("Số ngày gửi trước phải từ 1 đến 30.");
         RuleFor(x => x.Dto.ApDungChoLoaiKH)
@@ -262,6 +272,11 @@ public class UpdateNgayLeCommandValidator : AbstractValidator<UpdateNgayLeComman
             .WithMessage("Tháng phải từ 1 đến 12.");
         RuleFor(x => x.Dto.Ngay).InclusiveBetween((byte)1, (byte)31)
             .WithMessage("Ngày phải từ 1 đến 31.");
+        RuleFor(x => x.Dto)
+            .Must(d => d.Thang is not (4 or 6 or 9 or 11) || d.Ngay <= 30)
+            .WithMessage("Tháng 4, 6, 9, 11 chỉ có tối đa 30 ngày.")
+            .Must(d => d.Thang != 2 || d.Ngay <= 29)
+            .WithMessage("Tháng 2 chỉ có tối đa 29 ngày (kể cả năm nhuận).");
         RuleFor(x => x.Dto.SoNgayGuiTruoc).InclusiveBetween((byte)1, (byte)30)
             .WithMessage("Số ngày gửi trước phải từ 1 đến 30.");
         RuleFor(x => x.Dto.ApDungChoLoaiKH)
