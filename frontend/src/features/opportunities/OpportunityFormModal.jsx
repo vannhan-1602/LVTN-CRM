@@ -3,6 +3,7 @@ import opportunityApi from "../../api/opportunityApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
 import EmployeeSelect from "../../components/common/EmployeeSelect";
+import MoneyInput from "../../components/common/MoneyInput";
 
 import { getApiErrorMessage } from "../../utils/formatters";
 // Modal Tạo/Sửa cơ hội bán hàng. Có prop `item` => chế độ Sửa.
@@ -122,7 +123,8 @@ export default function OpportunityFormModal({
           </select>
           {form.leadId && (
             <p className="text-xs text-ink-500 mt-1">
-              Đã chọn Lead — xóa Lead bên dưới nếu muốn chọn Khách hàng thay vào đó.
+              Đã chọn Lead — xóa Lead bên dưới nếu muốn chọn Khách hàng thay vào
+              đó.
             </p>
           )}
         </div>
@@ -147,7 +149,8 @@ export default function OpportunityFormModal({
           </select>
           {form.khachHangId && (
             <p className="text-xs text-ink-500 mt-1">
-              Đã chọn Khách hàng — xóa Khách hàng bên trên nếu muốn chọn Lead thay vào đó.
+              Đã chọn Khách hàng — xóa Khách hàng bên trên nếu muốn chọn Lead
+              thay vào đó.
             </p>
           )}
         </div>
@@ -187,11 +190,9 @@ export default function OpportunityFormModal({
             <label className="block text-sm font-medium text-ink-700 mb-1.5">
               Doanh thu kỳ vọng (đ)
             </label>
-            <input
-              type="number"
-              min="0"
+            <MoneyInput
               value={form.doanhThuKyVong}
-              onChange={(e) => set("doanhThuKyVong", e.target.value)}
+              onChange={(n) => set("doanhThuKyVong", n)}
               placeholder="0"
               className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
             />

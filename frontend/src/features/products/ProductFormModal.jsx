@@ -3,6 +3,7 @@ import { Upload, X } from "lucide-react";
 import productApi from "../../api/productApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import MoneyInput from "../../components/common/MoneyInput";
 
 import { getApiErrorMessage } from "../../utils/formatters";
 import { getProductFieldLabels } from "../../utils/constants";
@@ -168,13 +169,9 @@ export default function ProductFormModal({
             <label className="block text-sm font-medium text-ink-700 mb-1.5">
               Giá bán (VNĐ)
             </label>
-            <input
-              type="number"
-              min="0"
+            <MoneyInput
               value={form.giaBan}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, giaBan: e.target.value }))
-              }
+              onChange={(n) => setForm((f) => ({ ...f, giaBan: n }))}
               className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
             />
           </div>

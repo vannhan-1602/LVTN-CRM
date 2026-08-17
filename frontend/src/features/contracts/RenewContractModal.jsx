@@ -2,6 +2,7 @@ import { useState } from "react";
 import contractApi from "../../api/contractApi";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import MoneyInput from "../../components/common/MoneyInput";
 import { getApiErrorMessage } from "../../utils/formatters";
 import { Plus, X } from "lucide-react";
 
@@ -14,7 +15,11 @@ export default function RenewContractModal({ contract, onClose, onSaved }) {
 
   const [ngayKy, setNgayKy] = useState(new Date().toISOString().slice(0, 10));
   const [lichThanhToans, setLichThanhToans] = useState([
-    { soDot: 1, soTien: "", hanThanhToan: new Date().toISOString().slice(0, 10) },
+    {
+      soDot: 1,
+      soTien: "",
+      hanThanhToan: new Date().toISOString().slice(0, 10),
+    },
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +36,9 @@ export default function RenewContractModal({ contract, onClose, onSaved }) {
 
   const removeDot = (idx) =>
     setLichThanhToans((prev) =>
-      prev.filter((_, i) => i !== idx).map((item, i) => ({ ...item, soDot: i + 1 })),
+      prev
+        .filter((_, i) => i !== idx)
+        .map((item, i) => ({ ...item, soDot: i + 1 })),
     );
 
   const updateDot = (idx, field, value) =>
@@ -42,7 +49,9 @@ export default function RenewContractModal({ contract, onClose, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isTraGop && lichThanhToans.length === 0) {
-      setError("Hợp đồng trả góp phải có ít nhất 1 đợt thanh toán cho kỳ gia hạn");
+      setError(
+        "Hợp đồng trả góp phải có ít nhất 1 đợt thanh toán cho kỳ gia hạn",
+      );
       return;
     }
     setSubmitting(true);
@@ -67,12 +76,21 @@ export default function RenewContractModal({ contract, onClose, onSaved }) {
   };
 
   return (
-    <Modal isOpen onClose={onClose} title={`Gia hạn hợp đồng ${contract.maHopDong}`} size="md">
-      <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto px-1">
+    <Modal
+      isOpen
+      onClose={onClose}
+      title={`Gia hạn hợp đồng ${contract.maHopDong}`}
+      size="md"
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 max-h-[80vh] overflow-y-auto px-1"
+      >
         <p className="text-xs text-ink-400">
           Hệ thống sẽ tạo 1 hợp đồng mới (kế thừa khách hàng, thời hạn
-          {contract.thoiHan ? ` ${contract.thoiHan} tháng` : ""}, hình thức thanh toán{" "}
-          {isTraGop ? "trả góp" : "1 lần"}) và chuyển hợp đồng hiện tại sang trạng thái Thanh lý.
+          {contract.thoiHan ? ` ${contract.thoiHan} tháng` : ""}, hình thức
+          thanh toán {isTraGop ? "trả góp" : "1 lần"}) và chuyển hợp đồng hiện
+          tại sang trạng thái Thanh lý.
         </p>
 
         <div>
@@ -104,18 +122,21 @@ export default function RenewContractModal({ contract, onClose, onSaved }) {
 
             {lichThanhToans.map((dot, idx) => (
               <div key={idx} className="flex gap-2 items-center">
-                <span className="text-xs font-medium text-ink-500 w-12">Đợt {dot.soDot}</span>
-                <input
-                  type="number"
-                  placeholder="Số tiền"
+                <span className="text-xs font-medium text-ink-500 w-12">
+                  Đợt {dot.soDot}
+                </span>
+                <MoneyInput
                   value={dot.soTien}
-                  onChange={(e) => updateDot(idx, "soTien", e.target.value)}
+                  onChange={(n) => updateDot(idx, "soTien", n)}
+                  placeholder="Số tiền"
                   className="flex-1 border border-ink-200 rounded-lg px-2 py-1.5 text-xs"
                 />
                 <input
                   type="date"
                   value={dot.hanThanhToan}
-                  onChange={(e) => updateDot(idx, "hanThanhToan", e.target.value)}
+                  onChange={(e) =>
+                    updateDot(idx, "hanThanhToan", e.target.value)
+                  }
                   className="w-32 border border-ink-200 rounded-lg px-2 py-1.5 text-xs"
                 />
                 {lichThanhToans.length > 1 && (
@@ -133,7 +154,9 @@ export default function RenewContractModal({ contract, onClose, onSaved }) {
         )}
 
         {error && (
-          <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2.5">{error}</div>
+          <div className="text-sm text-danger-600 bg-danger-50 rounded-lg p-2.5">
+            {error}
+          </div>
         )}
 
         <div className="flex gap-2 pt-2">

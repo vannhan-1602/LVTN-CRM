@@ -2,10 +2,15 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Modal from "../../components/common/Modal";
 import Button from "../../components/common/Button";
+import MoneyInput from "../../components/common/MoneyInput";
 import invoiceApi from "../../api/invoiceApi";
 import contractApi from "../../api/contractApi";
 import customerApi from "../../api/customerApi";
-import { formatCurrency, formatDate, getApiErrorMessage } from "../../utils/formatters";
+import {
+  formatCurrency,
+  formatDate,
+  getApiErrorMessage,
+} from "../../utils/formatters";
 
 export default function CreateInvoiceModal({ onClose, onSaved }) {
   const {
@@ -21,6 +26,14 @@ export default function CreateInvoiceModal({ onClose, onSaved }) {
       lichThanhToanId: "",
       tongTien: "",
     },
+  });
+  // react-hook-form register() gắn thẳng vào <input type="number"> nên không dùng chung được với
+  // MoneyInput (input text tự format dấu chấm ngăn cách nghìn) — validate bắt buộc/số dương vẫn
+  // đăng ký qua register để giữ nguyên cơ chế báo lỗi errors.tongTien, chỉ input hiển thị đổi sang
+  // MoneyInput điều khiển qua watch/setValue.
+  register("tongTien", {
+    required: "Vui lòng nhập tổng tiền",
+    min: { value: 1, message: "Tổng tiền phải lớn hơn 0" },
   });
   const [apiError, setApiError] = useState("");
   const [contracts, setContracts] = useState([]);
@@ -228,19 +241,14 @@ export default function CreateInvoiceModal({ onClose, onSaved }) {
           <label className="block text-sm font-medium text-ink-700 mb-1">
             Tổng tiền (VNĐ) <span className="text-danger-500">*</span>
           </label>
-          <input
-            type="number"
-            min="0"
-            step="1"
-            readOnly={isMotLan || isTraGop}
-            {...register("tongTien", {
-              required: "Vui lòng nhập tổng tiền",
-              min: { value: 1, message: "Tổng tiền phải lớn hơn 0" },
-            })}
+          <MoneyInput
+            value={watch("tongTien")}
+            onChange={(n) => setValue("tongTien", n, { shouldValidate: true })}
+            disabled={isMotLan || isTraGop}
             className={`w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400 ${
               isMotLan || isTraGop ? "bg-surface-alt text-ink-500" : ""
             }`}
-            placeholder="VD: 5000000"
+            placeholder="VD: 5.000.000"
           />
           {isMotLan && (
             <p className="text-xs text-ink-400 mt-1">
