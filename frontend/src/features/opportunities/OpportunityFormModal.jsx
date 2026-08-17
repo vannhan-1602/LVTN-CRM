@@ -32,7 +32,13 @@ export default function OpportunityFormModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // set("khachHangId", x) và set("leadId", x) dùng hàm riêng bên dưới để đảm bảo loại trừ lẫn
+  // nhau ngay trên UI — tránh người dùng chọn được cả 2 rồi mới bị backend từ chối sau khi bấm Lưu.
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const setKhachHang = (v) =>
+    setForm((f) => ({ ...f, khachHangId: v, leadId: v ? "" : f.leadId }));
+  const setLead = (v) =>
+    setForm((f) => ({ ...f, leadId: v, khachHangId: v ? "" : f.khachHangId }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,7 +47,11 @@ export default function OpportunityFormModal({
       return;
     }
     if (!form.khachHangId && !form.leadId) {
-      setError("Phải chọn ít nhất Khách hàng hoặc Lead");
+      setError("Phải chọn đúng một trong hai: Khách hàng hoặc Lead");
+      return;
+    }
+    if (form.khachHangId && form.leadId) {
+      setError("Chỉ được chọn Khách hàng hoặc Lead, không được chọn cả hai");
       return;
     }
 
@@ -99,8 +109,9 @@ export default function OpportunityFormModal({
           </label>
           <select
             value={form.khachHangId}
-            onChange={(e) => set("khachHangId", e.target.value)}
-            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            onChange={(e) => setKhachHang(e.target.value)}
+            disabled={Boolean(form.leadId)}
+            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400 disabled:bg-ink-50 disabled:text-ink-400"
           >
             <option value="">-- Chọn khách hàng --</option>
             {customers.map((c) => (
@@ -109,6 +120,11 @@ export default function OpportunityFormModal({
               </option>
             ))}
           </select>
+          {form.leadId && (
+            <p className="text-xs text-ink-500 mt-1">
+              Đã chọn Lead — xóa Lead bên dưới nếu muốn chọn Khách hàng thay vào đó.
+            </p>
+          )}
         </div>
 
         <div>
@@ -117,8 +133,9 @@ export default function OpportunityFormModal({
           </label>
           <select
             value={form.leadId}
-            onChange={(e) => set("leadId", e.target.value)}
-            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400"
+            onChange={(e) => setLead(e.target.value)}
+            disabled={Boolean(form.khachHangId)}
+            className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-400/40 focus:border-accent-400 disabled:bg-ink-50 disabled:text-ink-400"
           >
             <option value="">-- Chọn lead --</option>
             {leads.map((l) => (
@@ -128,6 +145,11 @@ export default function OpportunityFormModal({
               </option>
             ))}
           </select>
+          {form.khachHangId && (
+            <p className="text-xs text-ink-500 mt-1">
+              Đã chọn Khách hàng — xóa Khách hàng bên trên nếu muốn chọn Lead thay vào đó.
+            </p>
+          )}
         </div>
 
         <div>
