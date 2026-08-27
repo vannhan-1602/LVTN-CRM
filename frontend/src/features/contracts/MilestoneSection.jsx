@@ -107,7 +107,13 @@ export default function MilestoneSection({
   };
 
   useEffect(() => {
-    if (hopDongId) load();
+    if (!hopDongId) return;
+    load();
+    // Ăn theo nhịp làm mới của trang cha (ContractDetailPage poll 5s) — tránh trường hợp
+    // người khác (VD Manager) vừa thêm/sửa mốc triển khai mà người đang xem không thấy
+    // cập nhật nếu không tự F5.
+    const timer = setInterval(load, 5000);
+    return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hopDongId]);
 
@@ -196,7 +202,9 @@ export default function MilestoneSection({
   const canAdd = isManager && !isFinal;
   // Sale chỉ sửa được mốc đang gán cho chính mình; Manager sửa được mọi mốc.
   const canEditMoc = (moc) =>
-    canEdit && !isFinal && (isManager || moc.nhanVienThucHienId === currentUserId);
+    canEdit &&
+    !isFinal &&
+    (isManager || moc.nhanVienThucHienId === currentUserId);
   // Chỉ Manager được xóa mốc triển khai.
   const canDeleteMoc = isManager && !isFinal;
   // Khi Sale đang sửa mốc của mình: chỉ được đổi trạng thái / người xác nhận / biên bản,

@@ -98,6 +98,11 @@ export default function LicenseSection({
 
   useEffect(() => {
     load();
+    // Ăn theo nhịp làm mới của trang cha (ContractDetailPage poll 5s) — tránh trường hợp
+    // License vừa được cấp/gia hạn/khóa ở nơi khác mà người đang xem không thấy cập nhật
+    // nếu không tự F5.
+    const timer = setInterval(load, 5000);
+    return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [licenseSourceHopDongId]);
 
