@@ -6,6 +6,7 @@ using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Contracts;
 using CRM.Application.Interfaces.Products;
 using CRM.Domain.Entities.Sales;
+using CRM.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using Moq;
 using Xunit;
