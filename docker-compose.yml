@@ -1,4 +1,3 @@
-version: "3.9"
 
 # Chạy toàn bộ hệ thống bằng 1 lệnh: docker compose up -d --build
 # Xem README.md mục "Chạy bằng Docker" để biết chi tiết từng bước và cách nạp dữ liệu mẫu.
