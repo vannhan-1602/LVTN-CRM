@@ -1,0 +1,87 @@
+version: "3.9"
+
+# Chạy toàn bộ hệ thống bằng 1 lệnh: docker compose up -d --build
+# Xem README.md mục "Chạy bằng Docker" để biết chi tiết từng bước và cách nạp dữ liệu mẫu.
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-changeme_root}
+      # Database CRM-LVTN đã có sẵn lệnh CREATE DATABASE IF NOT EXISTS trong file .sql nên
+      # không cần khai MYSQL_DATABASE ở đây — tránh MySQL tạo trùng 1 database rỗng khác tên.
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # File .sql trong thư mục này tự động chạy 1 LẦN DUY NHẤT lúc container khởi tạo lần đầu
+      # (volume mysql_data rỗng) — đây chính là cách "seed" toàn bộ schema + dữ liệu mẫu.
+      - ./database:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-changeme_root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-crm}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-changeme_rabbit}
+    ports:
+      - "5672:5672"   # AMQP — backend kết nối qua cổng này
+      - "15672:15672" # Management UI — http://localhost:15672 để xem queue/DLQ trực quan
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=CRM-LVTN;Uid=root;Pwd=${DB_ROOT_PASSWORD:-changeme_root};"
+      RabbitMq__HostName: rabbitmq
+      RabbitMq__Port: 5672
+      RabbitMq__UserName: ${RABBITMQ_USER:-crm}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-changeme_rabbit}
+      JwtSettings__Secret: ${JWT_SECRET:?Bắt buộc đặt JWT_SECRET trong .env — xem .env.example}
+      Email__SmtpUser: ${SMTP_USER:-}
+      Email__SmtpPassword: ${SMTP_PASSWORD:-}
+      OpenAI__ApiKey: ${OPENAI_API_KEY:-}
+      OpenAI__Model: ${OPENAI_MODEL:-gpt-4o-mini}
+      OpenAI__BaseUrl: ${OPENAI_BASE_URL:-}
+      PublicFormsAllowedOrigins__0: ${FRONTEND_URL:-http://localhost:5173}
+    ports:
+      - "8080:8080"
+    volumes:
+      # Ảnh sản phẩm upload cần sống lâu hơn vòng đời container — không mất ảnh khi
+      # recreate/redeploy container.
+      - product_uploads:/app/wwwroot/uploads/products
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080/api}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  mysql_data:
+  product_uploads:

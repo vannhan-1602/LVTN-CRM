@@ -1,0 +1,93 @@
+# File ĐỘC LẬP dùng khi deploy thật lên VPS có domain trỏ vào — KHÔNG chạy chung với
+# docker-compose.yml (tránh xung đột cổng 8080/5173). Khác bản dev ở chỗ: backend/frontend
+# không public cổng thẳng ra ngoài nữa, chỉ Caddy được expose 80/443 và tự lo HTTPS.
+#
+# Deploy: docker compose -f docker-compose.prod.yml up -d --build
+# Xem đầy đủ hướng dẫn tại DEPLOY.md
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Bắt buộc đặt DB_ROOT_PASSWORD trong .env}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-crm}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Bắt buộc đặt RABBITMQ_PASSWORD trong .env}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=CRM-LVTN;Uid=root;Pwd=${DB_ROOT_PASSWORD};"
+      RabbitMq__HostName: rabbitmq
+      RabbitMq__Port: 5672
+      RabbitMq__UserName: ${RABBITMQ_USER:-crm}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      JwtSettings__Secret: ${JWT_SECRET:?Bắt buộc đặt JWT_SECRET trong .env}
+      Email__SmtpUser: ${SMTP_USER:-}
+      Email__SmtpPassword: ${SMTP_PASSWORD:-}
+      OpenAI__ApiKey: ${OPENAI_API_KEY:-}
+      OpenAI__Model: ${OPENAI_MODEL:-gpt-4o-mini}
+      OpenAI__BaseUrl: ${OPENAI_BASE_URL:-}
+      PublicFormsAllowedOrigins__0: "https://${DOMAIN:?Bat buoc dat DOMAIN trong .env}"
+    volumes:
+      - product_uploads:/app/wwwroot/uploads/products
+    # KHÔNG có "ports:" ở đây — backend chỉ truy cập được từ container khác trong cùng mạng
+    # Docker (Caddy), không lộ trực tiếp ra ngoài internet.
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: https://api.${DOMAIN:?Bắt buộc đặt DOMAIN trong .env}/api
+    restart: unless-stopped
+    depends_on:
+      - backend
+    # Tương tự — không public cổng, chỉ Caddy gọi vào.
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  mysql_data:
+  product_uploads:
+  caddy_data:
+  caddy_config:
