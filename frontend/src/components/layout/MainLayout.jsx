@@ -50,10 +50,6 @@ function SidebarSection({ children }) {
   );
 }
 
-function SidebarDivider() {
-  return <div className="my-1 border-t border-white/10" />;
-}
-
 export default function MainLayout() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);

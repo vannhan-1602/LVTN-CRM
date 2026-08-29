@@ -12,7 +12,6 @@ import {
   User,
 } from "lucide-react";
 import leadPublicApi from "../../api/leadPublicApi";
-import Button from "../../components/common/Button";
 
 import { getApiErrorMessage } from "../../utils/formatters";
 export default function LandingPageDemo() {
@@ -40,7 +39,10 @@ export default function LandingPageDemo() {
       setForm({ tenLead: "", tenCongTy: "", soDienThoai: "", email: "" });
     } catch (err) {
       setError(
-        getApiErrorMessage(err, "Có lỗi xảy ra, vui lòng kiểm tra lại thông tin."),
+        getApiErrorMessage(
+          err,
+          "Có lỗi xảy ra, vui lòng kiểm tra lại thông tin.",
+        ),
       );
     } finally {
       setSubmitting(false);

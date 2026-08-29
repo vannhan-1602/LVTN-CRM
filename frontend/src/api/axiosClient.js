@@ -18,7 +18,10 @@ axiosClient.interceptors.request.use((config) => {
       const token = JSON.parse(raw)?.state?.token;
       if (token) config.headers.Authorization = `Bearer ${token}`;
     }
-  } catch {}
+  } catch {
+    // localStorage có thể lỗi (VD JSON hỏng, đang ở chế độ private browsing chặn storage) —
+    // bỏ qua, coi như chưa đăng nhập, không chặn request tiếp tục chạy.
+  }
   return config;
 });
 

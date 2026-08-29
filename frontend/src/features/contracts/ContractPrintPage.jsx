@@ -246,7 +246,7 @@ export default function ContractPrintPage() {
           .getEmailHistory(id)
           .then((r) => setEmailHistory(r.data ?? []))
           .catch(() => {});
-      } catch (err) {
+      } catch {
         setError("Không thể tải thông tin hợp đồng để in");
       } finally {
         setLoading(false);
@@ -361,7 +361,7 @@ export default function ContractPrintPage() {
   }
 
   const tongTienSanPham = quoteChiTiet.reduce(
-    (sum, l) => sum + (l.thanhTien ?? l.soLuong * l.donGia ?? 0),
+    (sum, l) => sum + (l.thanhTien ?? (l.soLuong ?? 0) * (l.donGia ?? 0)),
     0,
   );
   const giaTriHopDong = contract.giaTri ?? tongTienSanPham;

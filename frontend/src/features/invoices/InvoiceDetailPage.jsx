@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Receipt, FileText } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import invoiceApi from "../../api/invoiceApi";
 import phieuThuChiApi from "../../api/phieuThuChiApi";
 import useAuthStore from "../auth/authStore";

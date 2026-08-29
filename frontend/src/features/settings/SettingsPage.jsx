@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Settings,
-  ChevronRight,
   Pencil,
   Trash2,
   Plus,
@@ -20,83 +19,6 @@ import useDanhMucStore from "../../stores/danhMucStore";
 import { HINH_THUC_LOAI_SAN_PHAM_LABEL } from "../../utils/constants";
 
 import { getApiErrorMessage } from "../../utils/formatters";
-// ── Generic CRUD table cho danh mục đơn giản ────────────────────────────────
-function DanhMucTable({
-  title,
-  items,
-  loading,
-  onAdd,
-  onEdit,
-  onDelete,
-  columns,
-  canDelete = true,
-}) {
-  return (
-    <div className="bg-surface rounded-card border border-ink-100 overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-ink-100 flex items-center justify-between">
-        <h3 className="font-semibold text-ink-900">{title}</h3>
-        <Button size="sm" icon={Plus} onClick={onAdd}>
-          Thêm
-        </Button>
-      </div>
-      {loading ? (
-        <div className="py-8 text-center text-ink-400 text-sm">Đang tải...</div>
-      ) : items.length === 0 ? (
-        <div className="py-8 text-center text-ink-400 text-sm">
-          Chưa có dữ liệu
-        </div>
-      ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-surface-alt">
-              {columns.map((c) => (
-                <th
-                  key={c.key}
-                  className="px-5 py-3 text-left text-xs font-medium text-ink-400 uppercase tracking-wide"
-                >
-                  {c.label}
-                </th>
-              ))}
-              <th className="w-20"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-ink-100">
-            {items.map((item) => (
-              <tr
-                key={item.id}
-                className="hover:bg-surface-alt transition-colors"
-              >
-                {columns.map((c) => (
-                  <td key={c.key} className="px-5 py-3 text-ink-700">
-                    {c.render ? c.render(item) : (item[c.key] ?? "—")}
-                  </td>
-                ))}
-                <td className="px-3 py-3 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => onEdit(item)}
-                      className="p-1.5 rounded-lg text-ink-400 hover:text-accent-600 hover:bg-accent-50 transition-colors"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    {canDelete && (
-                      <button
-                        onClick={() => onDelete(item.id)}
-                        className="p-1.5 rounded-lg text-ink-400 hover:text-danger-600 hover:bg-danger-50 transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
-}
 
 // ── Modal chung cho danh mục đơn giản ────────────────────────────────────────
 function SimpleModal({
@@ -614,7 +536,6 @@ function SimpleDanhMucSection({
   deleteFn,
   columns,
   fields,
-  checkActive = true,
 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
