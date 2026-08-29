@@ -19,3 +19,11 @@ appsettings.Local.json
 ## OS
 Thumbs.db
 .DS_Store
+## Secrets
+.env
+.env.local
+.env.production
+
+## Node / frontend
+node_modules/
+frontend/dist/
