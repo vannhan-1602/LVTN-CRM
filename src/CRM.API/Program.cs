@@ -53,8 +53,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
+        // Đọc từ config "AllowedFrontendOrigins" (env var AllowedFrontendOrigins__0, __1, ...)
+        // để domain Vercel thật không bị hardcode vào code — chỉ fallback về localhost khi
+        // chưa cấu hình (dev máy local).
+        var origins = builder.Configuration
+            .GetSection("AllowedFrontendOrigins")
+            .Get<string[]>() ?? new[] { "http://localhost:5173", "http://localhost:5174" };
+
         policy
-            .WithOrigins("http://localhost:5173", "http://localhost:5174")
+            .WithOrigins(origins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

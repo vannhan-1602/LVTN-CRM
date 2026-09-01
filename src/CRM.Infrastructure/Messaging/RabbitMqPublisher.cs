@@ -24,8 +24,18 @@ public class RabbitMqPublisher : IMessagePublisher, IDisposable
             HostName = _settings.HostName,
             Port = _settings.Port,
             UserName = _settings.UserName,
-            Password = _settings.Password
+            Password = _settings.Password,
+            VirtualHost = _settings.VirtualHost
         };
+
+        if (_settings.UseTls)
+        {
+            factory.Ssl = new SslOption
+            {
+                Enabled = true,
+                ServerName = _settings.HostName
+            };
+        }
 
         _connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
         _channel = _connection.CreateChannelAsync().GetAwaiter().GetResult();
@@ -37,8 +47,6 @@ public class RabbitMqPublisher : IMessagePublisher, IDisposable
         CancellationToken cancellationToken = default)
         where TMessage : class
     {
-        // Queue có DLQ (hiện tại: AuditLogQueue) phải declare qua topology dùng chung
-        // để arguments khớp với bên consumer; các queue khác giữ declare đơn giản.
         if (queueName == _settings.AuditLogQueue)
         {
             await RabbitMqTopology.EnsureAuditLogTopologyAsync(_channel, _settings, cancellationToken);

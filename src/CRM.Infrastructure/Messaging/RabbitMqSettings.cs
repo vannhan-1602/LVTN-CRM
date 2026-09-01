@@ -8,14 +8,13 @@ public class RabbitMqSettings
     public int Port { get; set; } = 5672;
     public string UserName { get; set; } = "guest";
     public string Password { get; set; } = "guest";
+
+    public string VirtualHost { get; set; } = "/";
+
+    public bool UseTls { get; set; } = false;
     public string AuditLogQueue { get; set; } = "crm.audit-log";
     public string NotificationQueue { get; set; } = "crm.notifications";
 
-    // ── Dead-letter (DLQ) ────────────────────────────────────────────────────
-    // Message xử lý thất bại (lỗi deserialize, lỗi DB không phục hồi được...) sẽ
-    // được route sang exchange/queue này thay vì bị requeue vô hạn vào lại
-    // AuditLogQueue (gây vòng lặp retry vô tận, tốn CPU, không ai biết message
-    // đang lỗi). Message trong DLQ có thể xem/replay thủ công sau.
     public string DeadLetterExchange { get; set; } = "crm.dlx";
     public string AuditLogDeadLetterQueue { get; set; } = "crm.audit-log.dlq";
 }

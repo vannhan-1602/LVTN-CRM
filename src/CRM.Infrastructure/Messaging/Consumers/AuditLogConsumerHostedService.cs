@@ -61,14 +61,22 @@ public class AuditLogConsumerHostedService : BackgroundService
             HostName = _settings.HostName,
             Port = _settings.Port,
             UserName = _settings.UserName,
-            Password = _settings.Password
+            Password = _settings.Password,
+            VirtualHost = _settings.VirtualHost
         };
+
+        if (_settings.UseTls)
+        {
+            factory.Ssl = new SslOption
+            {
+                Enabled = true,
+                ServerName = _settings.HostName
+            };
+        }
 
         _connection = await factory.CreateConnectionAsync(stoppingToken);
         _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
-        // Declare qua topology dùng chung (khai báo cả DLX + DLQ + queue chính với
-        // arg x-dead-letter-exchange) — bắt buộc để arguments khớp với Publisher.
         await RabbitMqTopology.EnsureAuditLogTopologyAsync(_channel, _settings, stoppingToken);
 
         await _channel.BasicQosAsync(0, 1, false, stoppingToken);
@@ -106,12 +114,6 @@ public class AuditLogConsumerHostedService : BackgroundService
         await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
-    /// <summary>
-    /// Trước đây: nack(requeue:true) vô điều kiện → message lỗi vĩnh viễn (vd JSON hỏng)
-    /// bị requeue lặp lại VÔ HẠN, tốn CPU và không ai biết nó đang lỗi.
-    /// Giờ: đếm số lần retry qua header, retry tối đa <see cref="MaxRetries"/> lần rồi
-    /// đẩy sang DLQ (crm.audit-log.dlq) để xem/xử lý thủ công thay vì lặp vô hạn.
-    /// </summary>
     private async Task HandleFailureAsync(BasicDeliverEventArgs eventArgs, Exception ex, CancellationToken ct)
     {
         var headers = eventArgs.BasicProperties.Headers;
@@ -132,7 +134,6 @@ public class AuditLogConsumerHostedService : BackgroundService
             _logger.LogError(ex,
                 "Audit log message failed after {RetryCount} retries, sending to DLQ {DlqName}",
                 retryCount, _settings.AuditLogDeadLetterQueue);
-            // requeue:false + queue có x-dead-letter-exchange => RabbitMQ tự route sang DLQ
             await _channel!.BasicNackAsync(eventArgs.DeliveryTag, false, false, ct);
             return;
         }
@@ -141,10 +142,6 @@ public class AuditLogConsumerHostedService : BackgroundService
             "Failed to process audit log message (attempt {Attempt}/{Max}), retrying",
             retryCount + 1, MaxRetries);
 
-        // Không thể "sửa header rồi requeue" bằng BasicNack (header giữ nguyên bản gốc),
-        // nên ack bản cũ rồi tự publish lại với header đã tăng retry count.
-        // Dựng BasicProperties mới thủ công (không dùng copy-constructor từ
-        // IReadOnlyBasicProperties) để chắc chắn tương thích với RabbitMQ.Client 7.x.
         var newHeaders = new Dictionary<string, object?>(headers ?? new Dictionary<string, object?>())
         {
             [RetryCountHeader] = retryCount + 1
