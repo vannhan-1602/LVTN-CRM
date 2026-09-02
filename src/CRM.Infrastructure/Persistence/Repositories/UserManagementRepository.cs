@@ -11,11 +11,16 @@ public class UserManagementRepository : IUserManagementRepository
 {
     private readonly CrmDbContext _context;
     private readonly TokenVersionCache _tokenVersionCache;
+    private readonly CRM.Application.Interfaces.Auth.IRefreshTokenService _refreshTokenService;
 
-    public UserManagementRepository(CrmDbContext context, TokenVersionCache tokenVersionCache)
+    public UserManagementRepository(
+        CrmDbContext context,
+        TokenVersionCache tokenVersionCache,
+        CRM.Application.Interfaces.Auth.IRefreshTokenService refreshTokenService)
     {
         _context = context;
         _tokenVersionCache = tokenVersionCache;
+        _refreshTokenService = refreshTokenService;
     }
 
     public async Task<List<UserDto>> GetAllAsync(CancellationToken ct = default)
@@ -174,6 +179,11 @@ public class UserManagementRepository : IUserManagementRepository
             .ExecuteUpdateAsync(s => s.SetProperty(u => u.TokenVersion, u => u.TokenVersion + 1), ct);
 
         _tokenVersionCache.Invalidate(userId);
+
+        // Mọi nơi tăng TokenVersion (đổi mật khẩu, khóa/mở tài khoản, đổi vai trò, reset mật khẩu)
+        // đều có nghĩa "thu hồi phiên đăng nhập hiện tại" — nếu không revoke luôn refresh token,
+        // client vẫn có thể âm thầm lấy access token mới sau khi access token cũ hết hạn.
+        await _refreshTokenService.RevokeAllForUserAsync(userId, ct: ct);
     }
 
     public async Task<bool> DeleteAsync(uint userId, CancellationToken ct = default)

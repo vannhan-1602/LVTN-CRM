@@ -84,41 +84,46 @@ public class AnalyticsRepository : IAnalyticsRepository
         var dauThangNay = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var dauThangTruoc = dauThangNay.AddMonths(-1);
 
-        // Đếm bản ghi tạo trong [dauThangTruoc, dauThangNay) = "tháng trước",
-        // và [dauThangNay, now] = "tháng này" (tính tới thời điểm hiện tại, không phải hết tháng).
-        var khachHang = await _context.KhKhachHangs.AsNoTracking()
-            .Where(x => !x.IsDeleted && x.CreatedAt != null)
-            .Select(x => x.CreatedAt!.Value)
-            .ToListAsync(ct);
+        // Trước đây: SELECT toàn bộ cột CreatedAt của cả 4 bảng (không giới hạn thời gian) về
+        // App rồi mới đếm bằng LINQ-to-Objects — tải về TOÀN BỘ lịch sử từ ngày đầu vận hành
+        // chỉ để đếm 2 con số mỗi bảng. Thay bằng CountAsync có điều kiện WHERE ngay trong SQL
+        // (dịch thành COUNT(*) ... WHERE CreatedAt BETWEEN ...) — DB trả về đúng 1 số nguyên
+        // mỗi câu thay vì hàng nghìn/hàng triệu dòng theo thời gian dữ liệu phình ra.
+        //
+        // Await tuần tự (KHÔNG Task.WhenAll): MySqlConnector chỉ cho phép 1 lệnh tại một thời
+        // điểm trên cùng một connection/DbContext (không có MARS như SQL Server) — chạy song
+        // song ở đây sẽ ném "A second operation was started on this context before a previous
+        // operation completed". Vẫn nhanh hơn nhiều bản cũ vì mỗi câu chỉ là 1 COUNT(*) có index.
+        var khachHangMoiThangNay = await _context.KhKhachHangs.AsNoTracking()
+            .CountAsync(x => !x.IsDeleted && x.CreatedAt != null && x.CreatedAt >= dauThangNay, ct);
+        var khachHangMoiThangTruoc = await _context.KhKhachHangs.AsNoTracking()
+            .CountAsync(x => !x.IsDeleted && x.CreatedAt != null && x.CreatedAt >= dauThangTruoc && x.CreatedAt < dauThangNay, ct);
 
-        var hopDong = await _context.HdHopDongs.AsNoTracking()
-            .Where(x => x.CreatedAt != null)
-            .Select(x => x.CreatedAt!.Value)
-            .ToListAsync(ct);
+        var hopDongMoiThangNay = await _context.HdHopDongs.AsNoTracking()
+            .CountAsync(x => x.CreatedAt != null && x.CreatedAt >= dauThangNay, ct);
+        var hopDongMoiThangTruoc = await _context.HdHopDongs.AsNoTracking()
+            .CountAsync(x => x.CreatedAt != null && x.CreatedAt >= dauThangTruoc && x.CreatedAt < dauThangNay, ct);
 
-        var baoGia = await _context.HdBaoGias.AsNoTracking()
-            .Where(x => x.CreatedAt != null)
-            .Select(x => x.CreatedAt!.Value)
-            .ToListAsync(ct);
+        var baoGiaMoiThangNay = await _context.HdBaoGias.AsNoTracking()
+            .CountAsync(x => x.CreatedAt != null && x.CreatedAt >= dauThangNay, ct);
+        var baoGiaMoiThangTruoc = await _context.HdBaoGias.AsNoTracking()
+            .CountAsync(x => x.CreatedAt != null && x.CreatedAt >= dauThangTruoc && x.CreatedAt < dauThangNay, ct);
 
-        var ticket = await _context.TkTickets.AsNoTracking()
-            .Where(x => !x.IsDeleted && x.CreatedAt != null)
-            .Select(x => x.CreatedAt!.Value)
-            .ToListAsync(ct);
-
-        int DemThangNay(List<DateTime> ds) => ds.Count(d => d >= dauThangNay);
-        int DemThangTruoc(List<DateTime> ds) => ds.Count(d => d >= dauThangTruoc && d < dauThangNay);
+        var ticketMoiThangNay = await _context.TkTickets.AsNoTracking()
+            .CountAsync(x => !x.IsDeleted && x.CreatedAt != null && x.CreatedAt >= dauThangNay, ct);
+        var ticketMoiThangTruoc = await _context.TkTickets.AsNoTracking()
+            .CountAsync(x => !x.IsDeleted && x.CreatedAt != null && x.CreatedAt >= dauThangTruoc && x.CreatedAt < dauThangNay, ct);
 
         return new DashboardTrendsDto
         {
-            KhachHangMoiThangNay = DemThangNay(khachHang),
-            KhachHangMoiThangTruoc = DemThangTruoc(khachHang),
-            HopDongMoiThangNay = DemThangNay(hopDong),
-            HopDongMoiThangTruoc = DemThangTruoc(hopDong),
-            BaoGiaMoiThangNay = DemThangNay(baoGia),
-            BaoGiaMoiThangTruoc = DemThangTruoc(baoGia),
-            TicketMoiThangNay = DemThangNay(ticket),
-            TicketMoiThangTruoc = DemThangTruoc(ticket)
+            KhachHangMoiThangNay = khachHangMoiThangNay,
+            KhachHangMoiThangTruoc = khachHangMoiThangTruoc,
+            HopDongMoiThangNay = hopDongMoiThangNay,
+            HopDongMoiThangTruoc = hopDongMoiThangTruoc,
+            BaoGiaMoiThangNay = baoGiaMoiThangNay,
+            BaoGiaMoiThangTruoc = baoGiaMoiThangTruoc,
+            TicketMoiThangNay = ticketMoiThangNay,
+            TicketMoiThangTruoc = ticketMoiThangTruoc
         };
     }
 
@@ -130,9 +135,10 @@ public class AnalyticsRepository : IAnalyticsRepository
         var chiQueryGoc = _context.KtPhieuThuChis.AsNoTracking()
             .Where(x => x.LoaiPhieu == PaymentVoucherType.Chi);
 
-        var chiThangNay = await chiQueryGoc
-            .Where(x => x.NgayTao != null && x.NgayTao >= dauThangNay)
-            .ToListAsync(ct);
+        var chiThangNayQuery = chiQueryGoc
+            .Where(x => x.NgayTao != null && x.NgayTao >= dauThangNay);
+        var tongChiThangNay = await chiThangNayQuery.SumAsync(x => (decimal?)x.SoTien, ct) ?? 0m;
+        var soPhieuChiThangNay = await chiThangNayQuery.CountAsync(ct);
 
         // Áp bộ lọc thời gian (nếu có) cho tổng + top khách hàng — không truyền gì thì mặc định
         // toàn thời gian, giữ đúng hành vi cũ.
@@ -172,8 +178,8 @@ public class AnalyticsRepository : IAnalyticsRepository
 
         return new ChiSummaryDto
         {
-            TongChiThangNay = chiThangNay.Sum(x => x.SoTien),
-            SoPhieuChiThangNay = chiThangNay.Count,
+            TongChiThangNay = tongChiThangNay,
+            SoPhieuChiThangNay = soPhieuChiThangNay,
             TongChiTheoBoLoc = tongTheoBoLoc,
             SoPhieuChiTheoBoLoc = soPhieuTheoBoLoc,
             TuNgay = tuNgay,

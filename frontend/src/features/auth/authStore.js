@@ -15,6 +15,10 @@ const useAuthStore = create(
         set({ token: accessToken, user: userInfo });
       },
 
+      // Gọi sau khi /Auth/refresh trả về access token mới — chỉ cập nhật token,
+      // giữ nguyên user (refresh không đổi thông tin user).
+      setToken: (accessToken) => set({ token: accessToken }),
+
       logout: () => set({ token: null, user: null }),
     }),
     { name: "auth-storage" },

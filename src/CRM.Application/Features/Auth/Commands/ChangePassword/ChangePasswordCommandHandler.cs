@@ -58,6 +58,8 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
 
         // Bước 8 trong luồng sự kiện chính: "yêu cầu đăng nhập lại" — thu hồi JWT hiện tại
         // ngay để buộc người dùng phải đăng nhập lại bằng mật khẩu mới.
+        // IncrementTokenVersionAsync đồng thời thu hồi mọi refresh token còn sống của user
+        // (xem UserManagementRepository) nên không cần gọi riêng ở đây.
         await _userManagementRepository.IncrementTokenVersionAsync(userId, ct);
 
         await _unitOfWork.SaveChangesAsync(ct);

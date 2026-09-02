@@ -54,12 +54,22 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-        services.AddDbContext<CrmDbContext>(options =>
+        // AddDbContextPool thay vì AddDbContext: tái sử dụng instance DbContext giữa các request
+        // (pool) thay vì cấp phát mới mỗi lần — giảm áp lực GC đáng kể trên API có traffic cao.
+        // An toàn với pooling vì CrmDbContext không giữ state theo-request nào ngoài những gì
+        // EF tự quản lý (không có field custom nào được set từ bên ngoài constructor).
+        services.AddDbContextPool<CrmDbContext>(options =>
             options
                 .UseMySql(
                     connectionString,
                     ServerVersion.AutoDetect(connectionString),
                     mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
+        // Lưu ý: KHÔNG đổi QueryTrackingBehavior mặc định sang NoTracking ở đây — một số repo
+        // (LicenseRepository.MarkExpiredAsync, OpportunityRepository.ReassignLeadOpportunitiesToCustomerAsync...)
+        // đang dựa vào tracking mặc định: query .ToListAsync() rồi sửa entity trực tiếp, không
+        // gọi Update()/Attach() tường minh. Đổi default sẽ âm thầm làm các thao tác ghi đó mất
+        // tác dụng (SaveChanges không thấy gì đổi). Đã tự bổ sung AsNoTracking() cho các query
+        // đọc-thuần thay vì đổi default toàn cục — an toàn hơn.
 
         services.AddAutoMapper(typeof(PersistenceMappingProfile).Assembly);
         services.AddHttpContextAccessor();
@@ -96,6 +106,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogPublisher, AuditLogPublisher>();
         services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IQuotePublicTokenService, QuotePublicTokenService>();
         services.AddScoped<IOpenAiService, OpenAiService>();
 

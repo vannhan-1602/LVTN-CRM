@@ -19,6 +19,7 @@ import {
 import useAuthStore from "../../features/auth/authStore";
 import ChangePasswordModal from "../../features/auth/ChangePasswordModal";
 import { ROLES } from "../../utils/constants";
+import authApi from "../../api/authApi";
 
 function SidebarLink({ to, icon: Icon, children }) {
   return (
@@ -57,6 +58,9 @@ export default function MainLayout() {
   const [showChangePassword, setShowChangePassword] = useState(false);
 
   const handleLogout = () => {
+    // Thu hồi refresh token phía server (xoá cookie) trước — không chờ kết quả chặn UI, vì
+    // dù request logout lỗi mạng, phía client vẫn phải clear state + điều hướng về login.
+    authApi.logout().catch(() => {});
     logout();
     navigate("/login");
   };

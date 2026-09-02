@@ -6,25 +6,28 @@ using MediatR;
 
 namespace CRM.Application.Features.Auth.Commands.Login;
 
-public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDto>
+public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResultDto>
 {
     private const string ActiveStatus = "Active";
 
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IRefreshTokenService _refreshTokenService;
 
     public LoginCommandHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        IJwtTokenService jwtTokenService)
+        IJwtTokenService jwtTokenService,
+        IRefreshTokenService refreshTokenService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
+        _refreshTokenService = refreshTokenService;
     }
 
-    public async Task<LoginResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<LoginResultDto> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var account = await _userRepository.GetByUsernameWithRoleAsync(request.Username, cancellationToken);
 
@@ -55,8 +58,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
         };
 
         var tokenResult = _jwtTokenService.GenerateToken(authUser);
+        var refreshTokenResult = await _refreshTokenService.IssueAsync(account.Id, request.RequestIp, cancellationToken);
 
-        return new LoginResponseDto
+        return new LoginResultDto
         {
             AccessToken = tokenResult.AccessToken,
             ExpiresAt = tokenResult.ExpiresAt,
@@ -65,7 +69,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
             Role = account.RoleName,
             HoTen = account.HoTen,
             Email = account.Email,
-            NhanSuId = account.NhanSuId
+            NhanSuId = account.NhanSuId,
+            RefreshToken = refreshTokenResult.PlainToken,
+            RefreshTokenExpiresAt = refreshTokenResult.ExpiresAt
         };
     }
 }

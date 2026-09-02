@@ -15,7 +15,10 @@ public class OpportunityRepository : IOpportunityRepository
 
     public async Task<CoHoiBanHang?> GetByIdAsync(ulong id, CancellationToken ct = default)
     {
+        // Chỉ đọc để trả về domain object hiển thị — UpdateAsync/SoftDeleteAsync bên dưới tự
+        // FindAsync lại (luôn tracked) nên AsNoTracking ở đây an toàn, giảm overhead change-tracker.
         var e = await _ctx.Set<BhCoHoiBanHangEntity>()
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
         return e is null ? null : ToDomain(e);
     }
@@ -113,28 +116,44 @@ public class OpportunityRepository : IOpportunityRepository
 
     public async Task<OpportunitySummaryDto> GetSummaryAsync(uint? ownerUserId, CancellationToken ct = default)
     {
-        var q = _ctx.Set<BhCoHoiBanHangEntity>().Where(x => !x.IsDeleted);
+        // Trước đây: load TOÀN BỘ cơ hội bán hàng vào memory (ToListAsync không lọc) rồi mới
+        // Count/Sum/Average bằng LINQ-to-Objects — với vài nghìn bản ghi vẫn ổn, nhưng không
+        // scale (tốn RAM + băng thông DB->App tuyến tính theo số dòng, dù chỉ cần vài con số).
+        // Đẩy toàn bộ phép tính xuống SQL (GroupBy/Sum/Average dịch thành 1 câu SQL) để DB tính
+        // aggregate tại chỗ, chỉ trả về đúng số dòng theo GiaiDoan.
+        var q = _ctx.Set<BhCoHoiBanHangEntity>().AsNoTracking().Where(x => !x.IsDeleted);
         if (ownerUserId.HasValue)
             q = q.Where(x => x.NhanVienPhuTrach_Id == (int)ownerUserId.Value);
 
-        var all = await q.ToListAsync(ct);
+        var byStage = await q
+            .GroupBy(x => x.GiaiDoan)
+            .Select(g => new
+            {
+                GiaiDoan = g.Key,
+                Count = g.Count(),
+                TongDoanhThuKyVong = g.Sum(x => x.DoanhThuKyVong ?? 0),
+                TongTyLe = g.Sum(x => (double)x.TyLeThanhCong)
+            })
+            .ToListAsync(ct);
 
-        var countByStage = all.GroupBy(x => x.GiaiDoan)
-            .ToDictionary(g => g.Key, g => g.Count());
+        var countByStage = byStage.ToDictionary(g => g.GiaiDoan, g => g.Count);
+        var thanhCong = byStage.FirstOrDefault(g => g.GiaiDoan == "ThanhCong");
+        var thatBai = byStage.FirstOrDefault(g => g.GiaiDoan == "ThatBai");
 
-        var thanhCong = all.Where(x => x.GiaiDoan == "ThanhCong").ToList();
-        var thatBai = all.Where(x => x.GiaiDoan == "ThatBai").ToList();
-        var active = all.Where(x => x.GiaiDoan != "ThanhCong" && x.GiaiDoan != "ThatBai").ToList();
+        var totalCount = byStage.Sum(g => g.Count);
+        var activeCount = totalCount - (thanhCong?.Count ?? 0) - (thatBai?.Count ?? 0);
 
         return new OpportunitySummaryDto
         {
-            TotalActive = active.Count,
-            ThanhCong = thanhCong.Count,
-            ThatBai = thatBai.Count,
-            TotalDoanhThuKyVong = all.Sum(x => x.DoanhThuKyVong ?? 0),
-            DoanhThuThanhCong = thanhCong.Sum(x => x.DoanhThuKyVong ?? 0),
+            TotalActive = activeCount,
+            ThanhCong = thanhCong?.Count ?? 0,
+            ThatBai = thatBai?.Count ?? 0,
+            TotalDoanhThuKyVong = byStage.Sum(g => g.TongDoanhThuKyVong),
+            DoanhThuThanhCong = thanhCong?.TongDoanhThuKyVong ?? 0,
             CountByStage = countByStage,
-            TyLeThanhCongTrungBinh = all.Count > 0 ? all.Average(x => (double)x.TyLeThanhCong) : 0
+            TyLeThanhCongTrungBinh = totalCount > 0
+                ? byStage.Sum(g => g.TongTyLe) / totalCount
+                : 0
         };
     }
 

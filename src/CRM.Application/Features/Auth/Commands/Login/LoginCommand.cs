@@ -3,4 +3,4 @@ using MediatR;
 
 namespace CRM.Application.Features.Auth.Commands.Login;
 
-public record LoginCommand(string Username, string Password) : IRequest<LoginResponseDto>;
+public record LoginCommand(string Username, string Password, string? RequestIp = null) : IRequest<LoginResultDto>;

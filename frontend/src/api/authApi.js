@@ -4,6 +4,13 @@ const authApi = {
   login: (username, password) =>
     axiosClient.post("/Auth/login", { username, password }),
 
+  // Refresh token nằm trong cookie HttpOnly — trình duyệt tự đính kèm, không cần
+  // truyền tham số. Trả về access token mới; đồng thời server set lại cookie mới (rotation).
+  refresh: () => axiosClient.post("/Auth/refresh"),
+
+  // Thu hồi refresh token hiện tại + xoá cookie phía server.
+  logout: () => axiosClient.post("/Auth/logout"),
+
   // Admin only — danh sách tài khoản đầy đủ
   getUsers: () => axiosClient.get("/Auth/users"),
 
