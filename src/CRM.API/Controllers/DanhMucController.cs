@@ -6,15 +6,11 @@ using CRM.Application.Features.DanhMuc.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace CRM.API.Controllers;
 
 
-//Quản lý các bảng danh mục — admin có thể tùy chỉnh theo từng công ty.
-// PHÂN QUYỀN:
-// GET  (xem danh mục): tất cả roles đã đăng nhập.
-//  POST/PUT/DELETE (chỉnh sửa danh mục): chỉ Admin.
-//  Riêng XepHang: chỉ Update (không cho tạo/xóa tự do vì gắn với logic tích điểm).
 
 [ApiController]
 [Route("api/danh-muc")]
@@ -22,13 +18,23 @@ namespace CRM.API.Controllers;
 public class DanhMucController : ControllerBase
 {
     private readonly IMediator _mediator;
-    public DanhMucController(IMediator mediator) => _mediator = mediator;
+    private readonly IOutputCacheStore _outputCacheStore;
+
+    public DanhMucController(IMediator mediator, IOutputCacheStore outputCacheStore)
+    {
+        _mediator = mediator;
+        _outputCacheStore = outputCacheStore;
+    }
+
+    private ValueTask EvictDanhMucCacheAsync(CancellationToken ct) =>
+        _outputCacheStore.EvictByTagAsync("danh-muc", ct);
 
     // ══════════════════════════════════════════════════════════════════════════
     // LOAI KHACH HANG
     // ══════════════════════════════════════════════════════════════════════════
 
     [HttpGet("loai-khach-hang")]
+    [OutputCache(PolicyName = "DanhMuc")]
     public async Task<IActionResult> GetAllLoaiKhachHang(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetAllLoaiKhachHangQuery(), ct);
@@ -40,6 +46,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> CreateLoaiKhachHang([FromBody] UpsertLoaiKhachHangDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateLoaiKhachHangCommand(dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<LoaiKhachHangDto>.Ok(result, "Tạo loại khách hàng thành công."));
     }
 
@@ -48,6 +55,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> UpdateLoaiKhachHang(ushort id, [FromBody] UpsertLoaiKhachHangDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new UpdateLoaiKhachHangCommand(id, dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<LoaiKhachHangDto>.Ok(result, "Cập nhật thành công."));
     }
 
@@ -56,6 +64,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> DeleteLoaiKhachHang(ushort id, CancellationToken ct)
     {
         await _mediator.Send(new DeleteLoaiKhachHangCommand(id), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<string>.Ok("Đã xóa loại khách hàng."));
     }
 
@@ -64,6 +73,7 @@ public class DanhMucController : ControllerBase
     // ══════════════════════════════════════════════════════════════════════════
 
     [HttpGet("tinh-trang-khach-hang")]
+    [OutputCache(PolicyName = "DanhMuc")]
     public async Task<IActionResult> GetAllTinhTrang(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetAllTinhTrangQuery(), ct);
@@ -75,6 +85,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> CreateTinhTrang([FromBody] UpsertTinhTrangKhachHangDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateTinhTrangCommand(dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<TinhTrangKhachHangDto>.Ok(result, "Tạo tình trạng thành công."));
     }
 
@@ -83,6 +94,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> UpdateTinhTrang(ushort id, [FromBody] UpsertTinhTrangKhachHangDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new UpdateTinhTrangCommand(id, dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<TinhTrangKhachHangDto>.Ok(result, "Cập nhật thành công."));
     }
 
@@ -91,6 +103,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> DeleteTinhTrang(ushort id, CancellationToken ct)
     {
         await _mediator.Send(new DeleteTinhTrangCommand(id), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<string>.Ok("Đã xóa tình trạng."));
     }
 
@@ -99,6 +112,7 @@ public class DanhMucController : ControllerBase
     // ══════════════════════════════════════════════════════════════════════════
 
     [HttpGet("loai-ticket")]
+    [OutputCache(PolicyName = "DanhMuc")]
     public async Task<IActionResult> GetAllLoaiTicket(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetAllLoaiTicketQuery(), ct);
@@ -110,6 +124,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> CreateLoaiTicket([FromBody] UpsertLoaiTicketDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateLoaiTicketCommand(dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<LoaiTicketDto>.Ok(result, "Tạo loại ticket thành công."));
     }
 
@@ -118,6 +133,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> UpdateLoaiTicket(ushort id, [FromBody] UpsertLoaiTicketDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new UpdateLoaiTicketCommand(id, dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<LoaiTicketDto>.Ok(result, "Cập nhật thành công."));
     }
 
@@ -126,6 +142,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> DeleteLoaiTicket(ushort id, CancellationToken ct)
     {
         await _mediator.Send(new DeleteLoaiTicketCommand(id), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<string>.Ok("Đã xóa loại ticket."));
     }
 
@@ -134,6 +151,7 @@ public class DanhMucController : ControllerBase
     // ══════════════════════════════════════════════════════════════════════════
 
     [HttpGet("loai-san-pham")]
+    [OutputCache(PolicyName = "DanhMuc")]
     public async Task<IActionResult> GetAllLoaiSanPham(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetAllLoaiSanPhamQuery(), ct);
@@ -145,6 +163,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> CreateLoaiSanPham([FromBody] UpsertLoaiSanPhamDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateLoaiSanPhamCommand(dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<LoaiSanPhamDto>.Ok(result, "Tạo loại sản phẩm thành công."));
     }
 
@@ -153,6 +172,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> UpdateLoaiSanPham(uint id, [FromBody] UpsertLoaiSanPhamDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new UpdateLoaiSanPhamCommand(id, dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<LoaiSanPhamDto>.Ok(result, "Cập nhật thành công."));
     }
 
@@ -161,6 +181,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> DeleteLoaiSanPham(uint id, CancellationToken ct)
     {
         await _mediator.Send(new DeleteLoaiSanPhamCommand(id), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<string>.Ok("Đã xóa loại sản phẩm."));
     }
 
@@ -169,21 +190,19 @@ public class DanhMucController : ControllerBase
     // ══════════════════════════════════════════════════════════════════════════
 
     [HttpGet("xep-hang")]
+    [OutputCache(PolicyName = "DanhMuc")]
     public async Task<IActionResult> GetAllXepHang(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetAllXepHangQuery(), ct);
         return Ok(ApiResponse<List<XepHangDto>>.Ok(result));
     }
 
-    /// <summary>
-    /// Cập nhật tiêu chí và % giảm voucher của 1 hạng.
-    /// Chỉ Admin được chỉnh, mốc điểm phải tăng dần theo thứ tự hạng.
-    /// </summary>
     [HttpPut("xep-hang/{id}")]
     [Authorize(Policy = Policies.AdminOnly)]
     public async Task<IActionResult> UpdateXepHang(ushort id, [FromBody] UpdateXepHangDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new UpdateXepHangCommand(id, dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<XepHangDto>.Ok(result, "Cập nhật hạng thành công."));
     }
 
@@ -192,6 +211,7 @@ public class DanhMucController : ControllerBase
     // ══════════════════════════════════════════════════════════════════════════
 
     [HttpGet("ngay-le")]
+    [OutputCache(PolicyName = "DanhMuc")]
     public async Task<IActionResult> GetAllNgayLe(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetAllNgayLeQuery(), ct);
@@ -203,6 +223,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> CreateNgayLe([FromBody] UpsertNgayLeDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new CreateNgayLeCommand(dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<NgayLeDto>.Ok(result, "Thêm ngày lễ thành công."));
     }
 
@@ -211,6 +232,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> UpdateNgayLe(ushort id, [FromBody] UpsertNgayLeDto dto, CancellationToken ct)
     {
         var result = await _mediator.Send(new UpdateNgayLeCommand(id, dto), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<NgayLeDto>.Ok(result, "Cập nhật thành công."));
     }
 
@@ -219,6 +241,7 @@ public class DanhMucController : ControllerBase
     public async Task<IActionResult> DeleteNgayLe(ushort id, CancellationToken ct)
     {
         await _mediator.Send(new DeleteNgayLeCommand(id), ct);
+        await EvictDanhMucCacheAsync(ct);
         return Ok(ApiResponse<string>.Ok("Đã xóa ngày lễ."));
     }
 }

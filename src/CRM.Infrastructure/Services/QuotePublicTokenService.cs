@@ -1,7 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using CRM.Application.Interfaces.Quotes;
-using Microsoft.Extensions.Configuration;
+using CRM.Infrastructure.Identity;
+using Microsoft.Extensions.Options;
 
 namespace CRM.Infrastructure.Services;
 
@@ -14,9 +15,16 @@ public class QuotePublicTokenService : IQuotePublicTokenService
 {
     private readonly string _secret;
 
-    public QuotePublicTokenService(IConfiguration config)
+    // Trước đây đọc trực tiếp IConfiguration["JwtSettings:Secret"] và fallback về một chuỗi
+    // hardcode ("crm-quote-public-fallback-secret") nếu thiếu cấu hình — nghĩa là nếu deploy
+    // quên set secret, hệ thống vẫn "chạy được" nhưng dùng secret CÔNG KHAI (nằm ngay trong
+    // mã nguồn) để ký token truy cập báo giá công khai, ai đọc được source là tự tạo được
+    // token hợp lệ cho BẤT KỲ quoteId nào. Đổi sang IOptions<JwtSettings> để dùng chung giá
+    // trị đã được validate độ dài tối thiểu 256-bit ở DependencyInjection.AddInfrastructure —
+    // không còn đường nào để service này chạy với secret yếu/rỗng.
+    public QuotePublicTokenService(IOptions<JwtSettings> jwtSettings)
     {
-        _secret = config["JwtSettings:Secret"] ?? "crm-quote-public-fallback-secret";
+        _secret = jwtSettings.Value.Secret;
     }
 
     public string GenerateToken(ulong quoteId)

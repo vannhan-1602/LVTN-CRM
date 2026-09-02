@@ -54,22 +54,14 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-        // AddDbContextPool thay vì AddDbContext: tái sử dụng instance DbContext giữa các request
-        // (pool) thay vì cấp phát mới mỗi lần — giảm áp lực GC đáng kể trên API có traffic cao.
-        // An toàn với pooling vì CrmDbContext không giữ state theo-request nào ngoài những gì
-        // EF tự quản lý (không có field custom nào được set từ bên ngoài constructor).
+       
         services.AddDbContextPool<CrmDbContext>(options =>
             options
                 .UseMySql(
                     connectionString,
                     ServerVersion.AutoDetect(connectionString),
                     mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
-        // Lưu ý: KHÔNG đổi QueryTrackingBehavior mặc định sang NoTracking ở đây — một số repo
-        // (LicenseRepository.MarkExpiredAsync, OpportunityRepository.ReassignLeadOpportunitiesToCustomerAsync...)
-        // đang dựa vào tracking mặc định: query .ToListAsync() rồi sửa entity trực tiếp, không
-        // gọi Update()/Attach() tường minh. Đổi default sẽ âm thầm làm các thao tác ghi đó mất
-        // tác dụng (SaveChanges không thấy gì đổi). Đã tự bổ sung AsNoTracking() cho các query
-        // đọc-thuần thay vì đổi default toàn cục — an toàn hơn.
+       
 
         services.AddAutoMapper(typeof(PersistenceMappingProfile).Assembly);
         services.AddHttpContextAccessor();
@@ -120,6 +112,14 @@ public static class DependencyInjection
 
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
             ?? throw new InvalidOperationException("JwtSettings configuration is missing.");
+
+       
+        if (Encoding.UTF8.GetByteCount(jwtSettings.Secret) < 32)
+        {
+            throw new InvalidOperationException(
+                "JwtSettings:Secret phải có độ dài tối thiểu 32 byte (256-bit) để đảm bảo an toàn cho HMAC-SHA256. " +
+                "Secret hiện tại quá ngắn — tạo secret mới bằng: openssl rand -base64 48");
+        }
 
         services.AddAuthentication(options =>
         {
