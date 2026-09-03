@@ -1,4 +1,4 @@
-﻿// DeleteActivityCommandHandler.cs
+﻿
 using CRM.Application.Common.Constants;
 using CRM.Application.Common.Exceptions;
 using CRM.Application.Interfaces.Activities;

@@ -32,17 +32,11 @@ public class RestoreCustomerCommandHandler : IRequestHandler<RestoreCustomerComm
 
     public async Task<bool> Handle(RestoreCustomerCommand request, CancellationToken cancellationToken)
     {
-        // GetByIdAsync lọc !IsDeleted nên không tìm được khách hàng đang bị xóa mềm — phải dùng
-        // GetByIdEnrichedAsync (không lọc IsDeleted) để lấy Email trước khi khôi phục.
+      
         var existing = await _customerRepository.GetByIdEnrichedAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(KhachHang), request.Id);
 
-        // Đồng bộ với RestoreLeadCommandHandler: FindDuplicatesAsync chỉ kiểm tra khách hàng
-        // ĐANG hoạt động (Where !IsDeleted) — nghĩa là trong lúc khách hàng này bị xóa mềm, một
-        // khách hàng KHÁC hoàn toàn có thể được tạo mới với ĐÚNG email này (không bị chặn trùng).
-        // Nếu khôi phục mà không kiểm tra lại, hệ thống sẽ có 2 khách hàng ĐANG hoạt động cùng
-        // chung 1 email — phá vỡ giả định "email duy nhất giữa các khách hàng đang hoạt động"
-        // mà Create/Update đang đảm bảo.
+       
         if (!string.IsNullOrWhiteSpace(existing.Email))
         {
             var duplicates = await _customerRepository.FindDuplicatesAsync(
@@ -56,8 +50,7 @@ public class RestoreCustomerCommandHandler : IRequestHandler<RestoreCustomerComm
         var restored = await _customerRepository.RestoreAsync(request.Id, cancellationToken);
         if (!restored)
         {
-            // Không phân biệt "không tồn tại" và "chưa bị xóa" ra ngoài — cả hai đều nghĩa là
-            // không có gì để khôi phục ở trạng thái hiện tại.
+           
             throw new NotFoundException(nameof(KhachHang), request.Id);
         }
 
