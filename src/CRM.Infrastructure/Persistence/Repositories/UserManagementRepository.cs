@@ -23,46 +23,53 @@ public class UserManagementRepository : IUserManagementRepository
         _refreshTokenService = refreshTokenService;
     }
 
-    public async Task<List<UserDto>> GetAllAsync(CancellationToken ct = default)
-    {
-        var query =
-            from u in _context.HtUsers.AsNoTracking()
-            join role in _context.HtRoles on u.RoleId equals role.Id into roleJoin
-            from role in roleJoin.DefaultIfEmpty()
-            join ns in _context.HtThongTinNhanSu on u.NhanSuId equals ns.Id into nsJoin
-            from ns in nsJoin.DefaultIfEmpty()
-            join pb in _context.HtPhongBans on ns.PhongBanId equals pb.Id into pbJoin
-            from pb in pbJoin.DefaultIfEmpty()
-            join cv in _context.HtChucVus on ns.ChucVuId equals cv.Id into cvJoin
-            from cv in cvJoin.DefaultIfEmpty()
-            orderby u.Username
-            select new UserDto
-            {
-                Id = u.Id,
-                Username = u.Username,
-                TrangThai = u.TrangThai,
-                RoleId = u.RoleId,
-                RoleName = role != null ? role.TenRole : null,
-                NhanSuId = u.NhanSuId,
-                HoTen = ns != null ? ns.HoTen : null,
-                Email = ns != null ? ns.Email : null,
-                SoDienThoai = ns != null ? ns.SoDienThoai : null,
-                PhongBanId = ns != null ? ns.PhongBanId : null,
-                TenPhongBan = pb != null ? pb.TenPhongBan : null,
-                ChucVuId = ns != null ? ns.ChucVuId : null,
-                TenChucVu = cv != null ? cv.TenChucVu : null,
-                CreatedAt = u.CreatedAt,
-                UpdatedAt = u.UpdatedAt
-            };
+    public async Task<List<UserDto>> GetAllAsync(CancellationToken ct = default) =>
+        await BuildUserDtoQuery()
+            .OrderBy(x => x.U.Username)
+            .Select(ProjectToUserDto)
+            .ToListAsync(ct);
 
-        return await query.ToListAsync(ct);
-    }
+    public async Task<UserDto?> GetByIdAsync(uint id, CancellationToken ct = default) =>
+      
+        await BuildUserDtoQuery()
+            .Where(x => x.U.Id == id)
+            .Select(ProjectToUserDto)
+            .FirstOrDefaultAsync(ct);
 
-    public async Task<UserDto?> GetByIdAsync(uint id, CancellationToken ct = default)
-    {
-        var users = await GetAllAsync(ct);
-        return users.FirstOrDefault(u => u.Id == id);
-    }
+ 
+    private sealed record UserJoinRow(HtUserEntity U, HtRoleEntity? Role, HtThongTinNhanSuEntity? Ns, HtPhongBanEntity? Pb, HtChucVuEntity? Cv);
+
+    private IQueryable<UserJoinRow> BuildUserDtoQuery() =>
+        from u in _context.HtUsers.AsNoTracking()
+        join role in _context.HtRoles on u.RoleId equals role.Id into roleJoin
+        from role in roleJoin.DefaultIfEmpty()
+        join ns in _context.HtThongTinNhanSu on u.NhanSuId equals ns.Id into nsJoin
+        from ns in nsJoin.DefaultIfEmpty()
+        join pb in _context.HtPhongBans on ns.PhongBanId equals pb.Id into pbJoin
+        from pb in pbJoin.DefaultIfEmpty()
+        join cv in _context.HtChucVus on ns.ChucVuId equals cv.Id into cvJoin
+        from cv in cvJoin.DefaultIfEmpty()
+        select new UserJoinRow(u, role, ns, pb, cv);
+
+    private static readonly System.Linq.Expressions.Expression<Func<UserJoinRow, UserDto>> ProjectToUserDto =
+        x => new UserDto
+        {
+            Id = x.U.Id,
+            Username = x.U.Username,
+            TrangThai = x.U.TrangThai,
+            RoleId = x.U.RoleId,
+            RoleName = x.Role != null ? x.Role.TenRole : null,
+            NhanSuId = x.U.NhanSuId,
+            HoTen = x.Ns != null ? x.Ns.HoTen : null,
+            Email = x.Ns != null ? x.Ns.Email : null,
+            SoDienThoai = x.Ns != null ? x.Ns.SoDienThoai : null,
+            PhongBanId = x.Ns != null ? x.Ns.PhongBanId : null,
+            TenPhongBan = x.Pb != null ? x.Pb.TenPhongBan : null,
+            ChucVuId = x.Ns != null ? x.Ns.ChucVuId : null,
+            TenChucVu = x.Cv != null ? x.Cv.TenChucVu : null,
+            CreatedAt = x.U.CreatedAt,
+            UpdatedAt = x.U.UpdatedAt
+        };
 
     public Task<bool> UsernameExistsAsync(string username, CancellationToken ct = default) =>
         _context.HtUsers.AnyAsync(u => u.Username == username, ct);
@@ -164,14 +171,11 @@ public class UserManagementRepository : IUserManagementRepository
         user.TrangThai = trangThai;
         user.UpdatedAt = DateTime.UtcNow;
 
-        // Xóa cache ngay cả khi MỞ LẠI tài khoản (không chỉ lúc khóa): nếu không, cache cũ
-        // (TrangThai="Locked" từ trước) có thể còn hiệu lực tới 30s sau khi user vừa đăng nhập
-        // lại thành công, khiến token MỚI hợp lệ vẫn bị middleware từ chối nhầm.
+      
         _tokenVersionCache.Invalidate(userId);
     }
 
-    // Dùng ExecuteUpdateAsync (atomic, cộng dồn) thay vì đọc-sửa-ghi, tránh mất lượt tăng nếu
-    // có 2 thao tác quản trị xảy ra gần như đồng thời trên cùng 1 tài khoản.
+    
     public async Task IncrementTokenVersionAsync(uint userId, CancellationToken ct = default)
     {
         await _context.HtUsers
@@ -180,9 +184,7 @@ public class UserManagementRepository : IUserManagementRepository
 
         _tokenVersionCache.Invalidate(userId);
 
-        // Mọi nơi tăng TokenVersion (đổi mật khẩu, khóa/mở tài khoản, đổi vai trò, reset mật khẩu)
-        // đều có nghĩa "thu hồi phiên đăng nhập hiện tại" — nếu không revoke luôn refresh token,
-        // client vẫn có thể âm thầm lấy access token mới sau khi access token cũ hết hạn.
+       
         await _refreshTokenService.RevokeAllForUserAsync(userId, ct: ct);
     }
 
