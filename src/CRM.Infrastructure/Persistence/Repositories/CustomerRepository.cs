@@ -36,8 +36,6 @@ public class CustomerRepository : ICustomerRepository
             from loai in loaiJoin.DefaultIfEmpty()
             join tinh in _context.KhTinhTrangKhachHangs on kh.TinhTrangId equals tinh.Id into tinhJoin
             from tinh in tinhJoin.DefaultIfEmpty()
-                // kh.NhanVienPhuTrachId là HT_User.Id (fk_kh_nv), KHÔNG PHẢI HT_ThongTinNhanSu.Id —
-                // phải join qua HT_User trước rồi mới sang HT_ThongTinNhanSu qua NhanSuId.
             join u in _context.HtUsers on (uint?)kh.NhanVienPhuTrachId equals (uint?)u.Id into uJoin
             from u in uJoin.DefaultIfEmpty()
             join ns in _context.HtThongTinNhanSu on u.NhanSuId equals (uint?)ns.Id into nsJoin
@@ -201,6 +199,39 @@ public class CustomerRepository : ICustomerRepository
 
     public Task<bool> HangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default) =>
         _context.Set<KhXepHangEntity>().AnyAsync(h => h.Id == id && h.IsActive, cancellationToken);
+
+   
+    public async Task<(bool LoaiOk, bool TinhTrangOk, bool HangOk)> ValidateLookupIdsAsync(
+        ushort? loaiKhachHangId, ushort? tinhTrangId, ushort? hangKhachHangId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!loaiKhachHangId.HasValue && !tinhTrangId.HasValue && !hangKhachHangId.HasValue)
+            return (true, true, true);
+
+        const string sql = """
+            SELECT
+                EXISTS(SELECT 1 FROM KH_LoaiKhachHang WHERE Id = {0} AND IsActive = 1) AS LoaiOk,
+                EXISTS(SELECT 1 FROM KH_TinhTrangKhachHang WHERE Id = {1} AND IsActive = 1) AS TinhTrangOk,
+                EXISTS(SELECT 1 FROM KH_XepHang WHERE Id = {2} AND IsActive = 1) AS HangOk
+            """;
+
+        var row = await _context.Database
+            .SqlQueryRaw<LookupExistsRow>(sql, loaiKhachHangId ?? 0, tinhTrangId ?? 0, hangKhachHangId ?? 0)
+            .SingleAsync(cancellationToken);
+
+        return (
+            !loaiKhachHangId.HasValue || row.LoaiOk,
+            !tinhTrangId.HasValue || row.TinhTrangOk,
+            !hangKhachHangId.HasValue || row.HangOk
+        );
+    }
+
+    private sealed class LookupExistsRow
+    {
+        public bool LoaiOk { get; set; }
+        public bool TinhTrangOk { get; set; }
+        public bool HangOk { get; set; }
+    }
 
     public async Task<KhachHang?> GetByMaKhachHangAsync(string maKhachHang, CancellationToken cancellationToken = default)
     {

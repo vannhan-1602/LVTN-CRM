@@ -33,21 +33,6 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
             .MaximumLength(50).WithMessage("Mã số thuế không được vượt quá 50 ký tự.")
             .When(x => !string.IsNullOrWhiteSpace(x.MaSoThue));
 
-        RuleFor(x => x.LoaiKhachHangId)
-            .MustAsync(async (id, ct) => !id.HasValue || await customerRepository.LoaiKhachHangExistsAsync(id.Value, ct))
-            .WithMessage("Loại khách hàng không tồn tại.")
-            .When(x => x.LoaiKhachHangId.HasValue);
-
-        RuleFor(x => x.TinhTrangId)
-            .MustAsync(async (id, ct) => !id.HasValue || await customerRepository.TinhTrangKhachHangExistsAsync(id.Value, ct))
-            .WithMessage("Tình trạng khách hàng không tồn tại.")
-            .When(x => x.TinhTrangId.HasValue);
-
-        RuleFor(x => x.HangKhachHangId)
-            .MustAsync(async (id, ct) => !id.HasValue || await customerRepository.HangKhachHangExistsAsync(id.Value, ct))
-            .WithMessage("Hạng khách hàng không tồn tại.")
-            .When(x => x.HangKhachHangId.HasValue);
-
         RuleFor(x => x.NgaySinh)
             .LessThanOrEqualTo(x => DateOnly.FromDateTime(DateTime.UtcNow))
             .WithMessage("Ngày sinh không được ở tương lai.")
@@ -57,5 +42,20 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
             .LessThanOrEqualTo(x => DateOnly.FromDateTime(DateTime.UtcNow))
             .WithMessage("Ngày thành lập không được ở tương lai.")
             .When(x => x.NgayThanhLap.HasValue);
+
+        RuleFor(x => x).CustomAsync(async (command, context, ct) =>
+        {
+            var (loaiOk, tinhTrangOk, hangOk) = await customerRepository.ValidateLookupIdsAsync(
+                command.LoaiKhachHangId, command.TinhTrangId, command.HangKhachHangId, ct);
+
+            if (command.LoaiKhachHangId.HasValue && !loaiOk)
+                context.AddFailure(nameof(command.LoaiKhachHangId), "Loại khách hàng không tồn tại.");
+
+            if (command.TinhTrangId.HasValue && !tinhTrangOk)
+                context.AddFailure(nameof(command.TinhTrangId), "Tình trạng khách hàng không tồn tại.");
+
+            if (command.HangKhachHangId.HasValue && !hangOk)
+                context.AddFailure(nameof(command.HangKhachHangId), "Hạng khách hàng không tồn tại.");
+        });
     }
 }

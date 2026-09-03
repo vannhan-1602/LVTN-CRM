@@ -15,9 +15,7 @@ public interface ICustomerRepository
         string? search,
         ushort? loaiKhachHangId,
         ushort? tinhTrangId,
-        //  null = không giới hạn (Manager); có giá trị = chỉ Customer của Sale đó
         uint? ownerUserId,
-        //  null/false = chỉ lấy chưa xóa (mặc định); true = chỉ lấy đã xóa (đã khóa)
         bool? isDeleted = null,
         CancellationToken cancellationToken = default);
 
@@ -31,9 +29,10 @@ public interface ICustomerRepository
     Task<bool> LoaiKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default);
     Task<bool> TinhTrangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default);
     Task<bool> HangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default);
+    Task<(bool LoaiOk, bool TinhTrangOk, bool HangOk)> ValidateLookupIdsAsync(
+        ushort? loaiKhachHangId, ushort? tinhTrangId, ushort? hangKhachHangId,
+        CancellationToken cancellationToken = default);
     Task<KhachHang?> GetByMaKhachHangAsync(string maKhachHang, CancellationToken cancellationToken = default);
-
-    /// <summary>Tìm các khách hàng đang hoạt động trùng Email/SĐT/MST — dùng cảnh báo trùng lặp khi tạo mới.</summary>
     Task<List<(ulong Id, string MaKhachHang, string TenKhachHang, string TrungTruong)>> FindDuplicatesAsync(
         string? email, string? soDienThoai, string? maSoThue, ulong? excludeId,
         CancellationToken cancellationToken = default);
