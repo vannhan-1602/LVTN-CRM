@@ -355,6 +355,10 @@ public class ContractRepository : IContractRepository
             })
             .ToListAsync(ct);
 
+  
+    public Task<bool> HasRenewalLinksAsync(ulong hopDongGocId, CancellationToken ct = default) =>
+        _context.HdHopDongs.AnyAsync(x => x.HopDongGocId == hopDongGocId, ct);
+
     private static HopDong MapToDomain(HdHopDongEntity e) => new()
     {
         Id = e.Id,

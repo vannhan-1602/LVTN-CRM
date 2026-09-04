@@ -130,6 +130,32 @@ public class ProductRepository : IProductRepository
     public Task<bool> LoaiSanPhamExistsAsync(uint id, CancellationToken ct = default) =>
         _context.Set<BhLoaiSanPhamEntity>().AnyAsync(x => x.Id == id, ct);
 
+   
+    public async Task<(bool MaSPAvailable, bool LoaiSanPhamValid)> ValidateNewProductAsync(
+        string maSP, uint? loaiSanPhamId, CancellationToken ct = default)
+    {
+        const string sql = """
+            SELECT
+                EXISTS(SELECT 1 FROM BH_SanPham WHERE MaSP = {0}) AS MaSPExists,
+                EXISTS(SELECT 1 FROM BH_LoaiSanPham WHERE Id = {1}) AS LoaiSanPhamExists
+            """;
+
+        var row = await _context.Database
+            .SqlQueryRaw<ProductValidationRow>(sql, maSP, loaiSanPhamId ?? 0)
+            .SingleAsync(ct);
+
+        return (
+            MaSPAvailable: !row.MaSPExists,
+            LoaiSanPhamValid: !loaiSanPhamId.HasValue || row.LoaiSanPhamExists
+        );
+    }
+
+    private sealed class ProductValidationRow
+    {
+        public bool MaSPExists { get; set; }
+        public bool LoaiSanPhamExists { get; set; }
+    }
+
     public async Task<bool> IsReferencedAsync(uint id, CancellationToken ct = default)
     {
         var inQuote = await _context.Set<HdBaoGiaChiTietEntity>().AnyAsync(x => x.SanPham_Id == id, ct);
@@ -209,7 +235,7 @@ public class ProductRepository : IProductRepository
         var query =
             from gd in _context.Set<KhoTheKhoEntity>().AsNoTracking()
             where gd.SanPham_Id == sanPhamId
-            // gd.NguoiThucHien_Id là HT_User.Id (fk_thekho_user), KHÔNG PHẢI HT_ThongTinNhanSu.Id.
+          
             join u in _context.HtUsers on (uint?)gd.NguoiThucHien_Id equals (uint?)u.Id into uJoin
             from u in uJoin.DefaultIfEmpty()
             join ns in _context.HtThongTinNhanSu on u.NhanSuId equals (uint?)ns.Id into nsJoin
@@ -323,7 +349,7 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(h => h.Id == imageId && h.SanPham_Id == sanPhamId, ct);
         if (target is null) return false;
 
-        // Bỏ cờ IsMain của ảnh chính cũ (nếu khác ảnh đang chọn) rồi gán cho ảnh mới.
+       
         await _context.Set<BhSanPhamHinhAnhEntity>()
             .Where(h => h.SanPham_Id == sanPhamId && h.IsMain && h.Id != imageId)
             .ExecuteUpdateAsync(s => s.SetProperty(h => h.IsMain, false), ct);

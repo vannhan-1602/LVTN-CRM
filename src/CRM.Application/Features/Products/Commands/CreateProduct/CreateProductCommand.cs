@@ -69,11 +69,12 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
     public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken ct)
     {
-        if (await _productRepository.ExistsMaSPAsync(request.MaSP, null, ct))
+        var validation = await _productRepository.ValidateNewProductAsync(request.MaSP, request.LoaiSanPhamId, ct);
+
+        if (!validation.MaSPAvailable)
             throw new BusinessRuleException($"Mã sản phẩm '{request.MaSP}' đã tồn tại.");
 
-        if (request.LoaiSanPhamId.HasValue &&
-            !await _productRepository.LoaiSanPhamExistsAsync(request.LoaiSanPhamId.Value, ct))
+        if (!validation.LoaiSanPhamValid)
             throw new BusinessRuleException("Loại sản phẩm không hợp lệ.");
 
         var product = new SanPham

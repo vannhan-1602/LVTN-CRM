@@ -63,4 +63,5 @@ public interface IContractRepository
 
     /// <summary>Các hợp đồng gia hạn/bảo trì được tạo ra TỪ hợp đồng gốc — dùng hiển thị badge liên kết 2 chiều.</summary>
     Task<List<ContractRenewalLinkDto>> GetRenewalLinksAsync(ulong hopDongGocId, CancellationToken ct = default);
+    Task<bool> HasRenewalLinksAsync(ulong hopDongGocId, CancellationToken ct = default);
 }

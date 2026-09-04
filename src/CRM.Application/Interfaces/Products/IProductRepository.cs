@@ -20,6 +20,8 @@ public interface IProductRepository
 
     Task<bool> ExistsMaSPAsync(string maSP, uint? excludeId = null, CancellationToken ct = default);
     Task<bool> LoaiSanPhamExistsAsync(uint id, CancellationToken ct = default);
+    Task<(bool MaSPAvailable, bool LoaiSanPhamValid)> ValidateNewProductAsync(
+        string maSP, uint? loaiSanPhamId, CancellationToken ct = default);
     Task<bool> IsReferencedAsync(uint id, CancellationToken ct = default);
 
     Task<List<LoaiSanPham>> GetAllLoaiSanPhamAsync(CancellationToken ct = default);

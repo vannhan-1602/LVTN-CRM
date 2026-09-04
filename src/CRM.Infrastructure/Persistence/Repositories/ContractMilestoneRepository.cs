@@ -19,6 +19,10 @@ public class ContractMilestoneRepository : IContractMilestoneRepository
             .Select(x => ToDto(x, null))
             .ToListAsync(ct);
 
+   
+    public Task<bool> HasMilestonesAsync(ulong hopDongId, CancellationToken ct = default) =>
+        _context.HdMocTrienKhais.AnyAsync(x => x.HopDong_Id == hopDongId, ct);
+
     public async Task<MocTrienKhaiDto?> GetByIdAsync(ulong id, CancellationToken ct = default)
     {
         var e = await _context.HdMocTrienKhais.Include(x => x.NhanVienThucHien!).ThenInclude(u => u.NhanSu)

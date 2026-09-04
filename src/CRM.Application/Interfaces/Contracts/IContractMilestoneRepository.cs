@@ -7,6 +7,7 @@ namespace CRM.Application.Interfaces.Contracts;
 public interface IContractMilestoneRepository
 {
     Task<List<MocTrienKhaiDto>> GetByHopDongAsync(ulong hopDongId, CancellationToken ct = default);
+    Task<bool> HasMilestonesAsync(ulong hopDongId, CancellationToken ct = default);
     Task<MocTrienKhaiDto?> GetByIdAsync(ulong id, CancellationToken ct = default);
     Task<MocTrienKhaiDto> AddAsync(ulong hopDongId, string loaiMoc, string? noiDung,
         DateTime? ngayThucHien, uint? nhanVienThucHienId, CancellationToken ct = default);
