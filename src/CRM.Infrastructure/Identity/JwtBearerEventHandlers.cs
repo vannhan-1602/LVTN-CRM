@@ -12,11 +12,20 @@ public static class JwtBearerEventHandlers
 {
     public static JwtBearerEvents Create() => new()
     {
-        // Thu hồi JWT tức thời: JWT mặc định chỉ hết hạn theo thời gian (60 phút) và không có
-        // cách hủy giữa chừng. Handler này so khớp claim "tv" (TokenVersion) trong token với
-        // giá trị hiện tại trong DB (qua cache ngắn hạn) trên MỌI request đã xác thực chữ ký —
-        // nếu tài khoản vừa bị khóa / đổi vai trò / đổi mật khẩu (TokenVersion đã tăng), hoặc
-        // tài khoản không còn Active, token cũ bị từ chối ngay dù chữ ký vẫn hợp lệ và chưa hết hạn.
+
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        },
+
         OnTokenValidated = async context =>
         {
             var userIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);

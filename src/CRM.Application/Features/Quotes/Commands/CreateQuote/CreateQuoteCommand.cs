@@ -80,17 +80,21 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
         var khachHang = await _customerRepository.GetByIdAsync(request.KhachHangId, ct)
             ?? throw new NotFoundException(nameof(CRM.Domain.Entities.Customers.KhachHang), request.KhachHangId);
 
-        // Sale chỉ lập báo giá cho khách hàng mình phụ trách.
+
         if (_currentUser.Role == Roles.Sale && khachHang.NhanVienPhuTrachId != _currentUser.UserId)
             throw new ForbiddenException("Bạn chỉ có thể lập báo giá cho khách hàng mình phụ trách.");
 
         var chiTietInputs = new List<BaoGiaChiTietInput>();
         decimal tongTien = 0;
 
+
+        var productIds = request.ChiTiet.Select(x => x.SanPhamId);
+        var products = await _productRepository.GetByIdsAsync(productIds, ct);
+
         foreach (var item in request.ChiTiet)
         {
-            var product = await _productRepository.GetByIdAsync(item.SanPhamId, ct)
-                ?? throw new NotFoundException(nameof(CRM.Domain.Entities.Products.SanPham), item.SanPhamId);
+            if (!products.TryGetValue(item.SanPhamId, out var product))
+                throw new NotFoundException(nameof(CRM.Domain.Entities.Products.SanPham), item.SanPhamId);
 
             if (!product.DangKinhDoanh)
                 throw new BusinessRuleException($"Sản phẩm '{product.TenSP}' đã ngừng kinh doanh, không thể đưa vào báo giá.");
@@ -100,10 +104,7 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
             tongTien += item.SoLuong * donGia;
         }
 
-        // ── Áp dụng voucher (nếu có) ─────────────────────────────────────
-        // Kiểm tra ngay trước khi tạo báo giá để không tạo ra báo giá "treo"
-        // nếu mã voucher không hợp lệ — nhưng chỉ đánh dấu IsUsed trong DB
-        // SAU KHI báo giá đã tạo thành công (cần BaoGiaId để ghi AppliedTo_BaoGia_Id).
+
         CRM.Domain.Entities.Loyalty.Voucher? voucher = null;
         decimal soTienGiam = 0m;
 
@@ -148,10 +149,7 @@ public class CreateQuoteCommandHandler : IRequestHandler<CreateQuoteCommand, Quo
         var created = await _quoteRepository.AddAsync(quote, chiTietInputs, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
-        // Toàn bộ Handle() này chạy trong 1 transaction DB (TransactionBehavior tự bọc mọi
-        // Command) — nên nếu ApDungVoucherAsync trả về false (voucher vừa bị người khác dùng
-        // mất trong lúc chờ), ném lỗi ở đây sẽ rollback LUÔN cả báo giá vừa insert, tránh tình
-        // trạng báo giá đã giảm giá nhưng voucher lại không được đánh dấu đã dùng (double-spend).
+    
         if (voucher is not null)
         {
             var apDungThanhCong = await _loyaltyRepository.ApDungVoucherAsync(

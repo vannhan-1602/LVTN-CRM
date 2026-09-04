@@ -7,6 +7,7 @@ namespace CRM.Application.Interfaces.Products;
 public interface IProductRepository
 {
     Task<SanPham?> GetByIdAsync(uint id, CancellationToken ct = default);
+    Task<Dictionary<uint, SanPham>> GetByIdsAsync(IEnumerable<uint> productIds, CancellationToken ct = default);
     Task<ProductDto?> GetByIdEnrichedAsync(uint id, CancellationToken ct = default);
 
     Task<PagedResult<ProductDto>> GetPagedAsync(

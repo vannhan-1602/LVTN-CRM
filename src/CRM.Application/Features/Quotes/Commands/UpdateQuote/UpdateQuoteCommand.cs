@@ -77,10 +77,14 @@ public class UpdateQuoteCommandHandler : IRequestHandler<UpdateQuoteCommand, Quo
         var chiTietInputs = new List<Interfaces.Quotes.BaoGiaChiTietInput>();
         decimal tongTien = 0;
 
+    
+        var productIds = request.ChiTiet.Select(x => x.SanPhamId);
+        var products = await _productRepository.GetByIdsAsync(productIds, ct);
+
         foreach (var item in request.ChiTiet)
         {
-            var product = await _productRepository.GetByIdAsync(item.SanPhamId, ct)
-                ?? throw new NotFoundException(nameof(CRM.Domain.Entities.Products.SanPham), item.SanPhamId);
+            if (!products.TryGetValue(item.SanPhamId, out var product))
+                throw new NotFoundException(nameof(CRM.Domain.Entities.Products.SanPham), item.SanPhamId);
 
             if (!product.DangKinhDoanh)
                 throw new BusinessRuleException($"Sản phẩm '{product.TenSP}' đã ngừng kinh doanh.");
@@ -93,10 +97,7 @@ public class UpdateQuoteCommandHandler : IRequestHandler<UpdateQuoteCommand, Quo
         quote.TongTien = tongTien;
         quote.UpdatedAt = DateTime.UtcNow;
 
-        // ── Nếu báo giá này đã có voucher áp dụng, phải tính lại số tiền giảm theo TongTien
-        // MỚI — nếu không, sửa dòng sản phẩm sẽ âm thầm làm mất chiết khấu dù voucher vẫn đang
-        // bị đánh dấu IsUsed/AppliedTo_BaoGia_Id trỏ vào báo giá này (không thể dùng lại được nữa
-        // nhưng khách lại không được hưởng giảm giá — mất tiền oan cho khách).
+     
         var appliedVoucher = await _loyaltyRepository.GetVoucherByAppliedQuoteAsync(request.Id, ct);
         if (appliedVoucher is not null)
         {
