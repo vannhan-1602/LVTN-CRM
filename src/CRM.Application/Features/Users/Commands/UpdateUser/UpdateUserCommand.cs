@@ -58,11 +58,14 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
         var existing = await _repository.GetByIdAsync(request.Id, ct)
             ?? throw new NotFoundException("User", request.Id);
 
-        if (!await _repository.RoleExistsAsync(request.RoleId, ct))
+       
+        var validation = await _repository.ValidateUserUpdateAsync(
+            request.Email, existing.NhanSuId, request.RoleId, request.PhongBanId, request.ChucVuId, ct);
+
+        if (!validation.RoleValid)
             throw new BusinessRuleException("Vai trò không hợp lệ.");
 
-        // Không cho hạ quyền Admin cuối cùng còn đang hoạt động trong hệ thống — nếu không sẽ
-        // không còn ai có quyền quản trị (tạo user, mở khóa tài khoản...) trong hệ thống nữa.
+        
         if (string.Equals(existing.RoleName, Roles.Admin, StringComparison.OrdinalIgnoreCase) &&
             request.RoleId != existing.RoleId)
         {
@@ -77,13 +80,13 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
                     "Không thể hạ quyền Admin cuối cùng đang hoạt động trong hệ thống.");
         }
 
-        if (await _repository.EmailExistsAsync(request.Email, existing.NhanSuId, ct))
+        if (!validation.EmailAvailable)
             throw new BusinessRuleException($"Email '{request.Email}' đã được sử dụng bởi nhân sự khác.");
 
-        if (request.PhongBanId.HasValue && !await _repository.PhongBanExistsAsync(request.PhongBanId.Value, ct))
+        if (!validation.PhongBanValid)
             throw new BusinessRuleException("Phòng ban không hợp lệ.");
 
-        if (request.ChucVuId.HasValue && !await _repository.ChucVuExistsAsync(request.ChucVuId.Value, ct))
+        if (!validation.ChucVuValid)
             throw new BusinessRuleException("Chức vụ không hợp lệ.");
 
         await _repository.UpdateAsync(
@@ -91,8 +94,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
             request.HoTen.Trim(), request.Email?.Trim(), request.SoDienThoai?.Trim(),
             request.PhongBanId, request.ChucVuId, ct);
 
-        // Đổi vai trò: JWT cũ còn mang Role claim cũ, phải thu hồi ngay để tránh dùng
-        // quyền cũ cho tới khi token hết hạn tự nhiên.
+       
         if (request.RoleId != existing.RoleId)
             await _repository.IncrementTokenVersionAsync(request.Id, ct);
 

@@ -14,7 +14,17 @@ public interface IUserManagementRepository
     Task<bool> PhongBanExistsAsync(ushort id, CancellationToken ct = default);
     Task<bool> ChucVuExistsAsync(ushort id, CancellationToken ct = default);
 
-    /// Tạo HT_ThongTinNhanSu + HT_User trong cùng 1 transaction nghiệp vụ
+   
+    Task<CreateUserValidationResult> ValidateNewUserAsync(
+        string username, string? email, uint roleId, ushort? phongBanId, ushort? chucVuId,
+        CancellationToken ct = default);
+
+   
+    Task<UpdateUserValidationResult> ValidateUserUpdateAsync(
+        string? email, uint? excludeNhanSuId, uint roleId, ushort? phongBanId, ushort? chucVuId,
+        CancellationToken ct = default);
+
+
     Task<uint> CreateAsync(
         string username, string passwordHash, uint roleId,
         string hoTen, string? email, string? soDienThoai,
@@ -30,14 +40,19 @@ public interface IUserManagementRepository
     Task UpdatePasswordAsync(uint userId, string passwordHash, CancellationToken ct = default);
     Task UpdateStatusAsync(uint userId, string trangThai, CancellationToken ct = default);
 
-    /// <summary>
-    /// Tăng TokenVersion — vô hiệu hóa mọi JWT đã phát trước đó cho tài khoản này ngay lập tức
-    /// (khóa/vô hiệu hóa, đổi vai trò, đổi mật khẩu). Xem thêm TokenVersionCacheService.
-    /// </summary>
+
     Task IncrementTokenVersionAsync(uint userId, CancellationToken ct = default);
 
-    /// Xóa cứng tài khoản (giữ lại bản ghi nhân sự, chỉ gỡ liên kết đăng nhập).
+
     Task<bool> DeleteAsync(uint userId, CancellationToken ct = default);
 
     Task<UserLookupsDto> GetLookupsAsync(CancellationToken ct = default);
 }
+
+
+public record CreateUserValidationResult(
+    bool UsernameAvailable, bool EmailAvailable, bool RoleValid, bool PhongBanValid, bool ChucVuValid);
+
+
+public record UpdateUserValidationResult(
+    bool EmailAvailable, bool RoleValid, bool PhongBanValid, bool ChucVuValid);

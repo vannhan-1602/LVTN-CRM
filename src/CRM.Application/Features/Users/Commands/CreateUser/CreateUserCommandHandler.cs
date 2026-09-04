@@ -35,19 +35,23 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
 
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken ct)
     {
-        if (await _repository.UsernameExistsAsync(request.Username, ct))
+       
+        var validation = await _repository.ValidateNewUserAsync(
+            request.Username, request.Email, request.RoleId, request.PhongBanId, request.ChucVuId, ct);
+
+        if (!validation.UsernameAvailable)
             throw new BusinessRuleException($"Tên đăng nhập '{request.Username}' đã tồn tại.");
 
-        if (!await _repository.RoleExistsAsync(request.RoleId, ct))
+        if (!validation.RoleValid)
             throw new BusinessRuleException("Vai trò không hợp lệ.");
 
-        if (await _repository.EmailExistsAsync(request.Email, null, ct))
+        if (!validation.EmailAvailable)
             throw new BusinessRuleException($"Email '{request.Email}' đã được sử dụng.");
 
-        if (request.PhongBanId.HasValue && !await _repository.PhongBanExistsAsync(request.PhongBanId.Value, ct))
+        if (!validation.PhongBanValid)
             throw new BusinessRuleException("Phòng ban không hợp lệ.");
 
-        if (request.ChucVuId.HasValue && !await _repository.ChucVuExistsAsync(request.ChucVuId.Value, ct))
+        if (!validation.ChucVuValid)
             throw new BusinessRuleException("Chức vụ không hợp lệ.");
 
         var passwordHash = _passwordHasher.Hash(request.Password);
@@ -57,7 +61,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             request.HoTen.Trim(), request.Email?.Trim(), request.SoDienThoai?.Trim(),
             request.PhongBanId, request.ChucVuId, ct);
 
-        // Repository tự SaveChanges theo từng bước (cần Id nhân sự trước khi tạo user)
+       
         var dto = await _repository.GetByIdAsync(newUserId, ct)
             ?? throw new BusinessRuleException("Tạo tài khoản thất bại.");
 

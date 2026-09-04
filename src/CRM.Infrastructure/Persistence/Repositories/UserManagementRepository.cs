@@ -36,7 +36,7 @@ public class UserManagementRepository : IUserManagementRepository
             .Select(ProjectToUserDto)
             .FirstOrDefaultAsync(ct);
 
- 
+   
     private sealed record UserJoinRow(HtUserEntity U, HtRoleEntity? Role, HtThongTinNhanSuEntity? Ns, HtPhongBanEntity? Pb, HtChucVuEntity? Cv);
 
     private IQueryable<UserJoinRow> BuildUserDtoQuery() =>
@@ -89,6 +89,77 @@ public class UserManagementRepository : IUserManagementRepository
 
     public Task<bool> ChucVuExistsAsync(ushort id, CancellationToken ct = default) =>
         _context.HtChucVus.AnyAsync(c => c.Id == id && c.IsActive, ct);
+
+   
+    public async Task<CreateUserValidationResult> ValidateNewUserAsync(
+        string username, string? email, uint roleId, ushort? phongBanId, ushort? chucVuId,
+        CancellationToken ct = default)
+    {
+        const string sql = """
+            SELECT
+                EXISTS(SELECT 1 FROM HT_User WHERE Username = {0}) AS UsernameExists,
+                EXISTS(SELECT 1 FROM HT_ThongTinNhanSu WHERE Email = {1}) AS EmailExists,
+                EXISTS(SELECT 1 FROM HT_Role WHERE Id = {2}) AS RoleExists,
+                EXISTS(SELECT 1 FROM HT_PhongBan WHERE Id = {3} AND IsActive = 1) AS PhongBanExists,
+                EXISTS(SELECT 1 FROM HT_ChucVu WHERE Id = {4} AND IsActive = 1) AS ChucVuExists
+            """;
+
+        var row = await _context.Database
+            .SqlQueryRaw<CreateUserValidationRow>(
+                sql, username, email ?? string.Empty, roleId, phongBanId ?? 0, chucVuId ?? 0)
+            .SingleAsync(ct);
+
+        return new CreateUserValidationResult(
+            UsernameAvailable: !row.UsernameExists,
+            EmailAvailable: string.IsNullOrWhiteSpace(email) || !row.EmailExists,
+            RoleValid: row.RoleExists,
+            PhongBanValid: !phongBanId.HasValue || row.PhongBanExists,
+            ChucVuValid: !chucVuId.HasValue || row.ChucVuExists
+        );
+    }
+
+    private sealed class CreateUserValidationRow
+    {
+        public bool UsernameExists { get; set; }
+        public bool EmailExists { get; set; }
+        public bool RoleExists { get; set; }
+        public bool PhongBanExists { get; set; }
+        public bool ChucVuExists { get; set; }
+    }
+
+   
+    public async Task<UpdateUserValidationResult> ValidateUserUpdateAsync(
+        string? email, uint? excludeNhanSuId, uint roleId, ushort? phongBanId, ushort? chucVuId,
+        CancellationToken ct = default)
+    {
+        const string sql = """
+            SELECT
+                EXISTS(SELECT 1 FROM HT_ThongTinNhanSu WHERE Email = {0} AND Id != {1}) AS EmailExists,
+                EXISTS(SELECT 1 FROM HT_Role WHERE Id = {2}) AS RoleExists,
+                EXISTS(SELECT 1 FROM HT_PhongBan WHERE Id = {3} AND IsActive = 1) AS PhongBanExists,
+                EXISTS(SELECT 1 FROM HT_ChucVu WHERE Id = {4} AND IsActive = 1) AS ChucVuExists
+            """;
+
+        var row = await _context.Database
+            .SqlQueryRaw<UpdateUserValidationRow>(
+                sql, email ?? string.Empty, excludeNhanSuId ?? 0, roleId, phongBanId ?? 0, chucVuId ?? 0)
+            .SingleAsync(ct);
+
+        return new UpdateUserValidationResult(
+            EmailAvailable: string.IsNullOrWhiteSpace(email) || !row.EmailExists,
+            RoleValid: row.RoleExists,
+            PhongBanValid: !phongBanId.HasValue || row.PhongBanExists,
+            ChucVuValid: !chucVuId.HasValue || row.ChucVuExists
+        );
+    }
+
+    private sealed class UpdateUserValidationRow
+    {
+        public bool EmailExists { get; set; }
+        public bool RoleExists { get; set; }
+        public bool PhongBanExists { get; set; }
+        public bool ChucVuExists { get; set; }
+    }
 
     public async Task<uint> CreateAsync(
         string username, string passwordHash, uint roleId,
@@ -175,7 +246,7 @@ public class UserManagementRepository : IUserManagementRepository
         _tokenVersionCache.Invalidate(userId);
     }
 
-    
+   
     public async Task IncrementTokenVersionAsync(uint userId, CancellationToken ct = default)
     {
         await _context.HtUsers
@@ -184,7 +255,7 @@ public class UserManagementRepository : IUserManagementRepository
 
         _tokenVersionCache.Invalidate(userId);
 
-       
+        
         await _refreshTokenService.RevokeAllForUserAsync(userId, ct: ct);
     }
 
