@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Crown, Gift, TrendingUp, History, Ticket } from "lucide-react";
 import customerApi from "../../api/customerApi";
+import useRealtimeStore from "../../stores/realtimeStore";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import EmptyState from "../../components/common/EmptyState";
@@ -51,17 +52,20 @@ function conHan(ngayPhatSinh) {
 export default function CustomerLoyaltySection({ khachHangId }) {
   const [activeTab, setActiveTab] = useState("diem");
 
+  // Backend báo có voucher vừa đổi (ở bất kỳ đâu trong hệ thống) -> tự tải lại đúng lúc, không
+  // cần polling định kỳ nữa (trước đây refetchInterval 10s — gọi API lặp lại dù không có gì đổi).
+  const loyaltyRealtimeTick = useRealtimeStore((s) => s.lastUpdated.loyalty);
+
   const {
     data: info,
     isLoading: loading,
     error: queryError,
   } = useQuery({
-    queryKey: ["customerLoyalty", khachHangId],
+    queryKey: ["customerLoyalty", khachHangId, loyaltyRealtimeTick],
     queryFn: async () => {
       const res = await customerApi.getLoyaltyInfo(khachHangId);
       return res.data;
     },
-    refetchInterval: 10000, // tự tải lại mỗi 1 giây (voucher vừa đổi ở nơi khác)
     refetchOnWindowFocus: true,
   });
 

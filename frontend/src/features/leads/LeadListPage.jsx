@@ -31,6 +31,7 @@ import {
   LEAD_TINH_TRANG_COLOR,
 } from "../../utils/constants";
 import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
+import useRealtimeStore from "../../stores/realtimeStore";
 
 export default function LeadListPage() {
   const { user } = useAuthStore();
@@ -59,6 +60,9 @@ export default function LeadListPage() {
   // viewMode: "cuaToi" (mặc định, Sale chỉ thấy Lead mình phụ trách — Manager thấy tất cả),
   // "chuaGan" (hàng chờ Lead chưa gán — vd: lead từ form website, mọi Sale đều thấy như nhau).
   const [viewMode, setViewMode] = useState("cuaToi");
+
+  // Backend báo có Lead mới/sửa/xóa (kể cả từ form public trên landing page) -> tự tải lại.
+  const leadRealtimeTick = useRealtimeStore((s) => s.lastUpdated.lead);
 
   const nhanVienMap = useMemo(
     () =>
@@ -110,7 +114,7 @@ export default function LeadListPage() {
 
   useEffect(() => {
     loadLeads();
-  }, [pageNumber, filterDeleted, filterTinhTrang, viewMode]);
+  }, [pageNumber, filterDeleted, filterTinhTrang, viewMode, leadRealtimeTick]);
   useEffect(() => {
     loadNhanVien();
   }, []);

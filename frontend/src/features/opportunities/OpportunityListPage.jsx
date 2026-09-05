@@ -30,6 +30,7 @@ import {
   GIAI_DOAN_HEADER_COLOR,
   NEXT_STAGE,
 } from "../../utils/constants";
+import useRealtimeStore from "../../stores/realtimeStore";
 
 function formatMoney(n) {
   if (!n && n !== 0) return "—";
@@ -291,6 +292,11 @@ export default function OpportunityListPage() {
   const [editItem, setEditItem] = useState(null);
   const [stageChange, setStageChange] = useState(null);
 
+  // Backend báo có cơ hội bán hàng mới/đổi giai đoạn/xóa -> tự tải lại.
+  const opportunityRealtimeTick = useRealtimeStore(
+    (s) => s.lastUpdated.opportunity,
+  );
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -312,7 +318,14 @@ export default function OpportunityListPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filterStage, khachHangIdFilter, leadIdFilter]);
+  }, [
+    page,
+    search,
+    filterStage,
+    khachHangIdFilter,
+    leadIdFilter,
+    opportunityRealtimeTick,
+  ]);
 
   useEffect(() => {
     fetchData();

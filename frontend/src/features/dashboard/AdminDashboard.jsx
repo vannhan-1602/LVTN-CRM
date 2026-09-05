@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, ShieldAlert, UserX, Settings, ScrollText, UserCog } from "lucide-react";
+import {
+  Users,
+  ShieldAlert,
+  UserX,
+  Settings,
+  ScrollText,
+  UserCog,
+} from "lucide-react";
 import userManagementApi from "../../api/userManagementApi";
 import Card from "../../components/common/Card";
 import StatCard from "../../components/common/StatCard";
@@ -8,11 +15,15 @@ import Button from "../../components/common/Button";
 import DashboardAlertsCard from "./DashboardAlertsCard";
 
 import { getApiErrorMessage } from "../../utils/formatters";
+import useRealtimeStore from "../../stores/realtimeStore";
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [stats, setStats] = useState(null);
+
+  // Backend báo có user mới/sửa/xóa/khóa -> tự tải lại thống kê.
+  const userRealtimeTick = useRealtimeStore((s) => s.lastUpdated.user);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,7 +51,7 @@ export default function AdminDashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [userRealtimeTick]);
 
   return (
     <div className="space-y-5">
@@ -67,11 +78,7 @@ export default function AdminDashboard() {
 
       {stats && !loading && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <StatCard
-            label="Tổng người dùng"
-            value={stats.tong}
-            icon={Users}
-          />
+          <StatCard label="Tổng người dùng" value={stats.tong} icon={Users} />
           <StatCard
             label="Tài khoản bị khóa"
             value={stats.biKhoa}

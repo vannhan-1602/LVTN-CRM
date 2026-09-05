@@ -5,12 +5,14 @@ using CRM.Application.Features.Tickets.Mappings;
 using CRM.Application.Interfaces.Audit;
 using CRM.Application.Interfaces.Common;
 using CRM.Application.Interfaces.Customers;
+using CRM.Application.Interfaces.Notifications;
 using CRM.Application.Interfaces.Tickets;
 using CRM.Domain.Entities.Tickets;
 using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using INotificationPublisher = CRM.Application.Interfaces.Notifications.INotificationPublisher;
 
 namespace CRM.Application.Features.Tickets.Commands.CreateTicket
 {
@@ -21,6 +23,7 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
         private readonly ICustomerRepository _customerRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuditLogPublisher _auditLogPublisher;
+        private readonly INotificationPublisher _notificationPublisher;
         private readonly ICurrentUserService _currentUser;
         private readonly ILogger<CreateTicketCommandHandler> _logger;
 
@@ -29,6 +32,7 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
             ICustomerRepository customerRepository,
             IUnitOfWork unitOfWork,
             IAuditLogPublisher auditLogPublisher,
+            INotificationPublisher notificationPublisher,
             ICurrentUserService currentUser,
             ILogger<CreateTicketCommandHandler> logger)
         {
@@ -36,6 +40,7 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
             _customerRepository = customerRepository;
             _unitOfWork = unitOfWork;
             _auditLogPublisher = auditLogPublisher;
+            _notificationPublisher = notificationPublisher;
             _currentUser = currentUser;
             _logger = logger;
         }
@@ -107,6 +112,18 @@ namespace CRM.Application.Features.Tickets.Commands.CreateTicket
                     oldData: null, newData: dto, cancellationToken);
             }
             catch (Exception ex) { _logger.LogWarning(ex, "Audit log failed for ticket {Id}", created.Id); }
+
+           
+            if (nhanVienXuLyId.HasValue && nhanVienXuLyId != _currentUser.UserId)
+            {
+                var notification = new { TicketId = created.Id, created.MaTicket, created.TieuDe };
+                try
+                {
+                    await _notificationPublisher.NotifyUserAsync(
+                        nhanVienXuLyId.Value, "ticket:assigned", notification, cancellationToken);
+                }
+                catch (Exception ex) { _logger.LogWarning(ex, "Realtime notify failed for ticket {Id}", created.Id); }
+            }
 
             return dto;
         }

@@ -78,7 +78,14 @@ builder.Services.AddHealthChecks()
 
 // SignalR — cho phép backend chủ động đẩy sự kiện xuống client (thông báo, cập nhật số liệu)
 // thay vì client phải polling/F5. Xem CRM.API/Hubs/NotificationHub.cs.
-builder.Services.AddSignalR();
+// Chỉ định rõ camelCase cho JSON payload của SignalR — khớp với quy ước REST API hiện có
+// (ASP.NET Core mặc định camelCase cho MVC), tránh phụ thuộc vào default ngầm định có thể
+// khác nhau giữa 2 cơ chế, khiến client đọc property tên sai (VD "TenLead" thay vì "tenLead").
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
 
 // Production chạy sau Caddy (reverse proxy) — request thật tới backend luôn là HTTP nội bộ

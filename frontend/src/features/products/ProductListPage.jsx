@@ -22,6 +22,7 @@ import Button from "../../components/common/Button";
 import ProductFormModal from "./ProductFormModal";
 import { ROLES } from "../../utils/constants";
 import { getImageUrl, getApiErrorMessage } from "../../utils/formatters";
+import useRealtimeStore from "../../stores/realtimeStore";
 
 export default function ProductListPage() {
   const { user } = useAuthStore();
@@ -44,6 +45,9 @@ export default function ProductListPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
+
+  // Backend báo có sản phẩm/tồn kho thay đổi -> tự tải lại danh sách.
+  const productRealtimeTick = useRealtimeStore((s) => s.lastUpdated.product);
 
   const stats = useMemo(
     () => ({
@@ -87,7 +91,7 @@ export default function ProductListPage() {
 
   useEffect(() => {
     loadProducts();
-  }, [pageNumber, filterType, filterActive]);
+  }, [pageNumber, filterType, filterActive, productRealtimeTick]);
   useEffect(() => {
     loadTypes();
   }, []);

@@ -33,6 +33,7 @@ import {
   TICKET_PRIORITY_COLOR,
 } from "../../utils/constants";
 import { formatDateTime, getApiErrorMessage } from "../../utils/formatters";
+import useRealtimeStore from "../../stores/realtimeStore";
 
 export default function TicketListPage() {
   const { user } = useAuthStore();
@@ -66,6 +67,11 @@ export default function TicketListPage() {
   const isSale = user?.role === ROLES.Sale;
   const [viewMode, setViewMode] = useState("cuaToi");
 
+  // Backend báo có ticket mới/sửa/xóa/giao việc -> đưa vào queryKey để React Query tự refetch
+  // (thêm trực tiếp vào key thay vì chỉ dựa vào invalidateQueries trung tâm, vì key ở đây đặt
+  // là "tickets" số nhiều còn quy ước chung dùng "ticket" số ít — tránh rủi ro lệch tên).
+  const ticketRealtimeTick = useRealtimeStore((s) => s.lastUpdated.ticket);
+
   const {
     data,
     isLoading: loading,
@@ -78,6 +84,7 @@ export default function TicketListPage() {
       filterPriority,
       khachHangIdFilter,
       viewMode,
+      ticketRealtimeTick,
     ],
     queryFn: async () => {
       const res = await ticketApi.getAll({

@@ -26,6 +26,7 @@ import {
   CONTRACT_STATUS_OPTIONS,
 } from "../../utils/constants";
 import { formatDate, getApiErrorMessage } from "../../utils/formatters";
+import useRealtimeStore from "../../stores/realtimeStore";
 
 const STATUS_TONE = {
   DangThucHien: "success",
@@ -58,6 +59,9 @@ export default function ContractListPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Backend báo có hợp đồng mới/đổi trạng thái/xóa/gia hạn -> tự tải lại.
+  const contractRealtimeTick = useRealtimeStore((s) => s.lastUpdated.contract);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
 
@@ -84,7 +88,7 @@ export default function ContractListPage() {
 
   useEffect(() => {
     loadContracts();
-  }, [pageNumber, filterStatus, khachHangIdFilter]);
+  }, [pageNumber, filterStatus, khachHangIdFilter, contractRealtimeTick]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Xóa hợp đồng này? Hành động không thể hoàn tác."))

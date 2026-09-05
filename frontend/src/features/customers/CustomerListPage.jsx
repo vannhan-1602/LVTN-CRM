@@ -23,6 +23,7 @@ import Button from "../../components/common/Button";
 import CustomerFormModal from "./CustomerFormModal";
 import { ROLES } from "../../utils/constants";
 import useDanhMucStore from "../../stores/danhMucStore";
+import useRealtimeStore from "../../stores/realtimeStore";
 
 import { getApiErrorMessage } from "../../utils/formatters";
 export default function CustomerListPage() {
@@ -63,6 +64,11 @@ export default function CustomerListPage() {
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
 
+  // Tick đổi mỗi khi backend báo có thay đổi ở module "customer" (tạo/sửa/xóa/khôi phục) —
+  // đưa vào dependency của useEffect fetch bên dưới để tự động tải lại danh sách, không cần
+  // người dùng F5.
+  const customerRealtimeTick = useRealtimeStore((s) => s.lastUpdated.customer);
+
   const stats = useMemo(
     () => ({
       total: totalCount,
@@ -96,7 +102,13 @@ export default function CustomerListPage() {
 
   useEffect(() => {
     loadCustomers();
-  }, [pageNumber, filterLoai, filterTinhTrang, filterDeleted]);
+  }, [
+    pageNumber,
+    filterLoai,
+    filterTinhTrang,
+    filterDeleted,
+    customerRealtimeTick,
+  ]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Xóa khách hàng này? Có thể khôi phục lại sau."))

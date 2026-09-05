@@ -30,6 +30,7 @@ import AiSalesAnalysisCard from "./AiSalesAnalysisCard";
 import DashboardAlertsCard from "./DashboardAlertsCard";
 
 import { getApiErrorMessage } from "../../utils/formatters";
+import useRealtimeStore from "../../stores/realtimeStore";
 function formatMoney(n) {
   if (!n && n !== 0) return "—";
   return Number(n).toLocaleString("vi-VN") + " đ";
@@ -46,6 +47,16 @@ export default function ManagerDashboard() {
   const [chiFilter, setChiFilter] = useState({ tuNgay: "", denNgay: "" });
   const [chiSummary, setChiSummary] = useState(null);
   const [loadingChi, setLoadingChi] = useState(true);
+
+  // Dashboard tổng hợp số liệu từ nhiều module — chỉ cần BẤT KỲ module nào trong số này đổi là
+  // tải lại toàn bộ, không cần người dùng F5 (đúng mục tiêu ban đầu: dashboard tự cập nhật).
+  // Đưa cả 5 giá trị riêng biệt vào dependency array bên dưới thay vì gộp thành 1 biến — gộp
+  // bằng ?? sẽ chỉ nhận giá trị đầu tiên khác null, bỏ lỡ thay đổi ở các module còn lại.
+  const customerTick = useRealtimeStore((s) => s.lastUpdated.customer);
+  const contractTick = useRealtimeStore((s) => s.lastUpdated.contract);
+  const quoteTick = useRealtimeStore((s) => s.lastUpdated.quote);
+  const ticketTick = useRealtimeStore((s) => s.lastUpdated.ticket);
+  const opportunityTick = useRealtimeStore((s) => s.lastUpdated.opportunity);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,7 +153,7 @@ export default function ManagerDashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [customerTick, contractTick, quoteTick, ticketTick, opportunityTick]);
 
   if (loading)
     return (
@@ -287,7 +298,9 @@ export default function ManagerDashboard() {
           >
             <div className="flex flex-wrap items-end gap-2 mb-4">
               <div>
-                <label className="block text-xs text-ink-400 mb-1">Từ ngày</label>
+                <label className="block text-xs text-ink-400 mb-1">
+                  Từ ngày
+                </label>
                 <input
                   type="date"
                   value={chiFilter.tuNgay}
@@ -298,7 +311,9 @@ export default function ManagerDashboard() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-ink-400 mb-1">Đến ngày</label>
+                <label className="block text-xs text-ink-400 mb-1">
+                  Đến ngày
+                </label>
                 <input
                   type="date"
                   value={chiFilter.denNgay}
@@ -333,7 +348,9 @@ export default function ManagerDashboard() {
             </div>
 
             {loadingChi ? (
-              <p className="text-sm text-ink-400 text-center py-3">Đang tải...</p>
+              <p className="text-sm text-ink-400 text-center py-3">
+                Đang tải...
+              </p>
             ) : (chiSummary?.topKhachHangPhatSinhChi?.length ?? 0) === 0 ? (
               <p className="text-sm text-ink-400 text-center py-3">
                 Không có phiếu chi nào trong khoảng thời gian này.
