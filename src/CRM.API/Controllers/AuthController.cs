@@ -59,8 +59,7 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<LoginResponseDto>.Ok(response, "Đăng nhập thành công."));
     }
 
-    // Dùng refresh token trong cookie HttpOnly để lấy access token mới mà không cần đăng
-    // nhập lại. Refresh token cũ bị revoke ngay (rotation) và cookie được thay bằng token mới.
+    
     [HttpPost("refresh")]
     [AllowAnonymous]
     [EnableRateLimiting("LoginAttempt")]
@@ -88,15 +87,13 @@ public class AuthController : ControllerBase
         }
         catch (Exception)
         {
-            // Bất kể lý do thất bại (hết hạn, không hợp lệ, hay reuse-detected), luôn xoá cookie
-            // để buộc client quay lại màn hình đăng nhập thay vì lặp lại refresh vô ích.
+            
             DeleteRefreshTokenCookie();
             throw;
         }
     }
 
-    // Đăng xuất: thu hồi refresh token hiện tại và xoá cookie. Không thu hồi TokenVersion
-    // (đăng xuất chỉ đóng phiên này, không ép mọi thiết bị khác đăng nhập lại).
+    
     [HttpPost("logout")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
@@ -140,10 +137,8 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<IReadOnlyList<UserSummaryDto>>.Ok(users));
     }
 
-    
-    // Danh sách nhân viên tối giản (Id/HoTen/Role) cho dropdown
-    // "Nhân viên phụ trách / xử lý" ở Customer/Lead/Ticket. Mở cho mọi role
-    // đã đăng nhập (không giới hạn AdminOnly như /users).
+
+
     [HttpGet("staff-list")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<StaffLookupDto>>), StatusCodes.Status200OK)]
@@ -155,10 +150,7 @@ public class AuthController : ControllerBase
 
     private void SetRefreshTokenCookie(string token, DateTime expiresAt)
     {
-        // SameSite=None + Secure bắt buộc cho cross-site cookie (frontend Vercel <-> API domain
-        // riêng) trên production/staging (luôn chạy HTTPS). Ở Development (localhost, thường
-        // chạy HTTP), trình duyệt từ chối cookie Secure trên kết nối không mã hoá, nên dùng
-        // SameSite=Lax + Secure=false — vẫn hoạt động vì hai cổng localhost cùng site.
+        
         var isDev = _environment.IsDevelopment();
 
         Response.Cookies.Append(RefreshTokenCookieName, token, new CookieOptions
@@ -167,7 +159,8 @@ public class AuthController : ControllerBase
             Secure = !isDev,
             SameSite = isDev ? SameSiteMode.Lax : SameSiteMode.None,
             Expires = expiresAt,
-            Path = "/api/auth"
+           
+            Path = "/"
         });
     }
 
@@ -180,7 +173,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = !isDev,
             SameSite = isDev ? SameSiteMode.Lax : SameSiteMode.None,
-            Path = "/api/auth"
+            Path = "/"
         });
     }
 
