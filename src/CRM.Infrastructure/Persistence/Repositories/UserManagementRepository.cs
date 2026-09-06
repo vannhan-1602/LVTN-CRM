@@ -25,50 +25,47 @@ public class UserManagementRepository : IUserManagementRepository
 
     public async Task<List<UserDto>> GetAllAsync(CancellationToken ct = default) =>
         await BuildUserDtoQuery()
-            .OrderBy(x => x.U.Username)
-            .Select(ProjectToUserDto)
+            .OrderBy(x => x.HoTen)
             .ToListAsync(ct);
 
     public async Task<UserDto?> GetByIdAsync(uint id, CancellationToken ct = default) =>
-      
         await BuildUserDtoQuery()
-            .Where(x => x.U.Id == id)
-            .Select(ProjectToUserDto)
+            .Where(x => x.Id == id)
             .FirstOrDefaultAsync(ct);
 
-   
-    private sealed record UserJoinRow(HtUserEntity U, HtRoleEntity? Role, HtThongTinNhanSuEntity? Ns, HtPhongBanEntity? Pb, HtChucVuEntity? Cv);
-
-    private IQueryable<UserJoinRow> BuildUserDtoQuery() =>
+    // Viết trực tiếp 1 câu Select duy nhất ngay trong JOIN, không tách ra record trung gian +
+    // Expression tái sử dụng — pattern đó (UserJoinRow + static Expression<Func<>> dùng chung
+    // cho 2 query) từng gây lỗi 500 trên MySQL/Pomelo do EF Core không dịch được toàn bộ chuỗi
+    // LEFT JOIN phụ thuộc lẫn nhau kết hợp với Select tách rời thành 1 câu SQL. Viết thẳng thế
+    // này tuy lặp code hơn 1 chút giữa GetAllAsync/GetByIdAsync (không đáng kể, đã tách JOIN
+    // dùng chung qua BuildUserDtoQuery) nhưng chắc chắn dịch được, dễ đọc, dễ debug hơn nhiều.
+    private IQueryable<UserDto> BuildUserDtoQuery() =>
         from u in _context.HtUsers.AsNoTracking()
         join role in _context.HtRoles on u.RoleId equals role.Id into roleJoin
         from role in roleJoin.DefaultIfEmpty()
         join ns in _context.HtThongTinNhanSu on u.NhanSuId equals ns.Id into nsJoin
         from ns in nsJoin.DefaultIfEmpty()
-        join pb in _context.HtPhongBans on ns.PhongBanId equals pb.Id into pbJoin
+        join pb in _context.HtPhongBans on ns!.PhongBanId equals pb.Id into pbJoin
         from pb in pbJoin.DefaultIfEmpty()
-        join cv in _context.HtChucVus on ns.ChucVuId equals cv.Id into cvJoin
+        join cv in _context.HtChucVus on ns!.ChucVuId equals cv.Id into cvJoin
         from cv in cvJoin.DefaultIfEmpty()
-        select new UserJoinRow(u, role, ns, pb, cv);
-
-    private static readonly System.Linq.Expressions.Expression<Func<UserJoinRow, UserDto>> ProjectToUserDto =
-        x => new UserDto
+        select new UserDto
         {
-            Id = x.U.Id,
-            Username = x.U.Username,
-            TrangThai = x.U.TrangThai,
-            RoleId = x.U.RoleId,
-            RoleName = x.Role != null ? x.Role.TenRole : null,
-            NhanSuId = x.U.NhanSuId,
-            HoTen = x.Ns != null ? x.Ns.HoTen : null,
-            Email = x.Ns != null ? x.Ns.Email : null,
-            SoDienThoai = x.Ns != null ? x.Ns.SoDienThoai : null,
-            PhongBanId = x.Ns != null ? x.Ns.PhongBanId : null,
-            TenPhongBan = x.Pb != null ? x.Pb.TenPhongBan : null,
-            ChucVuId = x.Ns != null ? x.Ns.ChucVuId : null,
-            TenChucVu = x.Cv != null ? x.Cv.TenChucVu : null,
-            CreatedAt = x.U.CreatedAt,
-            UpdatedAt = x.U.UpdatedAt
+            Id = u.Id,
+            Username = u.Username,
+            TrangThai = u.TrangThai,
+            RoleId = u.RoleId,
+            RoleName = role != null ? role.TenRole : null,
+            NhanSuId = u.NhanSuId,
+            HoTen = ns != null ? ns.HoTen : null,
+            Email = ns != null ? ns.Email : null,
+            SoDienThoai = ns != null ? ns.SoDienThoai : null,
+            PhongBanId = ns != null ? ns.PhongBanId : null,
+            TenPhongBan = pb != null ? pb.TenPhongBan : null,
+            ChucVuId = ns != null ? ns.ChucVuId : null,
+            TenChucVu = cv != null ? cv.TenChucVu : null,
+            CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt
         };
 
     public Task<bool> UsernameExistsAsync(string username, CancellationToken ct = default) =>
@@ -90,7 +87,7 @@ public class UserManagementRepository : IUserManagementRepository
     public Task<bool> ChucVuExistsAsync(ushort id, CancellationToken ct = default) =>
         _context.HtChucVus.AnyAsync(c => c.Id == id && c.IsActive, ct);
 
-   
+
     public async Task<CreateUserValidationResult> ValidateNewUserAsync(
         string username, string? email, uint roleId, ushort? phongBanId, ushort? chucVuId,
         CancellationToken ct = default)
@@ -127,7 +124,7 @@ public class UserManagementRepository : IUserManagementRepository
         public bool ChucVuExists { get; set; }
     }
 
-   
+
     public async Task<UpdateUserValidationResult> ValidateUserUpdateAsync(
         string? email, uint? excludeNhanSuId, uint roleId, ushort? phongBanId, ushort? chucVuId,
         CancellationToken ct = default)
@@ -242,11 +239,11 @@ public class UserManagementRepository : IUserManagementRepository
         user.TrangThai = trangThai;
         user.UpdatedAt = DateTime.UtcNow;
 
-      
+
         _tokenVersionCache.Invalidate(userId);
     }
 
-   
+
     public async Task IncrementTokenVersionAsync(uint userId, CancellationToken ct = default)
     {
         await _context.HtUsers
@@ -255,7 +252,7 @@ public class UserManagementRepository : IUserManagementRepository
 
         _tokenVersionCache.Invalidate(userId);
 
-        
+
         await _refreshTokenService.RevokeAllForUserAsync(userId, ct: ct);
     }
 
