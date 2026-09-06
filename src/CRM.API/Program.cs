@@ -86,20 +86,9 @@ builder.Services.AddSignalR()
     {
         options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
-builder.Services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
+builder.Services.AddScoped<IRealtimeNotificationPublisher, SignalRNotificationPublisher>();
 
-// Production chạy sau Caddy (reverse proxy) — request thật tới backend luôn là HTTP nội bộ
-// trong mạng Docker, TLS được Caddy terminate ở biên. Nếu không forward header, ASP.NET Core
-// sẽ luôn thấy: IsHttps = false (khiến middleware HSTS phía trên không bao giờ set header),
-// và Connection.RemoteIpAddress = IP của container Caddy thay vì IP client thật (khiến rate
-// limiter "LoginAttempt" gộp TẤT CẢ người dùng vào chung 1 bucket theo IP Caddy, và
-// CreatedByIp lưu trong HT_RefreshToken vô nghĩa cho việc audit).
-//
-// KnownNetworks/KnownProxies để rỗng (thay vì chỉ định IP Caddy cụ thể) vì: (1) container Caddy
-// không có IP cố định giữa các lần deploy/restart trên Docker network, và (2) theo thiết kế
-// compose hiện tại, backend KHÔNG public port ra ngoài — chỉ Caddy trong cùng mạng Docker mới
-// gọi vào được (xem docker-compose.prod.yml), nên tin tưởng X-Forwarded-* ở đây không mở thêm
-// đường tấn công nào so với hiện trạng.
+
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;

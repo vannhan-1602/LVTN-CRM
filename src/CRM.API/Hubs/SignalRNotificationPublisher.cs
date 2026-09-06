@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace CRM.API.Hubs;
 
-public class SignalRNotificationPublisher : INotificationPublisher
+public class SignalRNotificationPublisher : IRealtimeNotificationPublisher
 {
     private readonly IHubContext<NotificationHub> _hubContext;
 

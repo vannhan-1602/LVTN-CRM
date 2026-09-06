@@ -9,7 +9,6 @@ using CRM.Domain.Interfaces.Repositories;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using INotificationPublisher = CRM.Application.Interfaces.Notifications.INotificationPublisher;
 
 namespace CRM.Application.Features.Leads.Commands.CreatePublicLead;
 
@@ -20,14 +19,14 @@ public class CreatePublicLeadCommandHandler : IRequestHandler<CreatePublicLeadCo
     private readonly ILeadRepository _leadRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogPublisher _auditLogPublisher;
-    private readonly INotificationPublisher _notificationPublisher;
+    private readonly IRealtimeNotificationPublisher _notificationPublisher;
     private readonly ILogger<CreatePublicLeadCommandHandler> _logger;
 
     public CreatePublicLeadCommandHandler(
         ILeadRepository leadRepository,
         IUnitOfWork unitOfWork,
         IAuditLogPublisher auditLogPublisher,
-        INotificationPublisher notificationPublisher,
+        IRealtimeNotificationPublisher notificationPublisher,
         ILogger<CreatePublicLeadCommandHandler> logger)
     {
         _leadRepository = leadRepository;
@@ -62,7 +61,7 @@ public class CreatePublicLeadCommandHandler : IRequestHandler<CreatePublicLeadCo
         }
         catch (Exception ex) { _logger.LogWarning(ex, "Audit log failed for public lead {Id}", created.Id); }
 
-       
+
         var notification = new { LeadId = created.Id, created.TenLead, created.SoDienThoai };
         try
         {

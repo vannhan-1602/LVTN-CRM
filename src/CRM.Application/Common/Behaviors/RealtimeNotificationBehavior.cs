@@ -2,24 +2,23 @@
 using CRM.Application.Interfaces.Notifications;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using INotificationPublisher = CRM.Application.Interfaces.Notifications.INotificationPublisher;
 namespace CRM.Application.Common.Behaviors;
 
 public class RealtimeNotificationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private readonly INotificationPublisher _notificationPublisher;
+    private readonly IRealtimeNotificationPublisher _notificationPublisher;
     private readonly ILogger<RealtimeNotificationBehavior<TRequest, TResponse>> _logger;
 
     public RealtimeNotificationBehavior(
-        INotificationPublisher notificationPublisher,
+        IRealtimeNotificationPublisher notificationPublisher,
         ILogger<RealtimeNotificationBehavior<TRequest, TResponse>> logger)
     {
         _notificationPublisher = notificationPublisher;
         _logger = logger;
     }
 
-    
+
     private static readonly Dictionary<string, (string EventName, string[] Roles)> CommandEventMap = new()
     {
         ["CreateCustomerCommand"] = ("customer:created", new[] { Roles.Sale, Roles.Manager }),
@@ -28,7 +27,7 @@ public class RealtimeNotificationBehavior<TRequest, TResponse> : IPipelineBehavi
         ["RestoreCustomerCommand"] = ("customer:restored", new[] { Roles.Sale, Roles.Manager }),
 
         ["CreateLeadCommand"] = ("lead:created", new[] { Roles.Sale, Roles.Manager }),
-       
+
         ["UpdateLeadCommand"] = ("lead:updated", new[] { Roles.Sale, Roles.Manager }),
         ["DeleteLeadCommand"] = ("lead:deleted", new[] { Roles.Sale, Roles.Manager }),
         ["RestoreLeadCommand"] = ("lead:restored", new[] { Roles.Sale, Roles.Manager }),
@@ -95,7 +94,7 @@ public class RealtimeNotificationBehavior<TRequest, TResponse> : IPipelineBehavi
             }
             catch (Exception ex)
             {
-              
+
                 _logger.LogWarning(ex, "Realtime notify failed for {Request}", requestName);
             }
         }
