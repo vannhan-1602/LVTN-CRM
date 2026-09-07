@@ -222,6 +222,27 @@ public class UserManagementRepository : IUserManagementRepository
         }
     }
 
+    // Dành riêng cho nhân viên TỰ sửa thông tin của mình — chỉ đụng HoTen/Email/SoDienThoai,
+    // KHÔNG đụng RoleId/PhongBanId/ChucVuId (những field đó do Admin quản lý qua UpdateAsync ở
+    // trên). Tách riêng method thay vì tái dùng UpdateAsync với tham số giả để tránh nhầm lẫn
+    // "tự sửa" với "Admin sửa" — 2 luồng nghiệp vụ khác nhau, gộp lại dễ gây bug quyền hạn.
+    public async Task UpdateMyProfileAsync(
+        uint userId, string hoTen, string? email, string? soDienThoai, CancellationToken ct = default)
+    {
+        var user = await _context.HtUsers.FirstOrDefaultAsync(u => u.Id == userId, ct)
+            ?? throw new InvalidOperationException("Không tìm thấy tài khoản.");
+
+        if (!user.NhanSuId.HasValue) return;
+
+        var nhanSu = await _context.HtThongTinNhanSu.FirstOrDefaultAsync(n => n.Id == user.NhanSuId.Value, ct);
+        if (nhanSu is null) return;
+
+        nhanSu.HoTen = hoTen;
+        nhanSu.Email = email;
+        nhanSu.SoDienThoai = soDienThoai;
+        nhanSu.UpdatedAt = DateTime.UtcNow;
+    }
+
     public async Task UpdatePasswordAsync(uint userId, string passwordHash, CancellationToken ct = default)
     {
         var user = await _context.HtUsers.FirstOrDefaultAsync(u => u.Id == userId, ct)

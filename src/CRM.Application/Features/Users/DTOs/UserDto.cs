@@ -50,6 +50,14 @@ public class UpdateUserRequestDto
     public ushort? ChucVuId { get; set; }
 }
 
+// Nhân viên tự sửa thông tin của mình — không có RoleId/PhongBanId/ChucVuId (không tự đổi được).
+public class UpdateMyProfileRequestDto
+{
+    public string HoTen { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? SoDienThoai { get; set; }
+}
+
 public class ResetPasswordRequestDto
 {
     public string NewPassword { get; set; } = string.Empty;

@@ -182,14 +182,20 @@ export default function MainLayout() {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-surface border-b border-ink-100 px-6 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-info-50 flex items-center justify-center text-xs font-semibold text-info-700">
-              {initials}
-            </div>
-            <div>
-              <p className="text-sm font-medium text-ink-900 leading-tight">
-                {user?.hoTen || user?.username}
-              </p>
-            </div>
+            <button
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-3 group text-left"
+              title="Xem thông tin cá nhân"
+            >
+              <div className="w-8 h-8 rounded-full bg-info-50 flex items-center justify-center text-xs font-semibold text-info-700 group-hover:ring-2 group-hover:ring-accent-500/40 transition-shadow">
+                {initials}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-ink-900 leading-tight group-hover:text-accent-600 transition-colors">
+                  {user?.hoTen || user?.username}
+                </p>
+              </div>
+            </button>
             <span className="text-xs bg-success-50 text-success-700 px-2.5 py-1 rounded-full font-medium">
               {user?.role}
             </span>

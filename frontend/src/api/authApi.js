@@ -24,6 +24,11 @@ const authApi = {
       newPassword,
       confirmNewPassword,
     }),
+
+  // Trang Profile — xem/sửa thông tin của chính mình (không đổi được username)
+  getMyProfile: () => axiosClient.get("/Auth/me"),
+  updateMyProfile: (hoTen, email, soDienThoai) =>
+    axiosClient.put("/Auth/me", { hoTen, email, soDienThoai }),
 };
 
 export default authApi;

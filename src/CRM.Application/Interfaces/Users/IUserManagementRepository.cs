@@ -14,12 +14,12 @@ public interface IUserManagementRepository
     Task<bool> PhongBanExistsAsync(ushort id, CancellationToken ct = default);
     Task<bool> ChucVuExistsAsync(ushort id, CancellationToken ct = default);
 
-   
+
     Task<CreateUserValidationResult> ValidateNewUserAsync(
         string username, string? email, uint roleId, ushort? phongBanId, ushort? chucVuId,
         CancellationToken ct = default);
 
-   
+
     Task<UpdateUserValidationResult> ValidateUserUpdateAsync(
         string? email, uint? excludeNhanSuId, uint roleId, ushort? phongBanId, ushort? chucVuId,
         CancellationToken ct = default);
@@ -36,6 +36,11 @@ public interface IUserManagementRepository
         string hoTen, string? email, string? soDienThoai,
         ushort? phongBanId, ushort? chucVuId,
         CancellationToken ct = default);
+
+    /// Nhân viên tự sửa thông tin của mình — chỉ HoTen/Email/SoDienThoai, không đổi được
+    /// Role/PhongBan/ChucVu (Admin quản lý qua UpdateAsync ở trên).
+    Task UpdateMyProfileAsync(
+        uint userId, string hoTen, string? email, string? soDienThoai, CancellationToken ct = default);
 
     Task UpdatePasswordAsync(uint userId, string passwordHash, CancellationToken ct = default);
     Task UpdateStatusAsync(uint userId, string trangThai, CancellationToken ct = default);

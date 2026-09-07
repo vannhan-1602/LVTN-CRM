@@ -30,6 +30,7 @@ import DashboardPage from "../features/dashboard/DashboardPage";
 import PublicQuotePage from "../features/quotes/PublicQuotePage";
 import PublicCsatPage from "../features/tickets/PublicCsatPage";
 import LandingPageDemo from "../features/leads/LandingPageDemo";
+import ProfilePage from "../features/auth/ProfilePage";
 
 function UnauthorizedPage() {
   return (
@@ -70,6 +71,7 @@ export default function AppRoutes() {
       <Route element={<MainLayout />}>
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
         {/* Sale + Manager */}

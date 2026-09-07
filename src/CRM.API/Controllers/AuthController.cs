@@ -6,6 +6,9 @@ using CRM.Application.Features.Auth.Commands.Refresh;
 using CRM.Application.Features.Auth.DTOs;
 using CRM.Application.Features.Auth.Queries.GetStaffList;
 using CRM.Application.Features.Auth.Queries.GetUsers;
+using CRM.Application.Features.Users.Commands.UpdateMyProfile;
+using CRM.Application.Features.Users.DTOs;
+using CRM.Application.Features.Users.Queries.GetMyProfile;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -59,7 +62,8 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<LoginResponseDto>.Ok(response, "Đăng nhập thành công."));
     }
 
-    
+    // Dùng refresh token trong cookie HttpOnly để lấy access token mới mà không cần đăng
+    // nhập lại. Refresh token cũ bị revoke ngay (rotation) và cookie được thay bằng token mới.
     [HttpPost("refresh")]
     [AllowAnonymous]
     [EnableRateLimiting("LoginAttempt")]
@@ -87,13 +91,15 @@ public class AuthController : ControllerBase
         }
         catch (Exception)
         {
-            
+            // Bất kể lý do thất bại (hết hạn, không hợp lệ, hay reuse-detected), luôn xoá cookie
+            // để buộc client quay lại màn hình đăng nhập thay vì lặp lại refresh vô ích.
             DeleteRefreshTokenCookie();
             throw;
         }
     }
 
-    
+    // Đăng xuất: thu hồi refresh token hiện tại và xoá cookie. Không thu hồi TokenVersion
+    // (đăng xuất chỉ đóng phiên này, không ép mọi thiết bị khác đăng nhập lại).
     [HttpPost("logout")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
@@ -125,6 +131,31 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse.Ok("Đổi mật khẩu thành công. Vui lòng đăng nhập lại."));
     }
 
+    // Xem thông tin cá nhân của chính mình (trang Profile) — không cần biết trước Id.
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyProfile(CancellationToken cancellationToken)
+    {
+        var profile = await _mediator.Send(new GetMyProfileQuery(), cancellationToken);
+        return Ok(ApiResponse<UserDto>.Ok(profile));
+    }
+
+    // Tự sửa Họ tên/Email/SĐT của chính mình — KHÔNG đổi được Username/Role/PhongBan/ChucVu
+    // (những field đó chỉ Admin sửa được qua /api/UserManagement).
+    [HttpPut("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateMyProfile(
+        [FromBody] UpdateMyProfileRequestDto request, CancellationToken cancellationToken)
+    {
+        var profile = await _mediator.Send(
+            new UpdateMyProfileCommand(request.HoTen, request.Email, request.SoDienThoai),
+            cancellationToken);
+        return Ok(ApiResponse<UserDto>.Ok(profile, "Cập nhật thông tin thành công."));
+    }
+
     // Danh sách tài khoản đầy đủ — chỉ Admin 
     [HttpGet("users")]
     [Authorize(Policy = Policies.AdminOnly)]
@@ -150,7 +181,7 @@ public class AuthController : ControllerBase
 
     private void SetRefreshTokenCookie(string token, DateTime expiresAt)
     {
-        
+       
         var isDev = _environment.IsDevelopment();
 
         Response.Cookies.Append(RefreshTokenCookieName, token, new CookieOptions
