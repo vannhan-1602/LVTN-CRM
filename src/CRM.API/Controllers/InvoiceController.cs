@@ -4,6 +4,7 @@ using CRM.Application.Features.Invoices.Commands.CreateInvoice;
 using CRM.Application.Features.Invoices.DTOs;
 using CRM.Application.Features.Invoices.Queries.GetAllInvoices;
 using CRM.Application.Features.Invoices.Queries.GetInvoiceById;
+using CRM.Application.Features.Invoices.Queries.GetInvoicesForExport;
 using CRM.Application.Features.Invoices.Queries.GetTongDaXuatHoaDon;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +20,7 @@ public class InvoiceController : ControllerBase
     private readonly IMediator _mediator;
     public InvoiceController(IMediator mediator) => _mediator = mediator;
 
-   
+
     // Lấy danh sách hóa đơn.
     // Lọc theo: tìm kiếm mã/tên khách, trạng thái thanh toán, khách hàng.
     [HttpGet]
@@ -35,6 +36,21 @@ public class InvoiceController : ControllerBase
         var result = await _mediator.Send(
             new GetAllInvoicesQuery(pageNumber, pageSize, search, trangThaiThanhToan, khachHangId), ct);
         return Ok(ApiResponse<PagedResult<InvoiceDto>>.Ok(result));
+    }
+
+    // Lấy TOÀN BỘ hóa đơn khớp bộ lọc (không phân trang, tối đa 5000 dòng) để xuất Excel.
+    // Frontend nhận JSON thuần rồi tự dựng file .xlsx bằng SheetJS — backend không sinh file.
+    [HttpGet("export")]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
+    public async Task<IActionResult> Export(
+        [FromQuery] string? search = null,
+        [FromQuery] string? trangThaiThanhToan = null,
+        [FromQuery] ulong? khachHangId = null,
+        CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(
+            new GetInvoicesForExportQuery(search, trangThaiThanhToan, khachHangId), ct);
+        return Ok(ApiResponse<List<InvoiceDto>>.Ok(result));
     }
 
     [HttpGet("{id:long}")]

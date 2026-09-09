@@ -5,6 +5,8 @@ const invoiceApi = {
   getById: (id) => axiosClient.get(`/Invoice/${id}`),
   create: (data) => axiosClient.post("/Invoice", data),
   getTongDaXuat: (hopDongId) => axiosClient.get(`/Invoice/tong-da-xuat/${hopDongId}`),
+  
+  getForExport: (params) => axiosClient.get("/Invoice/export", { params }),
 };
 
 export default invoiceApi;

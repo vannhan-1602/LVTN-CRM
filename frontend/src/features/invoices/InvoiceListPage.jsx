@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wallet, Plus, Search, Eye, FileText } from "lucide-react";
+import { Wallet, Plus, Search, Eye, FileText, Download } from "lucide-react";
 import invoiceApi from "../../api/invoiceApi";
 import useAuthStore from "../auth/authStore";
 import Pagination from "../../components/common/Pagination";
@@ -18,6 +18,7 @@ import {
   getApiErrorMessage,
 } from "../../utils/formatters";
 import useRealtimeStore from "../../stores/realtimeStore";
+import { exportToExcel } from "../../utils/exportExcel";
 
 const STATUS_LABEL = {
   ChuaThanhToan: "Chưa thanh toán",
@@ -40,6 +41,7 @@ export default function InvoiceListPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -75,6 +77,51 @@ export default function InvoiceListPage() {
     load();
   }, [pageNumber, filterStatus, invoiceRealtimeTick]);
 
+  // Xuất TOÀN BỘ hóa đơn khớp bộ lọc hiện tại (không chỉ trang đang xem) — gọi endpoint
+  // /Invoice/export riêng (không phân trang, tối đa 5000 dòng), dựng file .xlsx ngay trên
+  // trình duyệt bằng exceljs, không cần backend sinh file.
+  const handleExport = async () => {
+    setExporting(true);
+    setError("");
+    try {
+      const res = await invoiceApi.getForExport({
+        search: search.trim() || undefined,
+        trangThaiThanhToan: filterStatus || undefined,
+      });
+      const rows = res.data ?? [];
+
+      if (rows.length === 0) {
+        setError("Không có hóa đơn nào khớp bộ lọc hiện tại để xuất.");
+        return;
+      }
+
+      await exportToExcel({
+        fileName: `hoa-don-${new Date().toISOString().slice(0, 10)}`,
+        sheetName: "Hóa đơn",
+        columns: [
+          { key: "maHoaDon", header: "Mã hóa đơn", width: 16 },
+          { key: "tenKhachHang", header: "Khách hàng", width: 28 },
+          { key: "maHopDong", header: "Hợp đồng", width: 16 },
+          { key: "tongTien", header: "Tổng tiền", width: 16 },
+          { key: "soTienDaThu", header: "Đã thu", width: 16 },
+          { key: "soTienConLai", header: "Còn lại", width: 16 },
+          { key: "trangThaiThanhToan", header: "Trạng thái", width: 18 },
+          { key: "createdAt", header: "Ngày tạo", width: 14 },
+        ],
+        rows: rows.map((r) => ({
+          ...r,
+          trangThaiThanhToan:
+            STATUS_LABEL[r.trangThaiThanhToan] ?? r.trangThaiThanhToan,
+          createdAt: r.createdAt ? formatDate(r.createdAt) : "",
+        })),
+      });
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Xuất Excel thất bại"));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const chuaThanhToan = items.filter(
     (i) => i.trangThaiThanhToan === "ChuaThanhToan",
   ).length;
@@ -97,11 +144,21 @@ export default function InvoiceListPage() {
         breadcrumb="CRM / Kế toán"
         title="Hóa đơn & Công nợ"
         actions={
-          canCreate && (
-            <Button icon={Plus} onClick={() => setShowCreate(true)}>
-              Tạo hóa đơn
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              icon={Download}
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              {exporting ? "Đang xuất..." : "Xuất Excel"}
             </Button>
-          )
+            {canCreate && (
+              <Button icon={Plus} onClick={() => setShowCreate(true)}>
+                Tạo hóa đơn
+              </Button>
+            )}
+          </div>
         }
       />
 

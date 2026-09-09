@@ -13,12 +13,13 @@ public interface IInvoiceRepository
         int pageNumber, int pageSize, string? search, string? trangThaiThanhToan,
         ulong? khachHangId, uint? ownerUserId, CancellationToken ct = default);
 
-    Task<HoaDon> AddAsync(HoaDon invoice, CancellationToken ct = default);
 
-    /// Cộng dồn SoTienDaThu và tự cập nhật TrangThaiThanhToan tương ứng,
-    /// dùng khi có phiếu thu mới được tạo cho hóa đơn này.
-    /// ThanhCong=false nghĩa là UPDATE bị chặn atomic ở DB (sẽ vượt TongTien hoặc hóa đơn
-    /// không tồn tại) — KHÔNG có gì được ghi, caller phải rollback phiếu thu vừa tạo.
+    Task<List<InvoiceDto>> GetForExportAsync(
+        string? search, string? trangThaiThanhToan, ulong? khachHangId, uint? ownerUserId,
+        CancellationToken ct = default);
+
+    Task<HoaDon> AddAsync(HoaDon invoice, CancellationToken ct = default);
+vừa tạo.
     Task<(bool ThanhCong, decimal SoTienDaThu, decimal TongTien)> UpdateSoTienDaThuAsync(
         ulong hoaDonId, decimal soTienCong, CancellationToken ct = default);
 

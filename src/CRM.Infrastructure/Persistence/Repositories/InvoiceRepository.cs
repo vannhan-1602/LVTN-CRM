@@ -70,6 +70,36 @@ public class InvoiceRepository : IInvoiceRepository
         };
     }
 
+   
+    public async Task<List<InvoiceDto>> GetForExportAsync(
+        string? search, string? trangThaiThanhToan, ulong? khachHangId, uint? ownerUserId,
+        CancellationToken ct = default)
+    {
+        var query = BuildEnrichedQuery();
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(x =>
+                x.HoaDon.MaHoaDon.Contains(search) ||
+                (x.TenKhachHang != null && x.TenKhachHang.Contains(search)));
+
+        if (!string.IsNullOrWhiteSpace(trangThaiThanhToan))
+            query = query.Where(x => x.HoaDon.TrangThaiThanhToan == trangThaiThanhToan);
+
+        if (khachHangId.HasValue)
+            query = query.Where(x => x.HoaDon.KhachHang_Id == khachHangId.Value);
+
+        if (ownerUserId.HasValue)
+            query = query.Where(x => x.NhanVienPhuTrachId == ownerUserId.Value);
+
+        const int maxExportRows = 5000;
+        var items = await query
+            .OrderByDescending(x => x.HoaDon.Id)
+            .Take(maxExportRows)
+            .ToListAsync(ct);
+
+        return items.Select(x => MapToDto(x.HoaDon, x.TenKhachHang, x.MaHopDong, x.SoDot, x.NhanVienPhuTrachId)).ToList();
+    }
+
     public async Task<HoaDon> AddAsync(HoaDon invoice, CancellationToken ct = default)
     {
         var entity = MapToEntity(invoice);
@@ -79,21 +109,6 @@ public class InvoiceRepository : IInvoiceRepository
         return invoice;
     }
 
-    /// <summary>
-    /// Cộng dồn SoTienDaThu và tự cập nhật TrangThaiThanhToan tương ứng — TRONG CÙNG 1 câu
-    /// UPDATE (biểu thức SQL tham chiếu chính giá trị SoTienDaThu/TongTien của DB tại thời
-    /// điểm ghi, không đọc lại bằng round-trip riêng).
-    ///
-    /// QUAN TRỌNG: điều kiện chặn overflow (SoTienDaThu + soTienCong <= TongTien) nằm ngay
-    /// trong WHERE — giống AdjustStockAsync (Kho) — để việc CHẶN và việc GHI là 1 thao tác
-    /// atomic duy nhất ở tầng DB. Trước đây UPDATE luôn chạy vô điều kiện rồi mới đọc lại để
-    /// caller tự kiểm tra có vượt hay không — nghĩa là 2 Phiếu Thu tạo đồng thời có thể cùng
-    /// vượt qua bước validate "còn lại" ở Application layer, cả 2 đều ghi đè UPDATE thành công
-    /// (1 trong 2 làm SoTienDaThu vượt TongTien thật sự trong DB), rồi handler mới throw lỗi —
-    /// lúc đó dữ liệu sai đã commit rồi, throw chỉ để thông báo suông chứ không rollback được gì.
-    /// Giờ nếu rowsAffected == 0 nghĩa là UPDATE bị chặn ngay từ đầu (hoặc không có hóa đơn),
-    /// KHÔNG có gì bị ghi sai vào DB — caller (Handler) phải rollback luôn Phiếu Thu vừa tạo.
-    /// </summary>
     public async Task<(bool ThanhCong, decimal SoTienDaThu, decimal TongTien)> UpdateSoTienDaThuAsync(
         ulong hoaDonId, decimal soTienCong, CancellationToken ct = default)
     {
