@@ -13,13 +13,13 @@ public interface IInvoiceRepository
         int pageNumber, int pageSize, string? search, string? trangThaiThanhToan,
         ulong? khachHangId, uint? ownerUserId, CancellationToken ct = default);
 
-
     Task<List<InvoiceDto>> GetForExportAsync(
         string? search, string? trangThaiThanhToan, ulong? khachHangId, uint? ownerUserId,
         CancellationToken ct = default);
 
     Task<HoaDon> AddAsync(HoaDon invoice, CancellationToken ct = default);
-vừa tạo.
+
+
     Task<(bool ThanhCong, decimal SoTienDaThu, decimal TongTien)> UpdateSoTienDaThuAsync(
         ulong hoaDonId, decimal soTienCong, CancellationToken ct = default);
 

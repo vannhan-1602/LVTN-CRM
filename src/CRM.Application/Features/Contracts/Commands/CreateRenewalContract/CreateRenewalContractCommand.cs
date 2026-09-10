@@ -10,23 +10,11 @@ using CRM.Domain.Enums;
 using CRM.Domain.Interfaces.Repositories;
 using FluentValidation;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace CRM.Application.Features.Contracts.Commands.CreateRenewalContract;
 
-// Tạo hợp đồng gia hạn (LoaiHopDong=GiaHan) từ 1 hợp đồng đã có — copy điều khoản
-// (KhachHangId, ThoiHan, HinhThucThanhToan), liên kết HopDongGocId về hợp đồng ChinhThuc GỐC
-// THẬT (nếu hopDongCu đã là GiaHan thì kế thừa HopDongGocId của nó, không dùng Id của chính
-// nó — tránh đứt chuỗi khi gia hạn nhiều cấp liên tiếp, xem chi tiết trong Handle bên dưới),
-// và chuyển hợp đồng cũ sang ThanhLy.
-//
-// LichThanhToans: BẮT BUỘC nếu hợp đồng cũ là TraGop — hợp đồng mới không tự kế thừa lịch
-// trả góp của hợp đồng cũ (kỳ hạn mới, có thể đổi số đợt/số tiền), nên phải nhập lại. Nếu
-// hợp đồng cũ là ThanhToanMotLan thì bỏ trống — CreateInvoiceCommandHandler sẽ tự phát sinh
-// hạn thanh toán khi kế toán xuất hóa đơn đầu tiên cho hợp đồng mới.
+
 public record CreateRenewalContractCommand(
     ulong HopDongCuId, DateOnly? NgayKy, List<LichThanhToanInputDto>? LichThanhToans) : IRequest<ContractDto>;
 
@@ -78,8 +66,7 @@ public class CreateRenewalContractCommandHandler
         var hopDongCu = await _contractRepository.GetByIdAsync(request.HopDongCuId, ct)
             ?? throw new NotFoundException(nameof(HopDong), request.HopDongCuId);
 
-        // Sale chỉ gia hạn được hợp đồng của khách hàng mình phụ trách — đồng bộ với check đã
-        // có ở CreateContractFromQuoteCommandHandler cho lần tạo hợp đồng đầu tiên.
+
         if (_currentUser.Role == Roles.Sale)
         {
             var khachHang = await _customerRepository.GetByIdAsync(hopDongCu.KhachHangId, ct);
@@ -91,9 +78,7 @@ public class CreateRenewalContractCommandHandler
         if (hopDongCu.TrangThai == ContractStatus.ThanhLy)
             throw new BusinessRuleException("Hợp đồng đã thanh lý, không thể gia hạn.");
 
-        // Hợp đồng cũ TraGop bắt buộc phải nhập lịch trả góp mới cho kỳ gia hạn — nếu không,
-        // hợp đồng mới sẽ có 0 đợt và kế toán sẽ không thể xuất hóa đơn cho nó (dropdown chọn
-        // đợt ở FE luôn rỗng).
+
         var lichThanhToanMoi = request.LichThanhToans ?? new List<LichThanhToanInputDto>();
         if (hopDongCu.HinhThucThanhToan == "TraGop" && lichThanhToanMoi.Count == 0)
             throw new BusinessRuleException(
@@ -101,23 +86,19 @@ public class CreateRenewalContractCommandHandler
 
         var maHopDong = await _contractRepository.GenerateMaHopDongAsync(ct);
 
-        // HopDongGocId PHẢI luôn trỏ về hợp đồng ChinhThuc gốc thật, KHÔNG phải hợp đồng vừa
-        // gia hạn ngay trước đó — vì License luôn được cấp gắn với HopDongId của hợp đồng
-        // ChinhThuc gốc (xem CreateLicenseCommand). Nếu hopDongCu bản thân nó đã là GiaHan
-        // (gia hạn của 1 gia hạn, VD năm 2 -> năm 3), phải kế thừa HopDongGocId của nó thay vì
-        // dùng Id của chính nó — nếu không, từ cấp gia hạn thứ 2 trở đi chuỗi HopDongGocId sẽ bị
-        // đứt khỏi hợp đồng gốc thật, khiến RenewLicenseCommand/LicenseSection không tìm thấy
-        // (hoặc từ chối) License vốn vẫn thuộc đúng khách hàng/hợp đồng gốc đó.
         var hopDongGocIdThat = hopDongCu.LoaiHopDong == "GiaHan" && hopDongCu.HopDongGocId.HasValue
             ? hopDongCu.HopDongGocId.Value
             : hopDongCu.Id;
+
+
+        var ngayKyMacDinh = hopDongCu.NgayKetThuc?.AddDays(1) ?? DateOnly.FromDateTime(DateTime.UtcNow);
 
         var hopDongMoi = new HopDong
         {
             MaHopDong = maHopDong,
             KhachHangId = hopDongCu.KhachHangId,
             BaoGiaGocId = hopDongCu.BaoGiaGocId,
-            NgayKy = request.NgayKy ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            NgayKy = request.NgayKy ?? ngayKyMacDinh,
             ThoiHan = hopDongCu.ThoiHan,
             HinhThucThanhToan = hopDongCu.HinhThucThanhToan,
             TrangThai = ContractStatus.DangThucHien,
