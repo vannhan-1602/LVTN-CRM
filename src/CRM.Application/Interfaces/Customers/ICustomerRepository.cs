@@ -19,6 +19,11 @@ public interface ICustomerRepository
         bool? isDeleted = null,
         CancellationToken cancellationToken = default);
 
+   
+    Task<List<CustomerDto>> GetForExportAsync(
+        string? search, ushort? loaiKhachHangId, ushort? tinhTrangId, uint? ownerUserId,
+        CancellationToken cancellationToken = default);
+
     Task<KhachHang> AddAsync(KhachHang customer, CancellationToken cancellationToken = default);
     Task UpdateAsync(KhachHang customer, CancellationToken cancellationToken = default);
     Task<bool> SoftDeleteAsync(ulong id, CancellationToken cancellationToken = default);

@@ -68,6 +68,56 @@ public class CustomerRepository : ICustomerRepository
         bool? isDeleted = null,
         CancellationToken cancellationToken = default)
     {
+        var query = BuildFilteredQuery(search, loaiKhachHangId, tinhTrangId, ownerUserId, isDeleted);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderByDescending(x => x.KhachHang.CreatedAt)
+            .ThenByDescending(x => x.KhachHang.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var dtos = items.Select(x =>
+            CustomerMapper.ToDto(MapToDomain(x.KhachHang),
+                x.TenLoai, x.TenTinhTrang, x.TenNhanVien, x.TenHang))
+            .ToList();
+
+        return new PagedResult<CustomerDto>
+        {
+            Items = dtos,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
+
+    // Dùng cho xuất Excel — cùng bộ lọc với GetPagedAsync nhưng không phân trang (giới hạn
+    // cứng 5000 dòng để an toàn hiệu năng, đủ lớn cho báo cáo thực tế).
+    public async Task<List<CustomerDto>> GetForExportAsync(
+        string? search, ushort? loaiKhachHangId, ushort? tinhTrangId, uint? ownerUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = BuildFilteredQuery(search, loaiKhachHangId, tinhTrangId, ownerUserId, isDeleted: false);
+
+        const int maxExportRows = 5000;
+        var items = await query
+            .OrderByDescending(x => x.KhachHang.CreatedAt)
+            .Take(maxExportRows)
+            .ToListAsync(cancellationToken);
+
+        return items.Select(x =>
+            CustomerMapper.ToDto(MapToDomain(x.KhachHang),
+                x.TenLoai, x.TenTinhTrang, x.TenNhanVien, x.TenHang))
+            .ToList();
+    }
+
+    // Tách riêng phần JOIN + filter dùng chung giữa GetPagedAsync và GetForExportAsync —
+    // tránh lặp lại đúng 1 khối logic ở 2 nơi (sửa 1 chỗ quên chỗ kia là bug kinh điển).
+    private IQueryable<CustomerJoinRow> BuildFilteredQuery(
+        string? search, ushort? loaiKhachHangId, ushort? tinhTrangId, uint? ownerUserId, bool? isDeleted)
+    {
         var query =
             from kh in _context.KhKhachHangs.AsNoTracking()
             where kh.IsDeleted == (isDeleted ?? false)
@@ -81,7 +131,7 @@ public class CustomerRepository : ICustomerRepository
             from ns in nsJoin.DefaultIfEmpty()
             join hang in _context.Set<KhXepHangEntity>() on kh.HangKhachHang_Id equals hang.Id into hangJoin
             from hang in hangJoin.DefaultIfEmpty()
-            select new
+            select new CustomerJoinRow
             {
                 KhachHang = kh,
                 TenLoai = loai != null ? loai.TenLoai : null,
@@ -106,31 +156,20 @@ public class CustomerRepository : ICustomerRepository
         if (tinhTrangId.HasValue)
             query = query.Where(x => x.KhachHang.TinhTrangId == tinhTrangId.Value);
 
-        //  Sale chỉ thấy Customer mình phụ trách 
+        //  Sale chỉ thấy Customer mình phụ trách
         if (ownerUserId.HasValue)
             query = query.Where(x => x.KhachHang.NhanVienPhuTrachId == ownerUserId.Value);
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        return query;
+    }
 
-        var items = await query
-            .OrderByDescending(x => x.KhachHang.CreatedAt)
-            .ThenByDescending(x => x.KhachHang.Id)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
-
-        var dtos = items.Select(x =>
-            CustomerMapper.ToDto(MapToDomain(x.KhachHang),
-                x.TenLoai, x.TenTinhTrang, x.TenNhanVien, x.TenHang))
-            .ToList();
-
-        return new PagedResult<CustomerDto>
-        {
-            Items = dtos,
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            TotalCount = totalCount
-        };
+    private sealed class CustomerJoinRow
+    {
+        public KhKhachHangEntity KhachHang { get; set; } = null!;
+        public string? TenLoai { get; set; }
+        public string? TenTinhTrang { get; set; }
+        public string? TenNhanVien { get; set; }
+        public string? TenHang { get; set; }
     }
 
     public async Task<KhachHang> AddAsync(KhachHang customer, CancellationToken cancellationToken = default)
@@ -200,7 +239,7 @@ public class CustomerRepository : ICustomerRepository
     public Task<bool> HangKhachHangExistsAsync(ushort id, CancellationToken cancellationToken = default) =>
         _context.Set<KhXepHangEntity>().AnyAsync(h => h.Id == id && h.IsActive, cancellationToken);
 
-   
+
     public async Task<(bool LoaiOk, bool TinhTrangOk, bool HangOk)> ValidateLookupIdsAsync(
         ushort? loaiKhachHangId, ushort? tinhTrangId, ushort? hangKhachHangId,
         CancellationToken cancellationToken = default)

@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Crown,
   Building2,
+  Download,
 } from "lucide-react";
 import customerApi from "../../api/customerApi";
 import useAuthStore from "../auth/authStore";
@@ -26,6 +27,7 @@ import useDanhMucStore from "../../stores/danhMucStore";
 import useRealtimeStore from "../../stores/realtimeStore";
 
 import { getApiErrorMessage } from "../../utils/formatters";
+import { exportToExcel } from "../../utils/exportExcel";
 export default function CustomerListPage() {
   const { user } = useAuthStore();
   const {
@@ -43,6 +45,7 @@ export default function CustomerListPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState(false);
   const [success, setSuccess] = useState("");
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -110,6 +113,46 @@ export default function CustomerListPage() {
     customerRealtimeTick,
   ]);
 
+  // Xuất TOÀN BỘ khách hàng khớp bộ lọc hiện tại (không chỉ trang đang xem).
+  const handleExport = async () => {
+    setExporting(true);
+    setError("");
+    try {
+      const res = await customerApi.getForExport({
+        search: search.trim() || undefined,
+        loaiKhachHangId: filterLoai || undefined,
+        tinhTrangId: filterTinhTrang || undefined,
+      });
+      const rows = res.data ?? [];
+
+      if (rows.length === 0) {
+        setError("Không có khách hàng nào khớp bộ lọc hiện tại để xuất.");
+        return;
+      }
+
+      await exportToExcel({
+        fileName: `khach-hang-${new Date().toISOString().slice(0, 10)}`,
+        sheetName: "Khách hàng",
+        columns: [
+          { key: "maKhachHang", header: "Mã KH", width: 14 },
+          { key: "tenKhachHang", header: "Tên khách hàng", width: 28 },
+          { key: "tenLoaiKhachHang", header: "Loại KH", width: 16 },
+          { key: "tenTinhTrang", header: "Tình trạng", width: 16 },
+          { key: "tenHangKhachHang", header: "Hạng", width: 14 },
+          { key: "email", header: "Email", width: 24 },
+          { key: "soDienThoai", header: "SĐT", width: 16 },
+          { key: "maSoThue", header: "Mã số thuế", width: 16 },
+          { key: "tenNhanVienPhuTrach", header: "NV phụ trách", width: 20 },
+        ],
+        rows,
+      });
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Xuất Excel thất bại"));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Xóa khách hàng này? Có thể khôi phục lại sau."))
       return;
@@ -161,11 +204,21 @@ export default function CustomerListPage() {
         breadcrumb="CRM / Kinh doanh"
         title="Quản lý khách hàng"
         actions={
-          canEdit && (
-            <Button icon={Plus} onClick={() => setShowCreateModal(true)}>
-              Thêm khách hàng
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              icon={Download}
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              {exporting ? "Đang xuất..." : "Xuất Excel"}
             </Button>
-          )
+            {canEdit && (
+              <Button icon={Plus} onClick={() => setShowCreateModal(true)}>
+                Thêm khách hàng
+              </Button>
+            )}
+          </div>
         }
       />
 

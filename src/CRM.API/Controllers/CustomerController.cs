@@ -8,6 +8,7 @@ using CRM.Application.Features.Customers.DTOs;
 using CRM.Application.Features.Customers.Queries.CheckDuplicateCustomer;
 using CRM.Application.Features.Customers.Queries.GetAllCustomers;
 using CRM.Application.Features.Customers.Queries.GetCustomerById;
+using CRM.Application.Features.Customers.Queries.GetCustomersForExport;
 using CRM.Application.Features.Loyalty.DTOs;
 using CRM.Application.Features.Loyalty.Queries.GetCustomerLoyaltyInfo;
 using MediatR;
@@ -47,6 +48,21 @@ public class CustomerController : ControllerBase
             cancellationToken);
 
         return Ok(ApiResponse<PagedResult<CustomerDto>>.Ok(result));
+    }
+
+    // Lấy TOÀN BỘ khách hàng khớp bộ lọc (không phân trang, tối đa 5000 dòng) để xuất Excel.
+    [HttpGet("export")]
+    [Authorize(Policy = Policies.CustomerReadAccess)]
+    [ProducesResponseType(typeof(ApiResponse<List<CustomerDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Export(
+        [FromQuery] string? search = null,
+        [FromQuery] ushort? loaiKhachHangId = null,
+        [FromQuery] ushort? tinhTrangId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(
+            new GetCustomersForExportQuery(search, loaiKhachHangId, tinhTrangId), cancellationToken);
+        return Ok(ApiResponse<List<CustomerDto>>.Ok(result));
     }
 
     [HttpGet("{id:long}")]

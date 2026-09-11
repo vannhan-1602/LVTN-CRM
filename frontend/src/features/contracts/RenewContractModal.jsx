@@ -13,7 +13,16 @@ import { Plus, X } from "lucide-react";
 export default function RenewContractModal({ contract, onClose, onSaved }) {
   const isTraGop = contract.hinhThucThanhToan === "TraGop";
 
-  const [ngayKy, setNgayKy] = useState(new Date().toISOString().slice(0, 10));
+  // Tự điền sẵn ngày ký = ngày hết hạn hợp đồng cũ + 1 ngày (tiếp nối liền mạch), KHÔNG phải
+  // hôm nay — nếu không, gia hạn sớm (trước khi hợp đồng cũ hết hạn) sẽ khiến khách hàng bị
+  // mất phần thời gian còn dư chưa dùng hết. Sale vẫn có thể tự sửa ngày này nếu thật sự cần.
+  const ngayKyGoiY = contract.ngayKetThuc
+    ? new Date(new Date(contract.ngayKetThuc).getTime() + 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10)
+    : new Date().toISOString().slice(0, 10);
+
+  const [ngayKy, setNgayKy] = useState(ngayKyGoiY);
   const [lichThanhToans, setLichThanhToans] = useState([
     {
       soDot: 1,
@@ -103,6 +112,13 @@ export default function RenewContractModal({ contract, onClose, onSaved }) {
             onChange={(e) => setNgayKy(e.target.value)}
             className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm"
           />
+          {contract.ngayKetThuc && (
+            <p className="text-xs text-ink-400 mt-1">
+              Tự động tiếp nối ngay sau ngày hết hạn hợp đồng cũ ({" "}
+              {new Date(contract.ngayKetThuc).toLocaleDateString("vi-VN")}) —
+              sửa lại nếu cần.
+            </p>
+          )}
         </div>
 
         {isTraGop && (
